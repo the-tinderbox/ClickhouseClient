@@ -1,4 +1,5 @@
 # Clickhouse Client
+[![Build Status](https://travis-ci.org/the-tinderbox/ClickhouseClient.svg?branch=master)](https://travis-ci.org/the-tinderbox/ClickhouseClient)
 
 Пакет разработан для работы с [Clickhouse](https://clickhouse.yandex/).
 
