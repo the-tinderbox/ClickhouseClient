@@ -1,5 +1,5 @@
 # Clickhouse Client
-[![Build Status](https://travis-ci.org/the-tinderbox/ClickhouseClient.svg?branch=master)](https://travis-ci.org/the-tinderbox/ClickhouseClient)
+[![Build Status](https://travis-ci.org/the-tinderbox/ClickhouseClient.svg?branch=master)](https://travis-ci.org/the-tinderbox/ClickhouseClient) [![Coverage Status](https://coveralls.io/repos/github/the-tinderbox/ClickhouseClient/badge.svg?branch=master)](https://coveralls.io/github/the-tinderbox/ClickhouseClient?branch=master)
 
 Package was written as client for [Clickhouse](https://clickhouse.yandex/).
 
