@@ -17,7 +17,6 @@
       "Tinderbox\\Clickhouse\\": "tests"
     }
   },
-  "version": "1.0.0",
   "require": {
     "php": "~7.1",
     "guzzlehttp/guzzle": "^6.2"
