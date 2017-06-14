@@ -1,9 +1,9 @@
 # Clickhouse Client
 [![Build Status](https://travis-ci.org/the-tinderbox/ClickhouseClient.svg?branch=master)](https://travis-ci.org/the-tinderbox/ClickhouseClient)
 
-Пакет разработан для работы с [Clickhouse](https://clickhouse.yandex/).
+Package was written as client for [Clickhouse](https://clickhouse.yandex/).
 
-Клиент использует [Guzzle](https://github.com/guzzle/guzzle) для отправки Http запросов на сервера Clickhouse.
+Client uses [Guzzle](https://github.com/guzzle/guzzle) for sending Http requests to Clickhouse servers.
  
 ## Requirements
 `php7.1`
@@ -18,8 +18,7 @@ composer require the-tinderbox/clickhouse-php-client
 
 # Using
 
-Клиент умеет работать как с одним сервером так и с кластером. Так же клиент умеет выполнять асинхронные
-select запросы и асинхронные запросы на запись из локальных файлов.
+Client works with alone server and cluster. Also, client can make async select and insert (from local files) queries.
 
 ## Alone server
 
@@ -44,9 +43,8 @@ $cluster = new Tinderbox\Clickhouse\Cluster([
 $client = new Tinderbox\Clickhouse\Client($cluster);
 ```
 
-По умолчанию клиент будет использовать первый в списке сервер для выполнения запросов. Для того, что бы
-выполнить запрос на другом сервере необходимо вызвать метод `using($hostname)` на клиенте и затем выполнять
-запрос.
+By default client will use first server in given list. If you want to perform request on another server you should use 
+`using($hostname)` method on client and then run query;
 
 ```php
 $client->using('server-2')->select('select * from table');
@@ -54,13 +52,12 @@ $client->using('server-2')->select('select * from table');
 
 ## Values mappers
 
-Есть два способа передавать значения в запрос:
+There are two ways to bind values into raw sql:
 
-1. Неименованные плейсхолдеры в виде `?` в запросе;
-2. Именованные плейсхолдеры в виде `:paramname` в запросе.
+1. Unnamed placeholders like `?` in query;
+2. Named placeholders like `:paramname` in query.
 
-Что бы выбрать нужный биндер которым будет удобнее пользоваться, можно вторым аргументов в конструктор клиента
-передать нужный биндер.
+To choose the right one, you can pass mapper to client constructor as second argument.
 
 ```php
 $unnamedMapper = new Tinderbox\Clickhouse\Query\Mapper\UnnamedMapper();
@@ -70,11 +67,11 @@ $client = new Tinderbox\Clickhouse\Client($server, $unnamedMapper);
 $client = new Tinderbox\Clickhouse\Client($server, $namedMapper);
 ```
 
-По умолчанию используется `UnnamedMapper`.
+By default client uses `UnnamedMapper`.
 
 ### Unnamed
 
-В случае с неименованными плейсхолдерами, массив значений должен быть не ассоциативный.
+In case of unnamed placeholder, bindings array should be non-associative.
 
 ```php
 $client->select('select * from table where column = ?', [1]);
@@ -82,11 +79,9 @@ $client->select('select * from table where column = ?', [1]);
 
 ### Named
 
-В случае с именованными плейсхолдерами, массив значений должен быть ассоциативным где каждый ключ
-соответствует плейсхолдеру в запросе.
+In case of named placeholder, bindings array should be associative where each key corresponds to placeholder in query.
 
-Ключ может содержать `:`, так же может использоваться без `:`, но в запросе перед плейсхолдером `:` всегда
-должно быть.
+Key may contain `:` or not, but placeholder in query must have `:`.
 
 ```php
 $client->select('select * from table where column = :column', [
@@ -96,23 +91,23 @@ $client->select('select * from table where column = :column', [
 
 ## Select queries
 
-Любой SELECT запрос вернет результат в виде `Result`. Этот класс реализует интерфейсы `\ArrayAccess`, `\Countable` и `\Iterator`,
-что означает, что с ним можно обращаться как с обычным массивом.
+Any SELECT query will return instance of `Result`. This class implements interfaces `\ArrayAccess`, `\Countable` и `\Iterator`, 
+which means that it can be used as an array.
 
-Чистый массив значений можно получить обратившись к свойству `rows`
+Array with result rows can be obtained via `rows` property
 
 ```php
 $rows = $result->rows;
 $rows = $result->getRows();
 ```
 
-Так же результат содержит статистические данные выполнения запроса:
+Also you can get some statistic of your query execution:
 
-1. Количество прочитанных строк
-2. Количество прочитанных байт
-3. Время выполнения запроса
+1. Number of read rows
+2. Number of read bytes 
+3. Time of query execution
 
-Что бы получить статистику нужно обратиться к свойству `statistic`
+Statistic can be obtained via `statistic` property
 
 ```php
 $statistic = $result->statistic;
@@ -138,10 +133,37 @@ foreach ($result as $number) {
 }
 ```
 
+**Using local files**
+
+You can use local files as temporary tables in Clickhouse. You should pass as second argument array of `TempTable` instances or single `TempTable`
+instance.
+
+In this case will be sent one file to the server from which Clickhouse will extract data to temporary table.
+Structure of table will be:
+
+* number - UInt64
+
+If you pass such an array as a structure:
+
+```php
+['UInt64']
+```
+
+Then each column from file wil be named as _1, _2, _3.
+
+```php
+$result = $client->select('select number from system.numbers where number in _numbers limit 100', new TempTable('_numbers', 'numbers.csv', [
+    'number' => 'UInt64'
+]));
+
+foreach ($result as $number) {
+    echo $number['number'].PHP_EOL;
+}
+```
+
 ### Async
 
-В отличии от `select` метода, который возвращает `Result` метод `selectAsync` вернет массив из `Result` для 
-каждого выполненного запроса.
+Unlike the `select` method, which returns` Result`, the `selectAsync` method returns an array of` Result` for each executed query.
 
 ```php
 
@@ -156,13 +178,33 @@ foreach ($clicks as $click) {
 }
 
 ```
-**В метод `selectAsync` можно передать параметр `$concurrency` который отвечает за максимальное одновременное количество запросов.**
+**In `selectAsync` method, you can pass the parameter `$concurrency` which is responsible for the maximum simultaneous number of requests.**
+
+**Using local files**
+
+As with synchronous select request you can pass files to the server:
+
+```php
+
+list($clicks, $visits, $views) = $client->selectAsync([
+    ['select * from clicks where date = ? and userId in _users', ['2017-01-01'], new TempTable('_users', 'users.csv', ['number' => 'UInt64'])],
+    ['select * from visits where date = ?', ['2017-01-01']],
+    ['select * from views where date = ?', ['2017-01-01']],
+]);
+
+foreach ($clicks as $click) {
+    echo $click['date'].PHP_EOL;
+}
+
+```
+
+With asynchronous requests you can pass multiple files as with synchronous request.
 
 ## Insert queries
 
-Запросы на запись данных всегда возвращают true или выбрасывают исключение в случае ошибки.
+Insert queries always returns true or throws exceptions in case of error.
 
-Данные можно записать построчно или же асинхронно из набора CSV или TSV файлов.
+Data can be written row by row or from local CSV or TSV files.
 
 ```php
 $client->insert('insert into table (date, column) values (?,?), (?,?)', ['2017-01-01', 1, '2017-01-02', 2]);
@@ -178,13 +220,13 @@ $client->insertFiles('table', ['date', 'column'], [
 ], Tinderbox\Clickhouse\Common\Format::TSV);
 ```
 
-В случае с `insertFiles` запросы выполняются асинхронно.
+In case of `insertFiles` queries exetues asynchronously
 
-**В метод `insertFiles` можно передать параметр `$concurrency` который отвечает за максимальное одновременное количество запросов.**
+**In `insertFiles` method, you can pass the parameter `$concurrency` which is responsible for the maximum simultaneous number of requests.**
 
 ## Other queries
 
-Помимо SELECT и INSERT запросов можно выполнять другие запросы :) Для этого существует метод `statement`.
+In addition to SELECT and INSERT queries, you can execute other queries :) There is `statement` method for this purposes.
 
 ```php
 $client->statement('DROP TABLE table');
@@ -198,11 +240,10 @@ $ composer test
 
 ## Roadmap
 
-* Сделать учет `timeout` при выполнении асинхронных запросов
-* Сделать поддержку внешних файлов с данными для использования в `WHERE IN` и `WHERE NOT IN`
+* Add ability to save query result in local file
 
 ## Contributing
-Пожалуйста, присылайте свои пул-реквесты и высказывайте предложения по улучшению чего-либо.
-Будем очень благодарны.
+Please send your own pull-requests and make suggestions on how to improve anything.
+We will be very grateful.
 
-Спасибо!
+Thx!

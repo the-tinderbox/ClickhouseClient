@@ -3,10 +3,13 @@
 namespace Tinderbox\Clickhouse\Transport;
 
 use GuzzleHttp\Client;
+use GuzzleHttp\Exception\ConnectException;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Pool;
+use GuzzleHttp\Psr7\MultipartStream;
 use GuzzleHttp\Psr7\Request;
 use Psr\Http\Message\ResponseInterface;
+use Tinderbox\Clickhouse\Common\TempTable;
 use Tinderbox\Clickhouse\Interfaces\TransportInterface;
 use Tinderbox\Clickhouse\Server;
 use Tinderbox\Clickhouse\Exceptions\ClientException;
@@ -24,7 +27,7 @@ class HttpTransport implements TransportInterface
      * @var Client
      */
     protected $httpClient;
-    
+
     /**
      * HttpTransport constructor.
      *
@@ -34,7 +37,7 @@ class HttpTransport implements TransportInterface
     {
         $this->setClient($client);
     }
-    
+
     /**
      * Returns default headers for requests
      *
@@ -47,7 +50,7 @@ class HttpTransport implements TransportInterface
             'Content-Encoding' => 'gzip',
         ];
     }
-    
+
     /**
      * Sets Guzzle client
      *
@@ -61,7 +64,7 @@ class HttpTransport implements TransportInterface
             $this->httpClient = $client;
         }
     }
-    
+
     /**
      * Creates Guzzle client
      */
@@ -69,7 +72,7 @@ class HttpTransport implements TransportInterface
     {
         return new Client();
     }
-    
+
     /**
      * Sends query to given $server
      *
@@ -90,13 +93,34 @@ class HttpTransport implements TransportInterface
                     'connect_timeout' => $server->getOptions()->getTimeout(),
                 ]
             );
-            
+
             return true;
+        } catch (ConnectException $e) {
+            throw ClientException::connectionError();
         } catch (RequestException $e) {
             throw ClientException::serverReturnedError($e->getResponse()->getBody()->getContents().'. Query: '.$query);
         }
     }
-    
+
+    /**
+     * Creates file handle to send file to server
+     *
+     * @param string $file
+     * @param bool $gzip
+     *
+     * @return bool|resource
+     */
+    protected function getFileHandle(string $file, $gzip = true)
+    {
+        $fileHandle = fopen($file, 'r');
+
+        if ($gzip) {
+            stream_filter_append($fileHandle, 'zlib.deflate', STREAM_FILTER_READ, ['window' => 30]);
+        }
+
+        return $fileHandle;
+    }
+
     /**
      * Sends async insert queries with given files
      *
@@ -111,66 +135,161 @@ class HttpTransport implements TransportInterface
     {
         $requests = function ($files) use ($server, $query) {
             foreach ($files as $file) {
-                $fileHandle = fopen($file, 'r');
-                
-                stream_filter_append($fileHandle, 'zlib.deflate', STREAM_FILTER_READ, ['window' => 30]);
-                
                 $request = new Request(
-                    'POST', $this->buildRequestUri($server, ['query' => $query,]), $this->getHeaders(), $fileHandle
+                    'POST', $this->buildRequestUri($server, ['query' => $query,]), $this->getHeaders(), $this->getFileHandle($file)
                 );
-                
+
                 yield $request;
             }
         };
-        
+
         $result = [];
-        
+
         $pool = new Pool(
             $this->httpClient, $requests($files), [
                 'concurrency' => $concurrency,
                 'fulfilled'   => function ($response, $index) use (&$result) {
                     $result[$index] = true;
                 },
-                'rejected'    => function ($reason, $index) {
-                    throw ClientException::serverReturnedError($reason->getResponse()->getBody()->getContents());
-                },
+                'rejected'    => $this->parseReason(),
+                'options' => [
+                    'connect_timeout' => $server->getOptions()->getTimeout()
+                ]
             ]
         );
-        
+
         $promise = $pool->promise();
-        
+
         $promise->wait();
-        
+
         ksort($result);
-        
+
         return $result;
     }
-    
+
+    /**
+     * Assembles string from TempTable structure
+     *
+     * @param \Tinderbox\Clickhouse\Common\TempTable $table
+     *
+     * @return string
+     */
+    protected function assembleTempTableStructure(TempTable $table)
+    {
+        $structure = $table->getStructure();
+        $withColumns = true;
+
+        $preparedStructure = [];
+
+        foreach ($structure as $column => $type) {
+            if (is_int($column)) {
+                $withColumns = false;
+                $preparedStructure[] = $type;
+            } else {
+                $preparedStructure[] = $column.' '.$type;
+            }
+        }
+
+        return [implode(', ', $preparedStructure), $withColumns];
+    }
+
+    /**
+     * Parse temp table data to append it to request
+     *
+     * @param \Tinderbox\Clickhouse\Common\TempTable $table
+     *
+     * @return array
+     */
+    protected function parseTempTable(TempTable $table)
+    {
+        list($structure, $withColumns) = $this->assembleTempTableStructure($table);
+
+        return [
+            [
+                $table->getName().'_'.($withColumns ? 'structure' : 'types') => $structure,
+                $table->getName().'_format'                                  => $table->getFormat(),
+            ],
+            $this->getFileHandle($table->getSource(), false)
+        ];
+    }
+
     /**
      * Executes SELECT queries and returns result
      *
      * @param \Tinderbox\Clickhouse\Server $server
-     * @param string                             $query
+     * @param string                       $query
+     * @param TempTable|array|null         $tables
      *
      * @return \Tinderbox\Clickhouse\Query\Result
      * @throws \Tinderbox\Clickhouse\Exceptions\ClientException
      */
-    public function get(Server $server, string $query): Result
+    public function get(Server $server, string $query, $tables = null): Result
     {
         try {
+            $options = [
+                'headers'         => $this->getHeaders(),
+                'connect_timeout' => $server->getOptions()->getTimeout(),
+            ];
+
+            if (!is_null($tables)) {
+                $params = [
+                    'query' => $query
+                ];
+
+                if ($tables instanceof TempTable) {
+                    $tables = [$tables];
+                }
+
+                $options['multipart'] = [];
+
+                foreach ($tables as $table) {
+                    list($tableQuery, $tableSourceHandle) = $this->parseTempTable($table);
+
+                    $options['multipart'][] = [
+                        'name'     => $table->getName(),
+                        'contents' => $tableSourceHandle
+                    ];
+
+                    $params = array_merge($tableQuery, $params);
+                }
+            } else {
+                $params = [];
+                $options['body'] = gzencode($query);
+            }
+
             $response = $this->httpClient->post(
-                $this->buildRequestUri($server),
-                [
-                    'headers'         => $this->getHeaders(),
-                    'body'            => gzencode($query),
-                    'connect_timeout' => $server->getOptions()->getTimeout(),
-                ]
+                $this->buildRequestUri($server, $params),
+                $options
             );
-            
+
             return $this->assembleResult($response);
+        } catch (ConnectException $e) {
+            throw ClientException::connectionError();
         } catch (RequestException $e) {
             throw ClientException::serverReturnedError($e->getResponse()->getBody()->getContents().'. Query: '.$query);
         }
+    }
+
+    /**
+     * Determines the reason why request was rejected
+     *
+     * @return \Closure
+     */
+    protected function parseReason()
+    {
+        return function($reason, $index) {
+            if ($reason instanceof RequestException) {
+                $response = $reason->getResponse();
+
+                if (is_null($response)) {
+                    throw ClientException::connectionError();
+                } else {
+                    throw ClientException::serverReturnedError($reason->getResponse()->getBody()->getContents());
+                }
+            }
+
+            throw $reason;
+        };
     }
     
     /**
@@ -186,7 +305,38 @@ class HttpTransport implements TransportInterface
     {
         $requests = function ($queries) use ($server) {
             foreach ($queries as $query) {
-                yield new Request('POST', $this->buildRequestUri($server), $this->getHeaders(), $query);
+                $tables = $query[1] ?? null;
+                $query = $query[0];
+
+                if (!is_null($tables)) {
+                    $params = [
+                        'query' => $query
+                    ];
+
+                    if ($tables instanceof TempTable) {
+                        $tables = [$tables];
+                    }
+
+                    $multipart = [];
+
+                    foreach ($tables as $table) {
+                        list($tableQuery, $tableSourceHandle) = $this->parseTempTable($table);
+
+                        $multipart[] = [
+                            'name'     => $table->getName(),
+                            'contents' => $tableSourceHandle
+                        ];
+
+                        $params = array_merge($tableQuery, $params);
+                    }
+
+                    $body = new MultipartStream($multipart);
+                } else {
+                    $params = [];
+                    $body = gzencode($query);
+                }
+
+                yield new Request('POST', $this->buildRequestUri($server, $params), $this->getHeaders(), $body);
             }
         };
         
@@ -198,9 +348,10 @@ class HttpTransport implements TransportInterface
                 'fulfilled'   => function ($response, $index) use (&$result) {
                     $result[$index] = $this->assembleResult($response);
                 },
-                'rejected'    => function ($reason, $index) {
-                    throw ClientException::serverReturnedError($reason->getResponse()->getBody()->getContents());
-                },
+                'rejected'    => $this->parseReason(),
+                'options' => [
+                    'connect_timeout' => $server->getOptions()->getTimeout()
+                ]
             ]
         );
         

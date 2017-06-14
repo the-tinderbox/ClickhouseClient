@@ -59,7 +59,7 @@ class ResultTest extends TestCase
         $this->assertEquals(3, count($result));
     }
     
-    public function testResultArrayAccess()
+    public function testResultArrayAccessSet()
     {
         $rows = [
             [
@@ -90,10 +90,35 @@ class ResultTest extends TestCase
         $this->expectExceptionMessage($e->getMessage());
         
         $result[1] = 'test';
-        
+    }
+
+    public function testResultArrayAccessUnset()
+    {
+        $rows = [
+            [
+                'col' => 1,
+            ],
+            [
+                'col' => 2,
+            ],
+            [
+                'col' => 3,
+            ],
+            [
+                'col' => 4,
+            ],
+            [
+                'col' => 5,
+            ],
+        ];
+        $statistic = new QueryStatistic(5, 1024, 0.122);
+
+        $result = new Result($rows, $statistic);
+
+        $e = ResultException::isReadonly();
         $this->expectException(ResultException::class);
         $this->expectExceptionMessage($e->getMessage());
-        
+
         unset($result[1]);
     }
     
@@ -122,7 +147,7 @@ class ResultTest extends TestCase
         
         $prev = null;
         
-        foreach ($result as $row) {
+        foreach ($result as $i => $row) {
             $this->assertNotEquals($prev, $row);
             
             $prev = $row;

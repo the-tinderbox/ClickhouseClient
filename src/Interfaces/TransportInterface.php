@@ -2,6 +2,7 @@
 
 namespace Tinderbox\Clickhouse\Interfaces;
 
+use Tinderbox\Clickhouse\Common\TempTable;
 use Tinderbox\Clickhouse\Query\Result;
 use Tinderbox\Clickhouse\Server;
 
@@ -10,47 +11,47 @@ use Tinderbox\Clickhouse\Server;
  */
 interface TransportInterface
 {
-    
     /**
      * Sends query to given $server
      *
      * @param \Tinderbox\Clickhouse\Server $server
-     * @param string                             $query
+     * @param string                       $query
      *
      * @return bool
      * @throws \Tinderbox\Clickhouse\Exceptions\ClientException
      */
     public function send(Server $server, string $query): bool;
-    
+
     /**
      * Sends async insert queries with given files
      *
      * @param \Tinderbox\Clickhouse\Server $server
-     * @param string                             $query
-     * @param array                              $files
-     * @param int                                $concurrency
+     * @param string                       $query
+     * @param array                        $files
+     * @param int                          $concurrency
      *
      * @return array
      */
     public function sendAsyncFilesWithQuery(Server $server, string $query, array $files, int $concurrency = 5): array;
-    
+
     /**
      * Executes SELECT queries and returns result
      *
      * @param \Tinderbox\Clickhouse\Server $server
-     * @param string                             $query
+     * @param string                       $query
+     * @param TempTable|null               $tables
      *
      * @return \Tinderbox\Clickhouse\Query\Result
      * @throws \Tinderbox\Clickhouse\Exceptions\ClientException
      */
-    public function get(Server $server, string $query): Result;
-    
+    public function get(Server $server, string $query, $tables = null): Result;
+
     /**
      * Executes async SELECT queries and returns result
      *
      * @param \Tinderbox\Clickhouse\Server $server
-     * @param array                              $queries
-     * @param int                                $concurrency
+     * @param array                        $queries
+     * @param int                          $concurrency
      *
      * @return array
      */

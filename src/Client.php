@@ -3,6 +3,7 @@
 namespace Tinderbox\Clickhouse;
 
 use Tinderbox\Clickhouse\Common\Format;
+use Tinderbox\Clickhouse\Common\TempTable;
 use Tinderbox\Clickhouse\Exceptions\ClientException;
 use Tinderbox\Clickhouse\Interfaces\QueryMapperInterface;
 use Tinderbox\Clickhouse\Interfaces\TransportInterface;
@@ -194,8 +195,7 @@ class Client
     protected function setServerByDefaultHostname(string $hostname = null)
     {
         if (is_null($hostname)) {
-            $servers = $this->getCluster()
-                ->getServers();
+            $servers = $this->getCluster()->getServers();
             $hostnames = array_keys($servers);
             
             $hostname = $hostnames[0];
@@ -264,16 +264,17 @@ class Client
      *
      * $client->select('select * from table where column = ?', [1]);
      *
-     * @param string $query
-     * @param array  $bindings
+     * @param string               $query
+     * @param array                $bindings
+     * @param TempTable|array|null $tables
      *
      * @return \Tinderbox\Clickhouse\Query\Result
      */
-    public function select(string $query, array $bindings = []): Result
+    public function select(string $query, array $bindings = [], $tables = null): Result
     {
         $query = $this->prepareQuery($query, $bindings).' FORMAT JSON';
         
-        return $this->getTransport()->get($this->getServer(), $query);
+        return $this->getTransport()->get($this->getServer(), $query, $tables);
     }
     
     /**
@@ -295,7 +296,7 @@ class Client
     public function selectAsync(array $queries, int $concurrency = 5): array
     {
         foreach ($queries as $i => $query) {
-            $queries[$i] = $this->prepareQuery($query[0], $query[1] ?? []).' FORMAT JSON';
+            $queries[$i] = [$this->prepareQuery($query[0], $query[1] ?? []).' FORMAT JSON', $query[2] ?? null];
         }
         
         return $this->getTransport()->getAsync($this->getServer(), $queries, $concurrency);

@@ -2,11 +2,16 @@
 
 namespace Tinderbox\Clickhouse;
 
+use GuzzleHttp\Exception\ConnectException;
 use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;
+use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
 use PHPUnit\Framework\TestCase;
+use Tinderbox\Clickhouse\Common\Format;
+use Tinderbox\Clickhouse\Common\TempTable;
 use Tinderbox\Clickhouse\Exceptions\ClientException;
+use Tinderbox\Clickhouse\Query\Result;
 use Tinderbox\Clickhouse\Transport\HttpTransport;
 
 /**
@@ -31,11 +36,109 @@ class HttpTransportTest extends TestCase
         return new Server('127.0.0.1', '8123', 'default', 'user', 'pass');
     }
 
+    public function testGetWithFile() {
+        $file = sys_get_temp_dir().DIRECTORY_SEPARATOR.'numbers.csv';
+        file_put_contents($file, '');
+
+        $transport = $this->getMockedTransport([
+            new Response(200, [], json_encode([
+                'data' => [
+                    [
+                        '1' => 1
+                    ]
+                ],
+                'statistics' => [
+                    'rows_read' => 1,
+                    'bytes_read' => 1,
+                    'elapsed' => 0.100
+                ]
+            ])),
+
+            new Response(200, [], json_encode([
+                'data' => [
+                    [
+                        '1' => 1
+                    ]
+                ],
+                'statistics' => [
+                    'rows_read' => 1,
+                    'bytes_read' => 1,
+                    'elapsed' => 0.100
+                ]
+            ])),
+
+            new Response(200, [], json_encode([
+                'data' => [
+                    [
+                        '1' => 1
+                    ]
+                ],
+                'statistics' => [
+                    'rows_read' => 1,
+                    'bytes_read' => 1,
+                    'elapsed' => 0.100
+                ]
+            ])),
+
+            new Response(200, [], json_encode([
+                'data' => [
+                    [
+                        '1' => 1
+                    ]
+                ],
+                'statistics' => [
+                    'rows_read' => 1,
+                    'bytes_read' => 1,
+                    'elapsed' => 0.100
+                ]
+            ])),
+        ]);
+
+        $result = $transport->get($this->getServer(), 'select * from system.numbers where number in _numbers limit 6 format JSON', new TempTable('_numbers', $file, [
+            'UInt64'
+        ]));
+
+        $this->assertInstanceOf(Result::class, $result);
+
+        $result = $transport->get($this->getServer(), 'select * from system.numbers where number in _numbers or number in _numbers2 limit 6 format JSON', [
+            new TempTable('_numbers', $file, [
+                'numbers' => 'UInt64'
+            ]),
+            new TempTable('_numbers2', $file, [
+                'UInt64'
+            ])
+        ]);
+
+        $this->assertInstanceOf(Result::class, $result);
+
+        $result = $transport->getAsync($this->getServer(), [
+            ['select * from system.numbers where number in _numbers or number in _numbers2 limit 6 format JSON', [
+                new TempTable('_numbers', $file, [
+                    'numbers' => 'UInt64'
+                ]),
+                new TempTable('_numbers2', $file, [
+                    'UInt64'
+                ])
+            ]],
+
+            ['select * from system.numbers where number in _numbers or number in _numbers2 limit 6 format JSON', new TempTable('_numbers', $file, [
+                'numbers' => 'UInt64'
+            ])]
+        ]);
+
+        $this->assertInstanceOf(Result::class, $result[0]);
+        $this->assertInstanceOf(Result::class, $result[1]);
+
+        unlink($file);
+    }
+
     public function testHttpTransportEmptyClient()
     {
         $transport = new HttpTransport();
 
-        $this->expectException(\Error::class);
+        $e = ClientException::connectionError();
+        $this->expectException(ClientException::class);
+        $this->expectExceptionMessage($e->getMessage());
 
         $transport->get($this->getServer(), 'select 1');
     }
@@ -157,9 +260,9 @@ class HttpTransportTest extends TestCase
         $this->assertEquals(0.100, $result->statistic->time);
         
         $result = $transport->getAsync($server, [
-            'select 1',
-            'select 2',
-            'select 3'
+            ['select 1'],
+            ['select 2'],
+            ['select 3']
         ]);
     
         $this->assertEquals(1, $result[0][0]['1']);
@@ -181,5 +284,62 @@ class HttpTransportTest extends TestCase
         $transport->sendAsyncFilesWithQuery($server, 'insert into table format csv', $files);
 
         unlink($files[0]);
+    }
+
+    public function testSendConnectionError()
+    {
+        $server = $this->getServer();
+
+        $transport = $this->getMockedTransport([
+            new ConnectException('Connection error', new Request('',''))
+        ]);
+
+        $this->expectException(ClientException::class);
+
+        $transport->send($server, 'select 1');
+    }
+
+    public function testGetAsyncConnectionError()
+    {
+        $server = $this->getServer();
+
+        $transport = $this->getMockedTransport([
+            new ConnectException('Connection error', new Request('',''))
+        ]);
+
+        $this->expectException(ClientException::class);
+
+        $transport->getAsync($server, [
+            ['select 1']
+        ]);
+    }
+
+    public function testGetAsyncError()
+    {
+        $transport = $this->getMockedTransport([
+            new Response(500, [], 'Syntax error'),
+        ]);
+
+        $e = ClientException::serverReturnedError('Syntax error');
+        $this->expectException(ClientException::class);
+        $this->expectExceptionMessage($e->getMessage());
+
+        $transport->getAsync($this->getServer(), [
+            ['select 1']
+        ]);
+    }
+
+    public function testGetAsyncUnknownException()
+    {
+        $transport = $this->getMockedTransport([
+            new \Exception('Unknown exception')
+        ]);
+
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('Unknown exception');
+
+        $transport->getAsync($this->getServer(), [
+            ['select 1']
+        ]);
     }
 }

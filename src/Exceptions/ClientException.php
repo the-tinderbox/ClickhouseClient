@@ -18,6 +18,11 @@ class ClientException extends \Exception
         return new static('Can not execute query using specified server because cluster is not provided');
     }
 
+    public static function connectionError()
+    {
+        return new static('Can\'t connect to the server');
+    }
+
     public static function serverReturnedError($error)
     {
         return new static('Server returned error: '.$error);
