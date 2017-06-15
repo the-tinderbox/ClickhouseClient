@@ -6,7 +6,7 @@ use Tinderbox\Clickhouse\Exceptions\QueryMapperException;
 use Tinderbox\Clickhouse\Interfaces\QueryMapperInterface;
 
 /**
- * UnnamedMapper provides ability to use unnamed placeholders in query
+ * UnnamedMapper provides ability to use unnamed placeholders in query.
  *
  * Example:
  *
@@ -15,7 +15,7 @@ use Tinderbox\Clickhouse\Interfaces\QueryMapperInterface;
 class UnnamedMapper extends AbstractMapper implements QueryMapperInterface
 {
     /**
-     * Binds values to query
+     * Binds values to query.
      *
      * @param string $query
      * @param array  $bindings
@@ -32,7 +32,7 @@ class UnnamedMapper extends AbstractMapper implements QueryMapperInterface
         return call_user_func_array('sprintf', array_merge([$query], $escapedBindings));
     }
 
-    protected  function getBindingPattern(): string
+    protected function getBindingPattern(): string
     {
         return '/\?/';
     }

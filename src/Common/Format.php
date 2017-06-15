@@ -5,12 +5,12 @@ namespace Tinderbox\Clickhouse\Common;
 abstract class Format
 {
     /**
-     * CSV format
+     * CSV format.
      */
     const CSV = 'CSV';
 
     /**
-     * TSV format
+     * TSV format.
      */
     const TSV = 'TSV';
 }

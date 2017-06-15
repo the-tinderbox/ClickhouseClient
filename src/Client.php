@@ -12,46 +12,46 @@ use Tinderbox\Clickhouse\Query\Result;
 use Tinderbox\Clickhouse\Transport\HttpTransport;
 
 /**
- * Client
+ * Client.
  */
 class Client
 {
     /**
-     * Http transport which provides http requests to server
+     * Http transport which provides http requests to server.
      *
      * @var TransportInterface
      */
     protected $transport;
-    
+
     /**
-     * Values Mapper to raw  sql query
+     * Values Mapper to raw  sql query.
      *
      * @var \Tinderbox\Clickhouse\Interfaces\QueryMapperInterface
      */
     protected $mapper;
-    
+
     /**
-     * Server to perform requests
+     * Server to perform requests.
      *
      * @var \Tinderbox\Clickhouse\Server
      */
     protected $server;
-    
+
     /**
-     * Cluster to perform requests
+     * Cluster to perform requests.
      *
      * In case of using cluster server will be chosen automatically or you may specify server by call using method
      *
      * @var \Tinderbox\Clickhouse\Cluster
      */
     protected $cluster;
-    
+
     /**
      * Client constructor.
      *
      * @param \Tinderbox\Clickhouse\Server|\Tinderbox\Clickhouse\Cluster $server
-     * @param \Tinderbox\Clickhouse\Interfaces\QueryMapperInterface|null       $mapper
-     * @param \Tinderbox\Clickhouse\Interfaces\TransportInterface|null                                                     $transport
+     * @param \Tinderbox\Clickhouse\Interfaces\QueryMapperInterface|null $mapper
+     * @param \Tinderbox\Clickhouse\Interfaces\TransportInterface|null   $transport
      *
      * @throws \Tinderbox\Clickhouse\Exceptions\ClientException
      */
@@ -72,13 +72,13 @@ class Client
                 throw ClientException::invalidServerProvided($server);
                 break;
         }
-        
+
         $this->setTransport($transport);
         $this->setMapper($mapper);
     }
-    
+
     /**
-     * Creates default http transport
+     * Creates default http transport.
      *
      * @return HttpTransport
      */
@@ -86,9 +86,9 @@ class Client
     {
         return new HttpTransport();
     }
-    
+
     /**
-     * Returns values Mapper
+     * Returns values Mapper.
      *
      * @return \Tinderbox\Clickhouse\Interfaces\QueryMapperInterface
      */
@@ -96,9 +96,9 @@ class Client
     {
         return $this->mapper;
     }
-    
+
     /**
-     * Sets transport
+     * Sets transport.
      *
      * @param \Tinderbox\Clickhouse\Interfaces\TransportInterface|null $transport
      */
@@ -110,9 +110,9 @@ class Client
             $this->transport = $transport;
         }
     }
-    
+
     /**
-     * Sets Mapper
+     * Sets Mapper.
      *
      * @param \Tinderbox\Clickhouse\Interfaces\QueryMapperInterface $mapper
      *
@@ -123,26 +123,26 @@ class Client
         if (is_null($mapper)) {
             return $this->setDefaultMapper();
         }
-        
+
         $this->mapper = $mapper;
-        
+
         return $this;
     }
-    
+
     /**
-     * Sets default mapper
+     * Sets default mapper.
      *
      * @return Client
      */
     protected function setDefaultMapper(): self
     {
         $this->mapper = new UnnamedMapper();
-        
+
         return $this;
     }
-    
+
     /**
-     * Sets server to perform requests
+     * Sets server to perform requests.
      *
      * @param \Tinderbox\Clickhouse\Server $server
      *
@@ -151,12 +151,12 @@ class Client
     public function setServer(Server $server): self
     {
         $this->server = $server;
-        
+
         return $this;
     }
-    
+
     /**
-     * Returns current server
+     * Returns current server.
      *
      * @return \Tinderbox\Clickhouse\Server
      */
@@ -164,14 +164,14 @@ class Client
     {
         return $this->server;
     }
-    
+
     /**
-     * Sets cluster
+     * Sets cluster.
      *
      * If you have previously used alone server and then want to use cluster, server will be chosen from cluster
      *
      * @param \Tinderbox\Clickhouse\Cluster $cluster
-     * @param string|null                         $defaultServerHostname Default server to perform requests
+     * @param string|null                   $defaultServerHostname Default server to perform requests
      *
      * @return \Tinderbox\Clickhouse\Client
      */
@@ -179,14 +179,14 @@ class Client
     {
         $this->server = null;
         $this->cluster = $cluster;
-        
+
         $this->setServerByDefaultHostname($defaultServerHostname);
-        
+
         return $this;
     }
-    
+
     /**
-     * Gets server from cluster and uses him to perform requests
+     * Gets server from cluster and uses him to perform requests.
      *
      * If no hostname provided, will use first server in cluster
      *
@@ -197,36 +197,37 @@ class Client
         if (is_null($hostname)) {
             $servers = $this->getCluster()->getServers();
             $hostnames = array_keys($servers);
-            
+
             $hostname = $hostnames[0];
         }
-        
+
         $this->using($hostname);
     }
-    
+
     /**
-     * Switches between servers in cluster
+     * Switches between servers in cluster.
      *
      * If no cluster provided throws exception
      *
      * @param string $hostname
      *
-     * @return \Tinderbox\Clickhouse\Client
      * @throws \Tinderbox\Clickhouse\Exceptions\ClientException
+     *
+     * @return \Tinderbox\Clickhouse\Client
      */
     public function using(string $hostname): self
     {
         if (is_null($this->getCluster())) {
             throw ClientException::clusterIsNotProvided();
         }
-        
+
         $this->setServer($this->getCluster()->getServerByHostname($hostname));
-        
+
         return $this;
     }
-    
+
     /**
-     * Return cluster
+     * Return cluster.
      *
      * @return null|\Tinderbox\Clickhouse\Cluster
      */
@@ -234,9 +235,9 @@ class Client
     {
         return $this->cluster;
     }
-    
+
     /**
-     * Removes cluster to use alone server
+     * Removes cluster to use alone server.
      *
      * @return \Tinderbox\Clickhouse\Client
      */
@@ -246,9 +247,9 @@ class Client
 
         return $this;
     }
-    
+
     /**
-     * Returns transport
+     * Returns transport.
      *
      * @return TransportInterface
      */
@@ -256,9 +257,9 @@ class Client
     {
         return $this->transport;
     }
-    
+
     /**
-     * Performs select query
+     * Performs select query.
      *
      * Example:
      *
@@ -273,12 +274,12 @@ class Client
     public function select(string $query, array $bindings = [], $tables = null): Result
     {
         $query = $this->prepareQuery($query, $bindings).' FORMAT JSON';
-        
+
         return $this->getTransport()->get($this->getServer(), $query, $tables);
     }
-    
+
     /**
-     * Performs async select queries
+     * Performs async select queries.
      *
      * Example:
      *
@@ -298,12 +299,12 @@ class Client
         foreach ($queries as $i => $query) {
             $queries[$i] = [$this->prepareQuery($query[0], $query[1] ?? []).' FORMAT JSON', $query[2] ?? null];
         }
-        
+
         return $this->getTransport()->getAsync($this->getServer(), $queries, $concurrency);
     }
-    
+
     /**
-     * Performs insert query
+     * Performs insert query.
      *
      * Example:
      *
@@ -317,12 +318,12 @@ class Client
     public function insert(string $query, array $bindings = []): bool
     {
         $query = $this->prepareQuery($query, $bindings);
-        
+
         return $this->getTransport()->send($this->getServer(), $query);
     }
-    
+
     /**
-     * Performs async insert queries using local csv or tsv files
+     * Performs async insert queries using local csv or tsv files.
      *
      * Example:
      *
@@ -333,33 +334,35 @@ class Client
      *      'file4.csv',
      * ]);
      *
-     * @param string $table
-     * @param array $columns
-     * @param array $files
+     * @param string      $table
+     * @param array       $columns
+     * @param array       $files
      * @param string|null $format
-     * @param int $concurrency Max concurrency requests
+     * @param int         $concurrency Max concurrency requests
+     *
+     * @throws \Tinderbox\Clickhouse\Exceptions\ClientException
      *
      * @return array
-     * @throws \Tinderbox\Clickhouse\Exceptions\ClientException
      */
-    public function insertFiles(string $table, array $columns, array $files, string $format = null, int $concurrency = 5) {
+    public function insertFiles(string $table, array $columns, array $files, string $format = null, int $concurrency = 5)
+    {
         if (is_null($format)) {
             $format = Format::CSV;
         }
-        
+
         $query = 'INSERT INTO '.$table.' ('.implode(', ', $columns).') FORMAT '.strtoupper($format);
-        
+
         foreach ($files as $file) {
             if (!is_file($file)) {
                 throw ClientException::insertFileNotFound($file);
             }
         }
-        
+
         return $this->getTransport()->sendAsyncFilesWithQuery($this->getServer(), $query, $files, $concurrency);
     }
-    
+
     /**
-     * Executes query
+     * Executes query.
      *
      * Alias for method insert
      *
@@ -372,9 +375,9 @@ class Client
     {
         return $this->insert($query, $bindings);
     }
-    
+
     /**
-     * Prepares query to execution
+     * Prepares query to execution.
      *
      * @param string $query
      * @param array  $bindings

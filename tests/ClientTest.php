@@ -16,28 +16,28 @@ use Tinderbox\Clickhouse\Transport\HttpTransport;
  * @use \Tinderbox\Clickhouse\Exceptions\ClientException
  * @use \Tinderbox\Clickhouse\Exceptions\ClusterException
  */
-class ClickhouseTest extends TestCase
+class ClientTest extends TestCase
 {
     public function testClickhouseUsingServer()
     {
         $server = new Server('127.0.0.1');
         $client = new Client($server);
-        
+
         $this->assertEquals($server, $client->getServer());
-        
+
         $e = ClientException::clusterIsNotProvided();
         $this->expectException(ClientException::class);
         $this->expectExceptionMessage($e->getMessage());
-        
+
         $client->using('h1');
     }
-    
+
     public function testClickhouseUsingCluster()
     {
         $h1 = new Server('127.0.0.1');
         $h2 = new Server('127.0.0.2');
         $h3 = new Server('127.0.0.3');
-        
+
         $cluster = new Cluster(
             [
                 'h1' => $h1,
@@ -45,15 +45,15 @@ class ClickhouseTest extends TestCase
                 'h3' => $h3,
             ]
         );
-        
+
         $client = new Client($cluster);
-        
+
         $this->assertEquals($cluster, $client->getCluster());
-        
+
         $this->assertEquals($h1, $client->getServer());
-        
+
         $client->using('h2');
-        
+
         $this->assertEquals($h2, $client->getServer());
 
         $client->removeCluster();
@@ -65,7 +65,7 @@ class ClickhouseTest extends TestCase
         $e = ClusterException::serverNotFound('h4');
         $this->expectException(ClusterException::class);
         $this->expectExceptionMessage($e->getMessage());
-        
+
         $client->using('h4');
     }
 
@@ -87,7 +87,7 @@ class ClickhouseTest extends TestCase
         $handler = HandlerStack::create($mock);
 
         return new HttpTransport(new \GuzzleHttp\Client([
-            'handler' => $handler
+            'handler' => $handler,
         ]));
     }
 
@@ -113,53 +113,53 @@ class ClickhouseTest extends TestCase
             new Response(200, [], json_encode([
                 'data' => [
                     [
-                        '1' => 1
-                    ]
+                        '1' => 1,
+                    ],
                 ],
                 'statistics' => [
-                    'rows_read' => 1,
+                    'rows_read'  => 1,
                     'bytes_read' => 1,
-                    'elapsed' => 0.100
-                ]
+                    'elapsed'    => 0.100,
+                ],
             ])),
 
             new Response(200, [], json_encode([
                 'data' => [
                     [
-                        '1' => 1
-                    ]
+                        '1' => 1,
+                    ],
                 ],
                 'statistics' => [
-                    'rows_read' => 1,
+                    'rows_read'  => 1,
                     'bytes_read' => 1,
-                    'elapsed' => 0.100
-                ]
+                    'elapsed'    => 0.100,
+                ],
             ])),
 
             new Response(200, [], json_encode([
                 'data' => [
                     [
-                        '2' => 2
-                    ]
+                        '2' => 2,
+                    ],
                 ],
                 'statistics' => [
-                    'rows_read' => 1,
+                    'rows_read'  => 1,
                     'bytes_read' => 1,
-                    'elapsed' => 0.100
-                ]
+                    'elapsed'    => 0.100,
+                ],
             ])),
 
             new Response(200, [], json_encode([
                 'data' => [
                     [
-                        '3' => 3
-                    ]
+                        '3' => 3,
+                    ],
                 ],
                 'statistics' => [
-                    'rows_read' => 1,
+                    'rows_read'  => 1,
                     'bytes_read' => 1,
-                    'elapsed' => 0.100
-                ]
+                    'elapsed'    => 0.100,
+                ],
             ])),
 
             new Response(200, [], ''),
@@ -183,7 +183,7 @@ class ClickhouseTest extends TestCase
         $result = $client->selectAsync([
             ['select 1'],
             ['select 2'],
-            ['select 3']
+            ['select 3'],
         ]);
 
         $this->assertEquals(1, $result[0][0]['1']);
