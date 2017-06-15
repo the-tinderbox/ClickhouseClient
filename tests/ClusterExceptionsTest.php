@@ -37,6 +37,4 @@ class ClusterExceptionsTest extends TestCase
 
         $this->assertInstanceOf(ClusterException::class, $e);
     }
-
-
 }

@@ -5,12 +5,12 @@ namespace Tinderbox\Clickhouse\Common;
 abstract class Protocol
 {
     /**
-     * HTTP Protocol
+     * HTTP Protocol.
      */
     const HTTP = 'http';
 
     /**
-     * HTTPS Protocol
+     * HTTPS Protocol.
      */
     const https = 'https';
 }

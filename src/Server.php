@@ -5,48 +5,47 @@ namespace Tinderbox\Clickhouse;
 use Tinderbox\Clickhouse\Common\ServerOptions;
 
 /**
- * Alone server credentials
+ * Alone server credentials.
  */
 class Server
 {
     /**
-     * Host
+     * Host.
      *
      * @var string
      */
     protected $host;
 
     /**
-     * Port
+     * Port.
      *
      * @var string
      */
     protected $port;
 
     /**
-     * Database
+     * Database.
      *
      * @var string
      */
     protected $database;
 
     /**
-     * Username
+     * Username.
      *
      * @var string
      */
     protected $username;
 
     /**
-     *
-     * Password
+     * Password.
      *
      * @var string
      */
     protected $password;
 
     /**
-     * Options
+     * Options.
      *
      * @var ServerOptions
      */
@@ -55,11 +54,11 @@ class Server
     /**
      * Server constructor.
      *
-     * @param string                                                          $host
-     * @param string                                                          $port
-     * @param string|null                                                     $database
-     * @param string|null                                                     $username
-     * @param string|null                                                     $password
+     * @param string                                          $host
+     * @param string                                          $port
+     * @param string|null                                     $database
+     * @param string|null                                     $username
+     * @param string|null                                     $password
      * @param \Tinderbox\Clickhouse\Common\ServerOptions|null $options
      */
     public function __construct(
@@ -79,7 +78,7 @@ class Server
     }
 
     /**
-     * Sets host
+     * Sets host.
      *
      * @param string $host
      *
@@ -93,7 +92,7 @@ class Server
     }
 
     /**
-     * Returns host
+     * Returns host.
      *
      * @return string
      */
@@ -103,7 +102,7 @@ class Server
     }
 
     /**
-     * Sets port
+     * Sets port.
      *
      * @param string $port
      *
@@ -117,7 +116,7 @@ class Server
     }
 
     /**
-     * Returns port
+     * Returns port.
      *
      * @return string
      */
@@ -127,7 +126,7 @@ class Server
     }
 
     /**
-     * Sets database
+     * Sets database.
      *
      * @param string|null $database
      *
@@ -141,7 +140,7 @@ class Server
     }
 
     /**
-     * Returns database
+     * Returns database.
      *
      * @return null|string
      */
@@ -151,7 +150,7 @@ class Server
     }
 
     /**
-     * Sets username
+     * Sets username.
      *
      * @param string|null $username
      *
@@ -165,7 +164,7 @@ class Server
     }
 
     /**
-     * Returns username
+     * Returns username.
      *
      * @return null|string
      */
@@ -175,7 +174,7 @@ class Server
     }
 
     /**
-     * Sets password
+     * Sets password.
      *
      * @param string|null $password
      *
@@ -189,7 +188,7 @@ class Server
     }
 
     /**
-     * Returns password
+     * Returns password.
      *
      * @return null|string
      */
@@ -199,7 +198,7 @@ class Server
     }
 
     /**
-     * Sets options
+     * Sets options.
      *
      * If no options provided, will use default options
      *
@@ -219,7 +218,7 @@ class Server
     }
 
     /**
-     * Sets default options
+     * Sets default options.
      *
      * @return \Tinderbox\Clickhouse\Server
      */
@@ -231,7 +230,7 @@ class Server
     }
 
     /**
-     * Returns options
+     * Returns options.
      *
      * @return \Tinderbox\Clickhouse\Common\ServerOptions
      */

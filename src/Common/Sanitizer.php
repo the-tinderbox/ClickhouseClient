@@ -3,12 +3,12 @@
 namespace Tinderbox\Clickhouse\Common;
 
 /**
- * Helper to escape value before it bound in query
+ * Helper to escape value before it bound in query.
  */
 abstract class Sanitizer
 {
     /**
-     * Escapes value
+     * Escapes value.
      *
      * @param mixed $value
      *

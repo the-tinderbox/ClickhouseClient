@@ -16,19 +16,19 @@ class ClusterTest extends TestCase
     public function testClusterConstructor()
     {
         $cluster = new Cluster();
-        
+
         $this->assertEmpty($cluster->getServers());
-        
+
         $e = ClusterException::serverNotFound('host');
         $this->expectException(ClusterException::class);
         $this->expectExceptionMessage($e->getMessage());
-        
+
         $cluster->getServerByHostname('host');
-        
+
         $e = ClusterException::missingServerHostname();
         $this->expectException(ClusterException::class);
         $this->expectExceptionMessage($e->getMessage());
-        
+
         $cluster->addServers(
             [
                 [],
@@ -53,7 +53,7 @@ class ClusterTest extends TestCase
                 'port' => '8123',
             ],
 
-            'h3' => new Server('127.0.0.3')
+            'h3' => new Server('127.0.0.3'),
         ];
 
         $e = ClusterException::missingServerHostname();
@@ -62,11 +62,11 @@ class ClusterTest extends TestCase
 
         $cluster = new Cluster($servers);
     }
-    
+
     public function testClusterServers()
     {
         $options = (new ServerOptions())->setTimeout(10);
-        
+
         $servers = [
             'h1' => [
                 'host'     => '127.0.0.1',
@@ -76,32 +76,32 @@ class ClusterTest extends TestCase
                 'password' => 'pass',
                 'options'  => $options,
             ],
-            
+
             'h2' => [
                 'host' => '127.0.0.2',
                 'port' => '8123',
             ],
-            
-            'h3' => new Server('127.0.0.3')
+
+            'h3' => new Server('127.0.0.3'),
         ];
-        
+
         $cluster = new Cluster($servers);
-        
+
         $this->assertSameSize($servers, $cluster->getServers());
-        
+
         $server = $cluster->getServerByHostname('h1');
-        
+
         $this->assertEquals('127.0.0.1', $server->getHost());
         $this->assertEquals('8122', $server->getPort());
         $this->assertEquals('default', $server->getDatabase());
         $this->assertEquals('user', $server->getUsername());
         $this->assertEquals('pass', $server->getPassword());
         $this->assertEquals($options, $server->getOptions());
-    
+
         $server = $cluster->getServerByHostname('h3');
-    
+
         $this->assertEquals('127.0.0.3', $server->getHost());
-        
+
         $server = new Server('127.0.0.4');
 
         $cluster->addServer('h4', $server);
@@ -111,7 +111,7 @@ class ClusterTest extends TestCase
         $e = ClusterException::serverHostnameDuplicate('h1');
         $this->expectException(ClusterException::class);
         $this->expectExceptionMessage($e->getMessage());
-        
+
         $cluster->addServer('h1', $server);
     }
 }
