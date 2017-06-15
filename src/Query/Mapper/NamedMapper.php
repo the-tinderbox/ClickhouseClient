@@ -2,12 +2,11 @@
 
 namespace Tinderbox\Clickhouse\Query\Mapper;
 
-use Tinderbox\Clickhouse\Common\Sanitizer;
 use Tinderbox\Clickhouse\Exceptions\QueryMapperException;
 use Tinderbox\Clickhouse\Interfaces\QueryMapperInterface;
 
 /**
- * NamedMapper provides ability to use named placeholders in query
+ * NamedMapper provides ability to use named placeholders in query.
  *
  * Example:
  *
@@ -16,7 +15,7 @@ use Tinderbox\Clickhouse\Interfaces\QueryMapperInterface;
 class NamedMapper extends AbstractMapper implements QueryMapperInterface
 {
     /**
-     * Binds values to query
+     * Binds values to query.
      *
      * @param string $query
      * @param array  $bindings
@@ -39,7 +38,7 @@ class NamedMapper extends AbstractMapper implements QueryMapperInterface
         return $query;
     }
 
-    protected  function getBindingPattern(): string
+    protected function getBindingPattern(): string
     {
         return '/:[a-zA-Z0-9]+/';
     }

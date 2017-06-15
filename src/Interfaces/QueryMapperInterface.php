@@ -3,12 +3,12 @@
 namespace Tinderbox\Clickhouse\Interfaces;
 
 /**
- * Query Mapper interface
+ * Query Mapper interface.
  */
 interface QueryMapperInterface
 {
     /**
-     * Binds values to query
+     * Binds values to query.
      *
      * @param string $query
      * @param array  $bindings
