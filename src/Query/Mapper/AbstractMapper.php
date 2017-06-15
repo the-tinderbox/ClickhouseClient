@@ -6,13 +6,13 @@ use Tinderbox\Clickhouse\Common\Sanitizer;
 use Tinderbox\Clickhouse\Exceptions\QueryMapperException;
 
 /**
- * Abstract values Mapper
+ * Abstract values Mapper.
  */
 abstract class AbstractMapper
 {
     /**
      * Checks bindings count in query and $bindings array
-     * Checks if multiple bindings types used
+     * Checks if multiple bindings types used.
      *
      * @param string $query
      * @param array  $bindings
@@ -32,7 +32,7 @@ abstract class AbstractMapper
     }
 
     /**
-     * Counts bindings in query by given pattern
+     * Counts bindings in query by given pattern.
      *
      * @param string $query
      *
@@ -46,7 +46,7 @@ abstract class AbstractMapper
     }
 
     /**
-     * Escapes values
+     * Escapes values.
      *
      * @param array $bindings
      *
@@ -62,14 +62,14 @@ abstract class AbstractMapper
     }
 
     /**
-     * Should return pattern to count bindings in query
+     * Should return pattern to count bindings in query.
      *
      * @return string
      */
-    protected abstract function getBindingPattern(): string;
+    abstract protected function getBindingPattern(): string;
 
     /**
-     * Should check bindings policy
+     * Should check bindings policy.
      *
      * This method used to detect multiple bindings type
      *
@@ -77,5 +77,5 @@ abstract class AbstractMapper
      *
      * @return mixed
      */
-    protected abstract function checkBindingsPolicy(array $bindings);
+    abstract protected function checkBindingsPolicy(array $bindings);
 }

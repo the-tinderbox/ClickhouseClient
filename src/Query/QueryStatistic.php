@@ -5,7 +5,7 @@ namespace Tinderbox\Clickhouse\Query;
 use Tinderbox\Clickhouse\Exceptions\QueryStatisticException;
 
 /**
- * Query statistic contains three metrics:
+ * Query statistic contains three metrics:.
  *
  * 1. rows - number of rows read by server
  * 2. bytes - number of bytes read by server
@@ -18,21 +18,21 @@ use Tinderbox\Clickhouse\Exceptions\QueryStatisticException;
 class QueryStatistic
 {
     /**
-     * Number of rows read
+     * Number of rows read.
      *
      * @var int
      */
     protected $rows;
 
     /**
-     * Number of bytes read
+     * Number of bytes read.
      *
      * @var int
      */
     protected $bytes;
 
     /**
-     * Query execution time in seconds
+     * Query execution time in seconds.
      *
      * @var float
      */
@@ -53,7 +53,7 @@ class QueryStatistic
     }
 
     /**
-     * Returns number of read rows
+     * Returns number of read rows.
      *
      * @return int
      */
@@ -63,7 +63,7 @@ class QueryStatistic
     }
 
     /**
-     * Returns number of read bytes
+     * Returns number of read bytes.
      *
      * @return int
      */
@@ -73,7 +73,7 @@ class QueryStatistic
     }
 
     /**
-     * Returns query execution time
+     * Returns query execution time.
      *
      * @return float
      */
@@ -83,21 +83,22 @@ class QueryStatistic
     }
 
     /**
-     * Getter to simplify access to rows, bytes and time
+     * Getter to simplify access to rows, bytes and time.
      *
      * @param string $name
      *
-     * @return mixed
      * @throws \Tinderbox\Clickhouse\Exceptions\QueryStatisticException
+     *
+     * @return mixed
      */
     public function __get($name)
     {
         $method = 'get'.ucfirst($name);
-    
+
         if (method_exists($this, $method)) {
             return call_user_func([$this, $method]);
         }
-        
+
         throw QueryStatisticException::propertyNotExists($name);
     }
 }

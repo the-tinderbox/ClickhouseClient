@@ -13,7 +13,6 @@ use Tinderbox\Clickhouse\Query\Mapper\UnnamedMapper;
  */
 class QueryMapperTest extends TestCase
 {
-
     public function testUnnamedMapperCheckBindings()
     {
         $mapper = new UnnamedMapper();
@@ -67,13 +66,13 @@ class QueryMapperTest extends TestCase
 
         $this->assertEquals("SELECT * FROM table WHERE column = 'test with \'quotes\' and / other \\\\bad stuff' AND column2 IN ('a', 'b', 'c', 'd', 'e')", $result);
 
-        $bindigns = ["test with ? mark", 'a', 'b and here ? too', 'c', 'd', 'e'];
+        $bindigns = ['test with ? mark', 'a', 'b and here ? too', 'c', 'd', 'e'];
 
         $result = $mapper->bind($sql, $bindigns);
 
         $this->assertEquals("SELECT * FROM table WHERE column = 'test with ? mark' AND column2 IN ('a', 'b and here ? too', 'c', 'd', 'e')", $result);
 
-        $bindigns = ["test with %s text", 'a', 'b', 'c', 'd', 'e'];
+        $bindigns = ['test with %s text', 'a', 'b', 'c', 'd', 'e'];
 
         $result = $mapper->bind($sql, $bindigns);
 
@@ -141,7 +140,7 @@ class QueryMapperTest extends TestCase
             'c' => 'b',
             'd' => 'c',
             'e' => 'd',
-            'f' => 'e'
+            'f' => 'e',
         ];
 
         $result = $mapper->bind($sql, $bindigns);
@@ -154,7 +153,7 @@ class QueryMapperTest extends TestCase
             'c' => 'b',
             'd' => 'c',
             'e' => 'd',
-            'f' => 'e'
+            'f' => 'e',
         ];
 
         $result = $mapper->bind($sql, $bindigns);
@@ -167,7 +166,7 @@ class QueryMapperTest extends TestCase
             'c' => 'b',
             'd' => 'c',
             'e' => 'd',
-            'f' => 'e'
+            'f' => 'e',
         ];
 
         $result = $mapper->bind($sql, $bindigns);

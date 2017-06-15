@@ -5,12 +5,12 @@ namespace Tinderbox\Clickhouse;
 use Tinderbox\Clickhouse\Exceptions\ClusterException;
 
 /**
- * Cluster - is a container with many Server instances
+ * Cluster - is a container with many Server instances.
  */
 class Cluster
 {
     /**
-     * Servers in cluster
+     * Servers in cluster.
      *
      * @var \Tinderbox\Clickhouse\Server[]
      */
@@ -29,12 +29,13 @@ class Cluster
     }
 
     /**
-     * Pushes servers to cluster
+     * Pushes servers to cluster.
      *
      * @param array $servers Each server can be provided as array or Server instance
      *
-     * @return \Tinderbox\Clickhouse\Cluster
      * @throws \Tinderbox\Clickhouse\Exceptions\ClusterException
+     *
+     * @return \Tinderbox\Clickhouse\Cluster
      */
     public function addServers(array $servers): self
     {
@@ -61,9 +62,9 @@ class Cluster
     }
 
     /**
-     * Pushes one server to cluster
+     * Pushes one server to cluster.
      *
-     * @param string                                       $hostname
+     * @param string                       $hostname
      * @param \Tinderbox\Clickhouse\Server $server
      *
      * @throws \Tinderbox\Clickhouse\Exceptions\ClusterException
@@ -78,7 +79,7 @@ class Cluster
     }
 
     /**
-     * Returns servers in cluster
+     * Returns servers in cluster.
      *
      * @return \Tinderbox\Clickhouse\Server[]
      */
@@ -88,12 +89,13 @@ class Cluster
     }
 
     /**
-     * Returns server by specified hostname
+     * Returns server by specified hostname.
      *
      * @param string $hostname
      *
-     * @return \Tinderbox\Clickhouse\Server
      * @throws \Tinderbox\Clickhouse\Exceptions\ClusterException
+     *
+     * @return \Tinderbox\Clickhouse\Server
      */
     public function getServerByHostname(string $hostname): Server
     {

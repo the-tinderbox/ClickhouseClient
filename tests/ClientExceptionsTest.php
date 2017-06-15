@@ -23,11 +23,11 @@ class ClientExceptionsTest extends TestCase
 
         $this->assertInstanceOf(ClientException::class, $e);
     }
-    
+
     public function testConnectionError()
     {
         $e = ClientException::connectionError();
-        
+
         $this->assertInstanceOf(ClientException::class, $e);
     }
 
