@@ -14,13 +14,13 @@ class TempTableTest extends TestCase
     public function testTempTable()
     {
         $table = new TempTable('table', 'source', [
-            'structure'
+            'structure',
         ], Format::TSV);
 
         $this->assertEquals('table', $table->getName());
         $this->assertEquals('source', $table->getSource());
         $this->assertEquals([
-            'structure'
+            'structure',
         ], $table->getStructure());
         $this->assertEquals(Format::TSV, $table->getFormat());
     }

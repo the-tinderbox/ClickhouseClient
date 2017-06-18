@@ -12,7 +12,7 @@ class QueryMapperExceptionsTest extends TestCase
 {
     public function testWrongBindingsNumber()
     {
-        $e = QueryMapperException::wrongBindingsNumber(5,7);
+        $e = QueryMapperException::wrongBindingsNumber(5, 7);
 
         $this->assertInstanceOf(QueryMapperException::class, $e);
     }

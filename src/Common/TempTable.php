@@ -3,33 +3,33 @@
 namespace Tinderbox\Clickhouse\Common;
 
 /**
- * Temporary table for select requests which receives data from local file
+ * Temporary table for select requests which receives data from local file.
  */
 class TempTable
 {
     /**
-     * Table name to use in query in where section
+     * Table name to use in query in where section.
      *
      * @var string
      */
     protected $name;
 
     /**
-     * Table structure to map data in file on table
+     * Table structure to map data in file on table.
      *
      * @var array
      */
     protected $structure = [];
 
     /**
-     * Source file
+     * Source file.
      *
      * @var string
      */
     protected $source;
 
     /**
-     * Source data format
+     * Source data format.
      *
      * @var string
      */
@@ -52,7 +52,7 @@ class TempTable
     }
 
     /**
-     * Set name of table
+     * Set name of table.
      *
      * @param string $name
      *
@@ -66,7 +66,7 @@ class TempTable
     }
 
     /**
-     * Set full path to source file
+     * Set full path to source file.
      *
      * @param string $source
      *
@@ -80,7 +80,7 @@ class TempTable
     }
 
     /**
-     * Set data format in source file
+     * Set data format in source file.
      *
      * @param string $format
      *
@@ -94,7 +94,7 @@ class TempTable
     }
 
     /**
-     * Set table structure
+     * Set table structure.
      *
      * @param array $structure
      *
@@ -108,7 +108,7 @@ class TempTable
     }
 
     /**
-     * Returns table name
+     * Returns table name.
      *
      * @return string
      */
@@ -118,7 +118,7 @@ class TempTable
     }
 
     /**
-     * Returns full path to source file
+     * Returns full path to source file.
      *
      * @return string
      */
@@ -128,7 +128,7 @@ class TempTable
     }
 
     /**
-     * Returns format of data in source file
+     * Returns format of data in source file.
      *
      * @return string
      */
@@ -138,7 +138,7 @@ class TempTable
     }
 
     /**
-     * Returns table structure
+     * Returns table structure.
      *
      * @return array
      */

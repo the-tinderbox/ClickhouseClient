@@ -3,26 +3,26 @@
 namespace Tinderbox\Clickhouse\Common;
 
 /**
- * Container to server options
+ * Container to server options.
  */
 class ServerOptions
 {
     /**
-     * Connection timeout
+     * Connection timeout.
      *
      * @var float
      */
     protected $timeout = 5.0;
-    
+
     /**
-     * Protocol
+     * Protocol.
      *
      * @var string
      */
     protected $protocol = 'http';
-    
+
     /**
-     * Sets protocol
+     * Sets protocol.
      *
      * @param string $protocol
      *
@@ -31,12 +31,12 @@ class ServerOptions
     public function setProtocol(string $protocol): self
     {
         $this->protocol = $protocol;
-        
+
         return $this;
     }
-    
+
     /**
-     * Returns protocol
+     * Returns protocol.
      *
      * @return string
      */
@@ -44,9 +44,9 @@ class ServerOptions
     {
         return $this->protocol;
     }
-    
+
     /**
-     * Sets timeout
+     * Sets timeout.
      *
      * @param float $timeout
      *
@@ -55,12 +55,12 @@ class ServerOptions
     public function setTimeout(float $timeout): self
     {
         $this->timeout = $timeout;
-        
+
         return $this;
     }
-    
+
     /**
-     * Returns timeout
+     * Returns timeout.
      *
      * @return float
      */

@@ -8,7 +8,7 @@ class ResultException extends \Exception
     {
         return new static('Query result has no property '.$name);
     }
-    
+
     public static function isReadonly()
     {
         return new static('Query result is read-only');
