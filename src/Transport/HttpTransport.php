@@ -231,9 +231,10 @@ class HttpTransport implements TransportInterface
                 'connect_timeout' => $server->getOptions()->getTimeout(),
             ];
 
-            if (!is_null($tables)) {
+            if ($tables instanceof TempTable || !empty($tables)) {
                 $params = [
-                    'query' => $query
+                    'query'             => $query,
+                    'wait_end_of_query' => 1,
                 ];
 
                 if ($tables instanceof TempTable) {
@@ -308,9 +309,10 @@ class HttpTransport implements TransportInterface
                 $tables = $query[1] ?? null;
                 $query = $query[0];
 
-                if (!is_null($tables)) {
+                if ($tables instanceof TempTable || !empty($tables)) {
                     $params = [
-                        'query' => $query
+                        'query'             => $query,
+                        'wait_end_of_query' => 1,
                     ];
 
                     if ($tables instanceof TempTable) {
@@ -402,10 +404,6 @@ class HttpTransport implements TransportInterface
     protected function buildRequestUri(Server $server, array $query = []): string
     {
         $uri = $server->getOptions()->getProtocol().'://'.$server->getHost().':'.$server->getPort();
-        
-        $query = array_merge($query, [
-            'wait_end_of_query' => 1,
-        ]);
         
         if (!is_null($server->getDatabase())) {
             $query['database'] = $server->getDatabase();
