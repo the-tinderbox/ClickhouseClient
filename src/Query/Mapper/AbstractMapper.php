@@ -21,28 +21,7 @@ abstract class AbstractMapper
      */
     protected function checkBindings(string $query, array $bindings)
     {
-        $bindingsCountInQuery = $this->countBindingsFromQuery($query);
-        $bindingsCount = count($bindings);
-
-        if ($bindingsCountInQuery !== $bindingsCount) {
-            throw QueryMapperException::wrongBindingsNumber($bindingsCountInQuery, $bindingsCount);
-        }
-
         $this->checkBindingsPolicy($bindings);
-    }
-
-    /**
-     * Counts bindings in query by given pattern.
-     *
-     * @param string $query
-     *
-     * @return int
-     */
-    protected function countBindingsFromQuery(string $query)
-    {
-        preg_match_all($this->getBindingPattern(), $query, $matches);
-
-        return count($matches[0] ?? []);
     }
 
     /**
@@ -60,13 +39,6 @@ abstract class AbstractMapper
 
         return $bindings;
     }
-
-    /**
-     * Should return pattern to count bindings in query.
-     *
-     * @return string
-     */
-    abstract protected function getBindingPattern(): string;
 
     /**
      * Should check bindings policy.

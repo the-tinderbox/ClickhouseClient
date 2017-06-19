@@ -13,19 +13,6 @@ use Tinderbox\Clickhouse\Query\Mapper\UnnamedMapper;
  */
 class QueryMapperTest extends TestCase
 {
-    public function testUnnamedMapperCheckBindings()
-    {
-        $mapper = new UnnamedMapper();
-        $sql = 'SELECT * FROM table WHERE column = ? AND column2 IN (?, ?, ?, ?, ?)';
-        $bindigns = [1, 2, 3, 4, 5, 6, 7];
-
-        $e = QueryMapperException::wrongBindingsNumber(6, 7);
-        $this->expectException(QueryMapperException::class);
-        $this->expectExceptionMessage($e->getMessage());
-
-        $mapper->bind($sql, $bindigns);
-    }
-
     public function testUnnamedMapperCheckMultipleBindings()
     {
         $mapper = new UnnamedMapper();
@@ -77,25 +64,6 @@ class QueryMapperTest extends TestCase
         $result = $mapper->bind($sql, $bindigns);
 
         $this->assertEquals("SELECT * FROM table WHERE column = 'test with %s text' AND column2 IN ('a', 'b', 'c', 'd', 'e')", $result);
-    }
-
-    public function testNamedMapperCheckBindingsCount()
-    {
-        $mapper = new NamedMapper();
-        $sql = 'SELECT * FROM table WHERE column = :a AND column2 IN (:b, :c, :d, :e, :f)';
-        $bindigns = [
-            'a' => 'a',
-            'b' => 'b',
-            'c' => 'c',
-            'd' => 'd',
-            'e' => 'e',
-        ];
-
-        $e = QueryMapperException::wrongBindingsNumber(6, 5);
-        $this->expectException(QueryMapperException::class);
-        $this->expectExceptionMessage($e->getMessage());
-
-        $mapper->bind($sql, $bindigns);
     }
 
     public function testNamedMapperCheckMultipleBindings()

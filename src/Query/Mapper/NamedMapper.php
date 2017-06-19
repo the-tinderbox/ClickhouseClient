@@ -38,11 +38,6 @@ class NamedMapper extends AbstractMapper implements QueryMapperInterface
         return $query;
     }
 
-    protected function getBindingPattern(): string
-    {
-        return '/:[a-zA-Z0-9]+/';
-    }
-
     protected function checkBindingsPolicy(array $bindings)
     {
         $keys = array_keys($bindings);
