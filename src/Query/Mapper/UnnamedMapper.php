@@ -25,16 +25,16 @@ class UnnamedMapper extends AbstractMapper implements QueryMapperInterface
     public function bind(string $query, array $bindings): string
     {
         $this->checkBindings($query, $bindings);
+        $escapedBindings = $this->escapeBindings($bindings);
 
-        if (!empty($bindings)) {
-            $escapedBindings = $this->escapeBindings($bindings);
+        $query = str_replace('?', '%s', $query);
 
-            $query = str_replace('?', '%s', $query);
+        return call_user_func_array('sprintf', array_merge([$query], $escapedBindings));
+    }
 
-            return call_user_func_array('sprintf', array_merge([$query], $escapedBindings));
-        }
-
-        return $query;
+    protected function getBindingPattern(): string
+    {
+        return '/\?/';
     }
 
     protected function checkBindingsPolicy(array $bindings)
