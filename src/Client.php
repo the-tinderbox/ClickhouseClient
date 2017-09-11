@@ -47,6 +47,13 @@ class Client
     protected $cluster;
 
     /**
+     * Tells client to send queries over whole cluster selecting server by random
+     *
+     * @var bool
+     */
+    protected $useRandomServer = false;
+
+    /**
      * Client constructor.
      *
      * @param \Tinderbox\Clickhouse\Server|\Tinderbox\Clickhouse\Cluster $server
@@ -75,6 +82,26 @@ class Client
 
         $this->setTransport($transport);
         $this->setMapper($mapper);
+    }
+
+    /**
+     * Sets flag to use random server in cluster
+     *
+     * @param bool $flag
+     */
+    public function useRandomServer(bool $flag)
+    {
+        $this->useRandomServer = $flag;
+    }
+
+    /**
+     * Returns flag which tells client to use random server in cluster
+     *
+     * @return bool
+     */
+    protected function shouldUseRandomServer() : bool
+    {
+        return !is_null($this->getCluster()) && $this->useRandomServer;
     }
 
     /**
@@ -162,7 +189,27 @@ class Client
      */
     public function getServer(): Server
     {
+        if ($this->shouldUseRandomServer()) {
+            return $this->getRandomServer();
+        }
+
         return $this->server;
+    }
+
+    /**
+     * Returns random server from cluster
+     *
+     * @return \Tinderbox\Clickhouse\Server
+     */
+    public function getRandomServer() : Server
+    {
+        $cluster = $this->getCluster();
+        $servers = $cluster->getServers();
+        $random = array_rand($servers, 1);
+
+        dump($servers[$random]);
+
+        return $servers[$random];
     }
 
     /**
