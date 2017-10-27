@@ -136,8 +136,13 @@ class HttpTransport implements TransportInterface
     {
         $requests = function ($files) use ($server, $query) {
             foreach ($files as $file) {
+                $headers = array_merge($this->getHeaders(), [
+                    'Content-Length' => null
+                ]);
+
+
                 $request = new Request(
-                    'POST', $this->buildRequestUri($server, ['query' => $query]), $this->getHeaders(), $this->getFileHandle($file)
+                    'POST', $this->buildRequestUri($server, ['query' => $query]), $headers, $this->getFileHandle($file)
                 );
 
                 yield $request;
@@ -155,6 +160,7 @@ class HttpTransport implements TransportInterface
                 'rejected'    => $this->parseReason(),
                 'options'     => [
                     'connect_timeout' => $server->getOptions()->getTimeout(),
+                    'expect' => false
                 ],
             ]
         );
@@ -355,6 +361,7 @@ class HttpTransport implements TransportInterface
                 'rejected'    => $this->parseReason(),
                 'options'     => [
                     'connect_timeout' => $server->getOptions()->getTimeout(),
+                    'expect' => false
                 ],
             ]
         );
