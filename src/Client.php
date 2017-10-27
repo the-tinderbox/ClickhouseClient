@@ -207,8 +207,6 @@ class Client
         $servers = $cluster->getServers();
         $random = array_rand($servers, 1);
 
-        dump($servers[$random]);
-
         return $servers[$random];
     }
 
