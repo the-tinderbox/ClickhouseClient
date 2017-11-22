@@ -24,9 +24,9 @@ class ClickhouseCLIClientTransport implements TransportInterface
     /**
      * ClickhouseCLIClientTransport constructor.
      *
-     * @param string $executablePath
+     * @param string|null $executablePath
      */
-    public function __construct(string $executablePath = 'clickhouse-client')
+    public function __construct(string $executablePath = null)
     {
         $this->setExecutablePath($executablePath);
     }
@@ -38,6 +38,10 @@ class ClickhouseCLIClientTransport implements TransportInterface
      */
     protected function setExecutablePath(string $executablePath)
     {
+        if (is_null($executablePath)) {
+            $executablePath = 'clickhouse-client';
+        }
+
         $this->executablePath = $executablePath;
     }
 
@@ -339,7 +343,7 @@ class ClickhouseCLIClientTransport implements TransportInterface
     protected function assembleResult(string $response): Result
     {
         try {
-            $result = \GuzzleHttp\json_decode($response, true);
+            $result = json_decode($response, true);
 
             $statistic = new QueryStatistic(
                 $result['statistics']['rows_read'] ?? 0,
@@ -348,7 +352,7 @@ class ClickhouseCLIClientTransport implements TransportInterface
             );
 
             return new Result($result['data'] ?? [], $statistic);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             throw ClientException::serverReturnedError($response);
         }
     }
