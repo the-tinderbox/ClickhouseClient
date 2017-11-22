@@ -34,9 +34,9 @@ class ClickhouseCLIClientTransport implements TransportInterface
     /**
      * Set path to client executable.
      *
-     * @param string $executablePath
+     * @param string|null $executablePath
      */
-    protected function setExecutablePath(string $executablePath)
+    protected function setExecutablePath(string $executablePath = null)
     {
         if (is_null($executablePath)) {
             $executablePath = 'clickhouse-client';
