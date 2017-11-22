@@ -22,6 +22,13 @@ class ClickhouseCLIClientTransport implements TransportInterface
     protected $executablePath;
 
     /**
+     * Last execute query
+     *
+     * @var string
+     */
+    protected $lastQuery = '';
+
+    /**
      * ClickhouseCLIClientTransport constructor.
      *
      * @param string|null $executablePath
@@ -57,6 +64,8 @@ class ClickhouseCLIClientTransport implements TransportInterface
      */
     public function send(Server $server, string $query): bool
     {
+        $this->setLastQuery($query);
+
         $command = $this->buildCommandForWrite($server, $query);
         $this->executeCommand($command);
 
@@ -79,6 +88,8 @@ class ClickhouseCLIClientTransport implements TransportInterface
         $result = [];
 
         foreach ($files as $file) {
+            $this->setLastQuery($query);
+
             $command = $this->buildCommandForWrite($server, $query, $file);
             $this->executeCommand($command);
 
@@ -101,6 +112,8 @@ class ClickhouseCLIClientTransport implements TransportInterface
      */
     public function get(Server $server, string $query, $tables = null): Result
     {
+        $this->setLastQuery($query);
+
         list($command, $file) = $this->buildCommandForRead($server, $query, $tables);
 
         try {
@@ -287,10 +300,30 @@ class ClickhouseCLIClientTransport implements TransportInterface
         }
 
         if ($status != 0) {
-            throw ClientException::serverReturnedError($this->cleanString(str_replace(PHP_EOL, ' ', $error)));
+            throw ClientException::serverReturnedError($this->cleanString(str_replace(PHP_EOL, ' ', $error)).'. Query: '.$this->getLastQuery());
         }
 
         return $this->cleanString($response);
+    }
+
+    /**
+     * Sets last executed query
+     *
+     * @param string $query
+     */
+    protected function setLastQuery(string $query)
+    {
+        $this->lastQuery = $query;
+    }
+
+    /**
+     * Returns last executed query
+     *
+     * @return string
+     */
+    protected function getLastQuery() : string
+    {
+        return $this->lastQuery;
     }
 
     /**
