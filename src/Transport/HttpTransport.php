@@ -361,7 +361,7 @@ class HttpTransport implements TransportInterface
                 'rejected'    => $this->parseReason(),
                 'options'     => [
                     'connect_timeout' => $server->getOptions()->getTimeout(),
-                    'expect'          => false
+                    'expect'          => false,
                 ],
             ]
         );
