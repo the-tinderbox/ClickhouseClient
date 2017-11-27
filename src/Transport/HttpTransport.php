@@ -140,7 +140,6 @@ class HttpTransport implements TransportInterface
                     'Content-Length' => null,
                 ]);
 
-
                 $request = new Request(
                     'POST', $this->buildRequestUri($server, ['query' => $query]), $headers, $this->getFileHandle($file)
                 );
