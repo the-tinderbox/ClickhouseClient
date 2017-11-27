@@ -414,7 +414,7 @@ class HttpTransport implements TransportInterface
     protected function buildRequestUri(Server $server, array $query = []): string
     {
         $uri = $server->getOptions()->getProtocol().'://'.$server->getHost().':'.$server->getPort();
-        
+
         if (!is_null($server->getDatabase())) {
             $query['database'] = $server->getDatabase();
         }
