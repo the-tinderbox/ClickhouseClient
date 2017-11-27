@@ -10,42 +10,42 @@ use Tinderbox\Clickhouse\Exceptions\ClientException;
  */
 class ClientExceptionsTest extends TestCase
 {
-    public function testInvalidServerProvided()
+    public function testInvalidServerProvided(): void
     {
         $e = ClientException::invalidServerProvided('null');
 
         $this->assertInstanceOf(ClientException::class, $e);
     }
 
-    public function testClusterIsNotProvided()
+    public function testClusterIsNotProvided(): void
     {
         $e = ClientException::clusterIsNotProvided();
 
         $this->assertInstanceOf(ClientException::class, $e);
     }
 
-    public function testConnectionError()
+    public function testConnectionError(): void
     {
         $e = ClientException::connectionError();
 
         $this->assertInstanceOf(ClientException::class, $e);
     }
 
-    public function testServerReturnedError()
+    public function testServerReturnedError(): void
     {
         $e = ClientException::serverReturnedError('Syntax error');
 
         $this->assertInstanceOf(ClientException::class, $e);
     }
 
-    public function testMalformedResponseFromServer()
+    public function testMalformedResponseFromServer(): void
     {
         $e = ClientException::malformedResponseFromServer('some text');
 
         $this->assertInstanceOf(ClientException::class, $e);
     }
 
-    public function testInsertFileNotFound()
+    public function testInsertFileNotFound(): void
     {
         $e = ClientException::insertFileNotFound('/tmp/test.csv');
 

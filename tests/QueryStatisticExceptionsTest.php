@@ -10,7 +10,7 @@ use Tinderbox\Clickhouse\Exceptions\QueryStatisticException;
  */
 class QueryStatisticExceptionsTest extends TestCase
 {
-    public function testPropertyNotExists()
+    public function testPropertyNotExists(): void
     {
         $e = QueryStatisticException::propertyNotExists('test');
 

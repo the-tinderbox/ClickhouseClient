@@ -11,7 +11,7 @@ use Tinderbox\Clickhouse\Common\ServerOptions;
  */
 class ServerTest extends TestCase
 {
-    public function testServerDefaultOptions()
+    public function testServerDefaultOptions(): void
     {
         $server = new Server('127.0.0.1');
 
@@ -19,7 +19,7 @@ class ServerTest extends TestCase
         $this->assertEquals(5.0, $server->getOptions()->getTimeout());
     }
 
-    public function testClickhouseGettersSetters()
+    public function testClickhouseGettersSetters(): void
     {
         $options = new ServerOptions();
         $options->setTimeout(10);

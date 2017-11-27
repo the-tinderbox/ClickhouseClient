@@ -10,7 +10,7 @@ use Tinderbox\Clickhouse\Common\ServerOptions;
  */
 class ServerOptionsTest extends TestCase
 {
-    public function testServerOptions()
+    public function testServerOptions(): void
     {
         $options = new ServerOptions();
 

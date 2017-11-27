@@ -13,78 +13,78 @@ use Tinderbox\Clickhouse\Query\Mapper\UnnamedMapper;
  */
 class QueryMapperTest extends TestCase
 {
-    public function testUnnamedMapperCheckMultipleBindings()
+    public function testUnnamedMapperCheckMultipleBindings(): void
     {
         $mapper = new UnnamedMapper();
         $sql = 'SELECT * FROM table WHERE column = ? AND column2 IN (?, ?, ?, ?, ?)';
-        $bindigns = [1, 2, 3, 4, 5, 'named' => 'test'];
+        $bindings = [1, 2, 3, 4, 5, 'named' => 'test'];
 
         $e = QueryMapperException::multipleBindingsType();
         $this->expectException(QueryMapperException::class);
         $this->expectExceptionMessage($e->getMessage());
 
-        $mapper->bind($sql, $bindigns);
+        $mapper->bind($sql, $bindings);
     }
 
-    public function testUnnamedNumericBindings()
+    public function testUnnamedNumericBindings(): void
     {
         $mapper = new UnnamedMapper();
         $sql = 'SELECT * FROM table WHERE column = ? AND column2 IN (?, ?, ?, ?, ?)';
-        $bindigns = [1, 2, 3, 4, 5, 6];
+        $bindings = [1, 2, 3, 4, 5, 6];
 
-        $result = $mapper->bind($sql, $bindigns);
+        $result = $mapper->bind($sql, $bindings);
 
         $this->assertEquals('SELECT * FROM table WHERE column = 1 AND column2 IN (2, 3, 4, 5, 6)', $result);
     }
 
-    public function testUnnamedStringBindings()
+    public function testUnnamedStringBindings(): void
     {
         $mapper = new UnnamedMapper();
         $sql = 'SELECT * FROM table WHERE column = ? AND column2 IN (?, ?, ?, ?, ?)';
-        $bindigns = ['test', 'a', 'b', 'c', 'd', 'e'];
+        $bindings = ['test', 'a', 'b', 'c', 'd', 'e'];
 
-        $result = $mapper->bind($sql, $bindigns);
+        $result = $mapper->bind($sql, $bindings);
 
         $this->assertEquals("SELECT * FROM table WHERE column = 'test' AND column2 IN ('a', 'b', 'c', 'd', 'e')", $result);
 
-        $bindigns = ["test with 'quotes' and / other \\bad stuff", 'a', 'b', 'c', 'd', 'e'];
+        $bindings = ["test with 'quotes' and / other \\bad stuff", 'a', 'b', 'c', 'd', 'e'];
 
-        $result = $mapper->bind($sql, $bindigns);
+        $result = $mapper->bind($sql, $bindings);
 
         $this->assertEquals("SELECT * FROM table WHERE column = 'test with \'quotes\' and / other \\\\bad stuff' AND column2 IN ('a', 'b', 'c', 'd', 'e')", $result);
 
-        $bindigns = ['test with ? mark', 'a', 'b and here ? too', 'c', 'd', 'e'];
+        $bindings = ['test with ? mark', 'a', 'b and here ? too', 'c', 'd', 'e'];
 
-        $result = $mapper->bind($sql, $bindigns);
+        $result = $mapper->bind($sql, $bindings);
 
         $this->assertEquals("SELECT * FROM table WHERE column = 'test with ? mark' AND column2 IN ('a', 'b and here ? too', 'c', 'd', 'e')", $result);
 
-        $bindigns = ['test with %s text', 'a', 'b', 'c', 'd', 'e'];
+        $bindings = ['test with %s text', 'a', 'b', 'c', 'd', 'e'];
 
-        $result = $mapper->bind($sql, $bindigns);
+        $result = $mapper->bind($sql, $bindings);
 
         $this->assertEquals("SELECT * FROM table WHERE column = 'test with %s text' AND column2 IN ('a', 'b', 'c', 'd', 'e')", $result);
     }
 
-    public function testNamedMapperCheckMultipleBindings()
+    public function testNamedMapperCheckMultipleBindings(): void
     {
         $mapper = new NamedMapper();
         $sql = 'SELECT * FROM table WHERE column = :a AND column2 IN (:b, :c, :d, :e, :f)';
 
-        $bindigns = [1, 2, 3, 4, 5, 'named' => 'test'];
+        $bindings = [1, 2, 3, 4, 5, 'named' => 'test'];
 
         $e = QueryMapperException::multipleBindingsType();
         $this->expectException(QueryMapperException::class);
         $this->expectExceptionMessage($e->getMessage());
 
-        $mapper->bind($sql, $bindigns);
+        $mapper->bind($sql, $bindings);
     }
 
-    public function testNamedNumericBindings()
+    public function testNamedNumericBindings(): void
     {
         $mapper = new NamedMapper();
         $sql = 'SELECT * FROM table WHERE column = :a AND column2 IN (:b, :c, :d, :e, :f)';
-        $bindigns = [
+        $bindings = [
             'a' => 1,
             'b' => 2,
             'c' => 3,
@@ -93,16 +93,16 @@ class QueryMapperTest extends TestCase
             'f' => 6,
         ];
 
-        $result = $mapper->bind($sql, $bindigns);
+        $result = $mapper->bind($sql, $bindings);
 
         $this->assertEquals('SELECT * FROM table WHERE column = 1 AND column2 IN (2, 3, 4, 5, 6)', $result);
     }
 
-    public function testNamedStringBindings()
+    public function testNamedStringBindings(): void
     {
         $mapper = new NamedMapper();
         $sql = 'SELECT * FROM table WHERE column = :a AND column2 IN (:b, :c, :d, :e, :f)';
-        $bindigns = [
+        $bindings = [
             'a' => 'test',
             'b' => 'a',
             'c' => 'b',
@@ -111,11 +111,11 @@ class QueryMapperTest extends TestCase
             'f' => 'e',
         ];
 
-        $result = $mapper->bind($sql, $bindigns);
+        $result = $mapper->bind($sql, $bindings);
 
         $this->assertEquals("SELECT * FROM table WHERE column = 'test' AND column2 IN ('a', 'b', 'c', 'd', 'e')", $result);
 
-        $bindigns = [
+        $bindings = [
             'a' => 'test with \'quotes\' and / other \\bad stuff',
             'b' => 'a',
             'c' => 'b',
@@ -124,11 +124,11 @@ class QueryMapperTest extends TestCase
             'f' => 'e',
         ];
 
-        $result = $mapper->bind($sql, $bindigns);
+        $result = $mapper->bind($sql, $bindings);
 
         $this->assertEquals("SELECT * FROM table WHERE column = 'test with \'quotes\' and / other \\\\bad stuff' AND column2 IN ('a', 'b', 'c', 'd', 'e')", $result);
 
-        $bindigns = [
+        $bindings = [
             'a' => 'test with :name',
             'b' => 'a',
             'c' => 'b',
@@ -137,7 +137,7 @@ class QueryMapperTest extends TestCase
             'f' => 'e',
         ];
 
-        $result = $mapper->bind($sql, $bindigns);
+        $result = $mapper->bind($sql, $bindings);
 
         $this->assertEquals("SELECT * FROM table WHERE column = 'test with :name' AND column2 IN ('a', 'b', 'c', 'd', 'e')", $result);
     }

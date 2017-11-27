@@ -10,7 +10,7 @@ use Tinderbox\Clickhouse\Common\Sanitizer;
  */
 class SanitizerTest extends TestCase
 {
-    public function testEscapeNumericValue()
+    public function testEscapeNumericValue(): void
     {
         $value = 1;
         $escaped = Sanitizer::escape($value);
@@ -18,7 +18,7 @@ class SanitizerTest extends TestCase
         $this->assertEquals($value, $escaped);
     }
 
-    public function testEscapeStringValue()
+    public function testEscapeStringValue(): void
     {
         $value = "some-test with 'quotes'";
         $escaped = Sanitizer::escape($value);

@@ -14,7 +14,7 @@ use Tinderbox\Clickhouse\Query\Result;
  */
 class ResultTest extends TestCase
 {
-    public function testResult()
+    public function testResult(): void
     {
         $rows = [
             [
@@ -50,7 +50,7 @@ class ResultTest extends TestCase
         $result->miss;
     }
 
-    public function testResultCountable()
+    public function testResultCountable(): void
     {
         $statistic = new QueryStatistic(5, 1024, 0.122);
 
@@ -59,7 +59,7 @@ class ResultTest extends TestCase
         $this->assertEquals(3, count($result));
     }
 
-    public function testResultArrayAccessSet()
+    public function testResultArrayAccessSet(): void
     {
         $rows = [
             [
@@ -92,7 +92,7 @@ class ResultTest extends TestCase
         $result[1] = 'test';
     }
 
-    public function testResultArrayAccessUnset()
+    public function testResultArrayAccessUnset(): void
     {
         $rows = [
             [
@@ -122,7 +122,7 @@ class ResultTest extends TestCase
         unset($result[1]);
     }
 
-    public function testResultIterator()
+    public function testResultIterator(): void
     {
         $rows = [
             [
