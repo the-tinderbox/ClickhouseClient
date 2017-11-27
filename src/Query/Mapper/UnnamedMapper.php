@@ -18,10 +18,11 @@ class UnnamedMapper extends AbstractMapper implements QueryMapperInterface
      * Binds values to query.
      *
      * @param string $query
-     * @param array $bindings
+     * @param array  $bindings
+     *
+     * @throws QueryMapperException
      *
      * @return string
-     * @throws QueryMapperException
      */
     public function bind(string $query, array $bindings): string
     {

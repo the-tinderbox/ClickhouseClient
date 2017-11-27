@@ -142,7 +142,7 @@ class Result implements \ArrayAccess, \Iterator, \Countable
 
     public function next()
     {
-        ++$this->current;
+        $this->current++;
     }
 
     public function key()

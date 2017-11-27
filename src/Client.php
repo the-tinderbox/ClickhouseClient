@@ -47,7 +47,7 @@ class Client
     protected $cluster;
 
     /**
-     * Tells client to send queries over whole cluster selecting server by random
+     * Tells client to send queries over whole cluster selecting server by random.
      *
      * @var bool
      */
@@ -85,7 +85,7 @@ class Client
     }
 
     /**
-     * Sets flag to use random server in cluster
+     * Sets flag to use random server in cluster.
      *
      * @param bool $flag
      */
@@ -95,7 +95,7 @@ class Client
     }
 
     /**
-     * Returns flag which tells client to use random server in cluster
+     * Returns flag which tells client to use random server in cluster.
      *
      * @return bool
      */
@@ -197,7 +197,7 @@ class Client
     }
 
     /**
-     * Returns random server from cluster
+     * Returns random server from cluster.
      *
      * @return \Tinderbox\Clickhouse\Server
      */
