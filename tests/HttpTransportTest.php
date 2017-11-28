@@ -8,7 +8,6 @@ use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
 use PHPUnit\Framework\TestCase;
-use Tinderbox\Clickhouse\Common\Format;
 use Tinderbox\Clickhouse\Common\TempTable;
 use Tinderbox\Clickhouse\Exceptions\ClientException;
 use Tinderbox\Clickhouse\Query\Result;
@@ -19,7 +18,7 @@ use Tinderbox\Clickhouse\Transport\HttpTransport;
  */
 class HttpTransportTest extends TestCase
 {
-    protected function getMockedTransport(array $responses)
+    protected function getMockedTransport(array $responses): HttpTransport
     {
         $mock = new MockHandler($responses);
 
@@ -35,7 +34,7 @@ class HttpTransportTest extends TestCase
         return new Server('127.0.0.1', '8123', 'default', 'user', 'pass');
     }
 
-    public function testGetWithFile()
+    public function testGetWithFile(): void
     {
         $file = sys_get_temp_dir().DIRECTORY_SEPARATOR.'numbers.csv';
         file_put_contents($file, '');
@@ -132,7 +131,7 @@ class HttpTransportTest extends TestCase
         unlink($file);
     }
 
-    public function testHttpTransportEmptyClient()
+    public function testHttpTransportEmptyClient(): void
     {
         $transport = new HttpTransport();
 
@@ -143,7 +142,7 @@ class HttpTransportTest extends TestCase
         $transport->get($this->getServer(), 'select 1');
     }
 
-    public function testHttpTransportSyntaxError()
+    public function testHttpTransportSyntaxError(): void
     {
         $server = $this->getServer();
 
@@ -158,7 +157,7 @@ class HttpTransportTest extends TestCase
         $transport->get($server, 'seelect 1');
     }
 
-    public function testHttpTransportSendError()
+    public function testHttpTransportSendError(): void
     {
         $server = $this->getServer();
 
@@ -173,7 +172,7 @@ class HttpTransportTest extends TestCase
         $transport->send($server, 'inseert into table');
     }
 
-    public function testHttpTransportMalformedResponse()
+    public function testHttpTransportMalformedResponse(): void
     {
         $server = $this->getServer();
 
@@ -188,7 +187,7 @@ class HttpTransportTest extends TestCase
         $transport->get($server, 'select 1');
     }
 
-    public function testHttpTransport()
+    public function testHttpTransport(): void
     {
         $server = $this->getServer();
 
@@ -286,7 +285,7 @@ class HttpTransportTest extends TestCase
         unlink($files[0]);
     }
 
-    public function testSendConnectionError()
+    public function testSendConnectionError(): void
     {
         $server = $this->getServer();
 
@@ -299,7 +298,7 @@ class HttpTransportTest extends TestCase
         $transport->send($server, 'select 1');
     }
 
-    public function testGetAsyncConnectionError()
+    public function testGetAsyncConnectionError(): void
     {
         $server = $this->getServer();
 
@@ -314,7 +313,7 @@ class HttpTransportTest extends TestCase
         ]);
     }
 
-    public function testGetAsyncError()
+    public function testGetAsyncError(): void
     {
         $transport = $this->getMockedTransport([
             new Response(500, [], 'Syntax error'),
@@ -329,7 +328,7 @@ class HttpTransportTest extends TestCase
         ]);
     }
 
-    public function testGetAsyncUnknownException()
+    public function testGetAsyncUnknownException(): void
     {
         $transport = $this->getMockedTransport([
             new \Exception('Unknown exception'),

@@ -10,14 +10,14 @@ use Tinderbox\Clickhouse\Exceptions\ResultException;
  */
 class ResultExceptionsTest extends TestCase
 {
-    public function testPropertyNotExists()
+    public function testPropertyNotExists(): void
     {
         $e = ResultException::propertyNotExists('test');
 
         $this->assertInstanceOf(ResultException::class, $e);
     }
 
-    public function testIsReadonly()
+    public function testIsReadonly(): void
     {
         $e = ResultException::isReadonly();
 

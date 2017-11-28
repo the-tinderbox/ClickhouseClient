@@ -11,7 +11,7 @@ use Tinderbox\Clickhouse\Common\TempTable;
  */
 class TempTableTest extends TestCase
 {
-    public function testTempTable()
+    public function testTempTable(): void
     {
         $table = new TempTable('table', 'source', [
             'structure',

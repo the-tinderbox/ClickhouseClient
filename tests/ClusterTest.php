@@ -13,7 +13,7 @@ use Tinderbox\Clickhouse\Exceptions\ClusterException;
  */
 class ClusterTest extends TestCase
 {
-    public function testClusterConstructor()
+    public function testClusterConstructor(): void
     {
         $cluster = new Cluster();
 
@@ -37,7 +37,7 @@ class ClusterTest extends TestCase
         );
     }
 
-    public function testClusterWrongHostname()
+    public function testClusterWrongHostname(): void
     {
         $servers = [
             [
@@ -60,10 +60,10 @@ class ClusterTest extends TestCase
         $this->expectException(ClusterException::class);
         $this->expectExceptionMessage($e->getMessage());
 
-        $cluster = new Cluster($servers);
+        new Cluster($servers);
     }
 
-    public function testClusterServers()
+    public function testClusterServers(): void
     {
         $options = (new ServerOptions())->setTimeout(10);
 

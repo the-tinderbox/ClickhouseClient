@@ -10,28 +10,28 @@ use Tinderbox\Clickhouse\Exceptions\ClusterException;
  */
 class ClusterExceptionsTest extends TestCase
 {
-    public function testMissingServerHostname()
+    public function testMissingServerHostname(): void
     {
         $e = ClusterException::missingServerHostname();
 
         $this->assertInstanceOf(ClusterException::class, $e);
     }
 
-    public function testServerHostnameDuplicate()
+    public function testServerHostnameDuplicate(): void
     {
         $e = ClusterException::serverHostnameDuplicate('host-1');
 
         $this->assertInstanceOf(ClusterException::class, $e);
     }
 
-    public function testInvalidServerProvided()
+    public function testInvalidServerProvided(): void
     {
         $e = ClusterException::invalidServerProvided(null);
 
         $this->assertInstanceOf(ClusterException::class, $e);
     }
 
-    public function testServerNotFound()
+    public function testServerNotFound(): void
     {
         $e = ClusterException::serverNotFound('host-1');
 

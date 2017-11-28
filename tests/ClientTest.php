@@ -18,7 +18,7 @@ use Tinderbox\Clickhouse\Transport\HttpTransport;
  */
 class ClientTest extends TestCase
 {
-    public function testClickhouseUsingServer()
+    public function testClickhouseUsingServer(): void
     {
         $server = new Server('127.0.0.1');
         $client = new Client($server);
@@ -32,7 +32,7 @@ class ClientTest extends TestCase
         $client->using('h1');
     }
 
-    public function testClickhouseUsingCluster()
+    public function testClickhouseUsingCluster(): void
     {
         $h1 = new Server('127.0.0.1');
         $h2 = new Server('127.0.0.2');
@@ -69,7 +69,7 @@ class ClientTest extends TestCase
         $client->using('h4');
     }
 
-    public function testClickhouseUsingWrongServer()
+    public function testClickhouseUsingWrongServer(): void
     {
         $wrongServer = null;
 
@@ -77,10 +77,10 @@ class ClientTest extends TestCase
         $this->expectException(ClientException::class);
         $this->expectExceptionMessage($e->getMessage());
 
-        $client = new Client($wrongServer);
+        new Client($wrongServer);
     }
 
-    protected function getMockedTransport(array $responses)
+    protected function getMockedTransport(array $responses): HttpTransport
     {
         $mock = new MockHandler($responses);
 
@@ -91,9 +91,9 @@ class ClientTest extends TestCase
         ]));
     }
 
-    public function testClickhouseClientSyntaxError()
+    public function testClickhouseClientSyntaxError(): void
     {
-        $transport = $transport = $this->getMockedTransport([
+        $transport = $this->getMockedTransport([
             new Response(500, [], 'Syntax error'),
         ]);
 
@@ -107,9 +107,9 @@ class ClientTest extends TestCase
         $client->select('seelect 1');
     }
 
-    public function testClickhouseQueries()
+    public function testClickhouseQueries(): void
     {
-        $transport = $transport = $this->getMockedTransport([
+        $transport = $this->getMockedTransport([
             new Response(200, [], json_encode([
                 'data' => [
                     [
@@ -208,7 +208,7 @@ class ClientTest extends TestCase
 
         $result = $client->insertFiles('table', ['column', 'column'], $files);
 
-        $this->assertEquals(3, count($result));
+        $this->assertCount(3, $result);
         $this->assertTrue($result[0]);
         $this->assertTrue($result[1]);
         $this->assertTrue($result[2]);
@@ -222,7 +222,7 @@ class ClientTest extends TestCase
         $client->insertFiles('table', ['column', 'column'], $files, 'csv');
     }
 
-    public function testClickhouseMapper()
+    public function testClickhouseMapper(): void
     {
         $mapper = new NamedMapper();
 

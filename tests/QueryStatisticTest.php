@@ -11,7 +11,7 @@ use Tinderbox\Clickhouse\Query\QueryStatistic;
  */
 class QueryStatisticTest extends TestCase
 {
-    public function testQueryStatistic()
+    public function testQueryStatistic(): void
     {
         $statistic = new QueryStatistic(100, 1024, 0.122);
 

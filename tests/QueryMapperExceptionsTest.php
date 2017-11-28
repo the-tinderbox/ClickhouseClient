@@ -10,9 +10,16 @@ use Tinderbox\Clickhouse\Exceptions\QueryMapperException;
  */
 class QueryMapperExceptionsTest extends TestCase
 {
-    public function testMultipleBindingsType()
+    public function testMultipleBindingsType(): void
     {
         $e = QueryMapperException::multipleBindingsType();
+
+        $this->assertInstanceOf(QueryMapperException::class, $e);
+    }
+
+    public function testWrongBindingsNumber(): void
+    {
+        $e = QueryMapperException::wrongBindingsNumber(2, 1);
 
         $this->assertInstanceOf(QueryMapperException::class, $e);
     }

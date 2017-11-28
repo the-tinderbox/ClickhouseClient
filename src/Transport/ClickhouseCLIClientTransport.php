@@ -15,14 +15,14 @@ use Tinderbox\Clickhouse\Server;
 class ClickhouseCLIClientTransport implements TransportInterface
 {
     /**
-     * Path to executable clickhouse cli client
+     * Path to executable clickhouse cli client.
      *
      * @var string
      */
     protected $executablePath;
 
     /**
-     * Last execute query
+     * Last execute query.
      *
      * @var string
      */
@@ -80,8 +80,9 @@ class ClickhouseCLIClientTransport implements TransportInterface
      * @param array                        $files
      * @param int                          $concurrency
      *
-     * @return array
      * @throws \Tinderbox\Clickhouse\Exceptions\ClientException
+     *
+     * @return array
      */
     public function sendAsyncFilesWithQuery(Server $server, string $query, array $files, int $concurrency = 5): array
     {
@@ -159,7 +160,7 @@ class ClickhouseCLIClientTransport implements TransportInterface
     }
 
     /**
-     * Puts query in tmp file
+     * Puts query in tmp file.
      *
      * @param string $query
      *
@@ -178,7 +179,7 @@ class ClickhouseCLIClientTransport implements TransportInterface
     }
 
     /**
-     * Removes tmp file with query
+     * Removes tmp file with query.
      *
      * @param string $fileName
      */
@@ -188,7 +189,7 @@ class ClickhouseCLIClientTransport implements TransportInterface
     }
 
     /**
-     * Builds command for write
+     * Builds command for write.
      *
      * @param \Tinderbox\Clickhouse\Server $server
      * @param string                       $query
@@ -203,7 +204,7 @@ class ClickhouseCLIClientTransport implements TransportInterface
         $command = [];
 
         if (!is_null($file)) {
-            $command[] = "cat ".$file.' |';
+            $command[] = 'cat '.$file.' |';
         }
 
         $command = array_merge($command, [
@@ -211,14 +212,14 @@ class ClickhouseCLIClientTransport implements TransportInterface
             "--host='{$server->getHost()}'",
             "--port='{$server->getPort()}'",
             "--database='{$server->getDatabase()}'",
-            "--query={$query}"
+            "--query={$query}",
         ]);
 
         return implode(' ', $command);
     }
 
     /**
-     * Builds command to read
+     * Builds command to read.
      *
      * @param \Tinderbox\Clickhouse\Server $server
      * @param string                       $query
@@ -236,7 +237,7 @@ class ClickhouseCLIClientTransport implements TransportInterface
             "--host='{$server->getHost()}'",
             "--port='{$server->getPort()}'",
             "--database='{$server->getDatabase()}'",
-            "--max_query_size=".strlen($query),
+            '--max_query_size='.strlen($query),
         ];
 
         if ($tables instanceof TempTable || !empty($tables)) {
@@ -264,21 +265,22 @@ class ClickhouseCLIClientTransport implements TransportInterface
         list($structure, $withColumns) = $this->assembleTempTableStructure($table);
 
         return [
-            "--external",
+            '--external',
             ($withColumns ? '--structure=' : '--types=')."'{$structure}'",
             "--format='{$table->getFormat()}'",
             "--name='{$table->getName()}'",
-            "--file='{$table->getSource()}'"
+            "--file='{$table->getSource()}'",
         ];
     }
 
     /**
-     * Executes command and catches result or error via stdout and stderr
+     * Executes command and catches result or error via stdout and stderr.
      *
      * @param string $command
      *
-     * @return string
      * @throws \Tinderbox\Clickhouse\Exceptions\ClientException
+     *
+     * @return string
      */
     protected function executeCommand(string $command) : string
     {
@@ -307,7 +309,7 @@ class ClickhouseCLIClientTransport implements TransportInterface
     }
 
     /**
-     * Sets last executed query
+     * Sets last executed query.
      *
      * @param string $query
      */
@@ -317,7 +319,7 @@ class ClickhouseCLIClientTransport implements TransportInterface
     }
 
     /**
-     * Returns last executed query
+     * Returns last executed query.
      *
      * @return string
      */
@@ -327,7 +329,7 @@ class ClickhouseCLIClientTransport implements TransportInterface
     }
 
     /**
-     * Cleans string from tabs and spaces
+     * Cleans string from tabs and spaces.
      *
      * @param string $string
      *
