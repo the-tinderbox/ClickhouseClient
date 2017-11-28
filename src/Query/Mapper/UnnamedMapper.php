@@ -31,7 +31,7 @@ class UnnamedMapper extends AbstractMapper implements QueryMapperInterface
 
         $query = str_replace(['%', '?'], ['%%', '%s'], $query);
 
-        $query = sprintf(...array_merge([$query], $escapedBindings));
+        $query = sprintf($query, ...$escapedBindings);
 
         return $query;
     }
