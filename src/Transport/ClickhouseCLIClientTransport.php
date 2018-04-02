@@ -236,7 +236,7 @@ class ClickhouseCLIClientTransport implements TransportInterface
             "--host='{$server->getHost()}'",
             "--port='{$server->getPort()}'",
             "--database='{$server->getDatabase()}'",
-            "--max_query_size=".strlen($query),
+            "--max_query_size=".(strlen($query) + 1024),
         ];
 
         if ($tables instanceof TempTable || !empty($tables)) {
