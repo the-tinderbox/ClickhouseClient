@@ -117,7 +117,7 @@ class ClickhouseCLIClientTransport implements TransportInterface
         list($command, $file) = $this->buildCommandForRead($server, $query, $tables);
 
         try {
-            $response = $this->executeCommand($command);
+            $response = $this->executeCommand($command, round($server->getOptions()->getTimeout()));
 
             if (!is_null($file)) {
                 $this->removeQueryFile($file);
@@ -276,12 +276,18 @@ class ClickhouseCLIClientTransport implements TransportInterface
      * Executes command and catches result or error via stdout and stderr
      *
      * @param string $command
+     * @param int $timeout
      *
      * @return string
      * @throws \Tinderbox\Clickhouse\Exceptions\ClientException
      */
-    protected function executeCommand(string $command) : string
+    protected function executeCommand(string $command, int $timeout = 0) : string
     {
+        if ($timeout > 0) {
+            $killTimeout = $timeout + 10; // Если через 10с после SIGTERM процесс висит, то послать SIGKILL
+            $command = "timeout -k {$timeout} {$killTimeout} " . $command;
+        }
+
         $process = proc_open($command, [['pipe', 'r'], ['pipe', 'w'], ['pipe', 'w']], $pipes);
 
         $response = '';
@@ -297,6 +303,10 @@ class ClickhouseCLIClientTransport implements TransportInterface
             fclose($pipes[2]);
 
             $status = proc_close($process);
+
+            if ($status === 124) {
+                $error = "The command was closed by timeout {$timeout}s.";
+            }
         }
 
         if ($status != 0) {
