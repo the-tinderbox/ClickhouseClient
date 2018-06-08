@@ -36,6 +36,17 @@ interface TransportInterface
     public function sendAsyncFilesWithQuery(Server $server, string $query, array $files, int $concurrency = 5): array;
 
     /**
+     * Sends files as one block of data.
+     * 
+     * @param \Tinderbox\Clickhouse\Server $server
+     * @param string                       $query
+     * @param array                        $files
+     *
+     * @return bool
+     */
+    public function sendFilesAsOneWithQuery(Server $server, string $query, array $files): bool;
+
+    /**
      * Executes SELECT queries and returns result.
      *
      * @param \Tinderbox\Clickhouse\Server $server

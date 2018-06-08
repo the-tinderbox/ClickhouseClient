@@ -429,4 +429,20 @@ class HttpTransport implements TransportInterface
 
         return $uri.'?'.http_build_query($query);
     }
+
+    /**
+     * Sends files as one block of data.
+     *
+     * NOT SUPPORTED VIA HTTP INTERFACE
+     *
+     * @param \Tinderbox\Clickhouse\Server $server
+     * @param string                       $query
+     * @param array                        $files
+     *
+     * @return bool
+     */
+    public function sendFilesAsOneWithQuery(Server $server, string $query, array $files): bool
+    {
+        throw ClientException::notSupported('inserting multiple files as one via http interface');
+    }
 }
