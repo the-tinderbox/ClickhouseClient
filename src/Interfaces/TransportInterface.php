@@ -22,7 +22,7 @@ interface TransportInterface
      * @return bool
      */
     public function send(Server $server, string $query): bool;
-
+    
     /**
      * Sends async insert queries with given files.
      *
@@ -34,18 +34,19 @@ interface TransportInterface
      * @return array
      */
     public function sendAsyncFilesWithQuery(Server $server, string $query, array $files, int $concurrency = 5): array;
-
+    
     /**
      * Sends files as one block of data.
-     * 
+     *
      * @param \Tinderbox\Clickhouse\Server $server
      * @param string                       $query
      * @param array                        $files
+     * @param array                        $settings
      *
      * @return bool
      */
-    public function sendFilesAsOneWithQuery(Server $server, string $query, array $files): bool;
-
+    public function sendFilesAsOneWithQuery(Server $server, string $query, array $files, array $settings): bool;
+    
     /**
      * Executes SELECT queries and returns result.
      *
@@ -58,7 +59,7 @@ interface TransportInterface
      * @return \Tinderbox\Clickhouse\Query\Result
      */
     public function get(Server $server, string $query, $tables = null): Result;
-
+    
     /**
      * Executes async SELECT queries and returns result.
      *

@@ -438,10 +438,11 @@ class HttpTransport implements TransportInterface
      * @param \Tinderbox\Clickhouse\Server $server
      * @param string                       $query
      * @param array                        $files
+     * @param array                        $settings
      *
      * @return bool
      */
-    public function sendFilesAsOneWithQuery(Server $server, string $query, array $files): bool
+    public function sendFilesAsOneWithQuery(Server $server, string $query, array $files, array $settings = []): bool
     {
         throw ClientException::notSupported('inserting multiple files as one via http interface');
     }

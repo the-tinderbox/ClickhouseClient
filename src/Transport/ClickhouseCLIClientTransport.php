@@ -105,11 +105,12 @@ class ClickhouseCLIClientTransport implements TransportInterface
      * @param \Tinderbox\Clickhouse\Server $server
      * @param string                       $query
      * @param array                        $files
+     * @param array                        $settings
      *
      * @return bool
      * @throws \Throwable
      */
-    public function sendFilesAsOneWithQuery(Server $server, string $query, array $files): bool
+    public function sendFilesAsOneWithQuery(Server $server, string $query, array $files, array $settings = []): bool
     {
         $this->setLastQuery($query);
 
@@ -124,7 +125,7 @@ class ClickhouseCLIClientTransport implements TransportInterface
             return 'cat '.$file;
         }, $files)));
 
-        $command = $this->buildCommandForWriteFilesAsOne($server, $query, $fileName);
+        $command = $this->buildCommandForWriteFilesAsOne($server, $query, $fileName, $settings);
 
         try {
             $this->executeCommand($command);
@@ -231,10 +232,11 @@ class ClickhouseCLIClientTransport implements TransportInterface
      * @param \Tinderbox\Clickhouse\Server $server
      * @param string                       $query
      * @param string|null                  $file
+     * @param array                        $settings
      *
      * @return string
      */
-    protected function buildCommandForWrite(Server $server, string $query, string $file = null) : string
+    protected function buildCommandForWrite(Server $server, string $query, string $file = null, array $settings = []) : string
     {
         $query = escapeshellarg($query);
 
@@ -251,6 +253,10 @@ class ClickhouseCLIClientTransport implements TransportInterface
             "--database='{$server->getDatabase()}'",
             "--query={$query}"
         ]);
+    
+        foreach ($settings as $key => $value) {
+            $command[] = '--'.$key.'='.escapeshellarg($value);
+        }
 
         return implode(' ', $command);
     }
@@ -261,10 +267,11 @@ class ClickhouseCLIClientTransport implements TransportInterface
      * @param \Tinderbox\Clickhouse\Server $server
      * @param string                       $query
      * @param string|null                  $file
+     * @param array                        $settings
      *
      * @return string
      */
-    protected function buildCommandForWriteFilesAsOne(Server $server, string $query, string $file) : string
+    protected function buildCommandForWriteFilesAsOne(Server $server, string $query, string $file, array $settings = []) : string
     {
         $query = escapeshellarg($query);
 
@@ -277,6 +284,10 @@ class ClickhouseCLIClientTransport implements TransportInterface
             "--query={$query}",
         ];
         
+        foreach ($settings as $key => $value) {
+            $command[] = '--'.$key.'='.escapeshellarg($value);
+        }
+        
         return implode(' ', $command);
     }
 
@@ -286,10 +297,11 @@ class ClickhouseCLIClientTransport implements TransportInterface
      * @param \Tinderbox\Clickhouse\Server $server
      * @param string                       $query
      * @param null                         $tables
+     * @param array                        $settings
      *
      * @return array
      */
-    protected function buildCommandForRead(Server $server, string $query, $tables = null) : array
+    protected function buildCommandForRead(Server $server, string $query, $tables = null, array $settings = []) : array
     {
         $fileName = $this->writeTemporaryFile($query);
 
@@ -310,6 +322,10 @@ class ClickhouseCLIClientTransport implements TransportInterface
             foreach ($tables as $table) {
                 $command = array_merge($command, $this->parseTempTable($table));
             }
+        }
+    
+        foreach ($settings as $key => $value) {
+            $command[] = '--'.$key.'='.escapeshellarg($value);
         }
 
         return [implode(' ', $command), $fileName];
