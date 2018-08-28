@@ -45,7 +45,7 @@ interface TransportInterface
      *
      * @return bool
      */
-    public function sendFilesAsOneWithQuery(Server $server, string $query, array $files, array $settings): bool;
+    public function sendFilesAsOneWithQuery(Server $server, string $query, array $files, array $settings = []): bool;
     
     /**
      * Executes SELECT queries and returns result.

@@ -413,10 +413,12 @@ class Client
      * @param array       $columns
      * @param array       $files
      * @param string|null $format
+     * @param array       $options
      *
      * @return mixed
+     * @throws ClientException
      */
-    public function insertFilesAsOne(string $table, array $columns, array $files, string $format = null)
+    public function insertFilesAsOne(string $table, array $columns, array $files, string $format = null, $options = [])
     {
         if (is_null($format)) {
             $format = Format::CSV;
@@ -430,7 +432,7 @@ class Client
             }
         }
 
-        return $this->getTransport()->sendFilesAsOneWithQuery($this->getServer(), $query, $files);
+        return $this->getTransport()->sendFilesAsOneWithQuery($this->getServer(), $query, $files, $options);
     }
 
     /**
