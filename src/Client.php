@@ -407,6 +407,35 @@ class Client
     }
 
     /**
+     * Performs insert query using all given files as one block of data
+     *
+     * @param string      $table
+     * @param array       $columns
+     * @param array       $files
+     * @param string|null $format
+     * @param array       $options
+     *
+     * @return mixed
+     * @throws ClientException
+     */
+    public function insertFilesAsOne(string $table, array $columns, array $files, string $format = null, $options = [])
+    {
+        if (is_null($format)) {
+            $format = Format::CSV;
+        }
+
+        $query = 'INSERT INTO '.$table.' ('.implode(', ', $columns).') FORMAT '.strtoupper($format);
+
+        foreach ($files as $file) {
+            if (!is_file($file)) {
+                throw ClientException::insertFileNotFound($file);
+            }
+        }
+
+        return $this->getTransport()->sendFilesAsOneWithQuery($this->getServer(), $query, $files, $options);
+    }
+
+    /**
      * Executes query.
      *
      * Alias for method insert

@@ -37,4 +37,9 @@ class ClientException extends \Exception
     {
         return new static('File '.$file.' is not found');
     }
+
+    public static function notSupported($operation)
+    {
+        return new static('Operation '.$operation.' is not supported');
+    }
 }
