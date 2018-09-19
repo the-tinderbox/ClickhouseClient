@@ -29,6 +29,13 @@ class ClickhouseCLIClientTransport implements TransportInterface
     protected $catExecutablePath;
 
     /**
+     * Path to executable ccat command
+     *
+     * @var string
+     */
+    protected $ccatExecutablePath;
+
+    /**
      * Last execute query
      *
      * @var string
@@ -47,12 +54,14 @@ class ClickhouseCLIClientTransport implements TransportInterface
      *
      * @param string|null $executablePath
      * @param string|null $catExecutablePath
+     * @param string|null $ccatExecutablePath
      * @param bool        $useCcat
      */
-    public function __construct(string $executablePath = null, string $catExecutablePath = null, bool $useCcat = false)
+    public function __construct(string $executablePath = null, string $catExecutablePath = null, string $ccatExecutablePath = null, bool $useCcat = false)
     {
         $this->setExecutablePath($executablePath);
         $this->setCatExecutablePath($catExecutablePath);
+        $this->setCcatExecutablePath($ccatExecutablePath);
         $this->useCcat = $useCcat;
     }
 
@@ -82,6 +91,20 @@ class ClickhouseCLIClientTransport implements TransportInterface
         }
 
         $this->catExecutablePath = $catExecutablePath;
+    }
+
+    /**
+     * Set path to ccat executable.
+     *
+     * @param string|null $ccatExecutablePath
+     */
+    protected function setCcatExecutablePath(string $ccatExecutablePath = null)
+    {
+        if (is_null($ccatExecutablePath)) {
+            $ccatExecutablePath = 'ccat';
+        }
+
+        $this->ccatExecutablePath = $ccatExecutablePath;
     }
 
     /**
@@ -322,7 +345,7 @@ class ClickhouseCLIClientTransport implements TransportInterface
         $command = [];
 
         if ($this->useCcat) {
-            $command[] = $this->catExecutablePath.' '.$file.' | ';
+            $command[] = $this->ccatExecutablePath.' '.$file.' | ';
         } else {
             $command[] = '$('.$this->catExecutablePath.' '.$file.') | ';
         }
