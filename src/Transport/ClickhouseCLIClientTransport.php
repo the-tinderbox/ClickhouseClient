@@ -100,6 +100,45 @@ class ClickhouseCLIClientTransport implements TransportInterface
     }
 
     /**
+     * Sends files as one block of data.
+     *
+     * @param \Tinderbox\Clickhouse\Server $server
+     * @param string                       $query
+     * @param array                        $files
+     * @param array                        $settings
+     *
+     * @return bool
+     * @throws \Throwable
+     */
+    public function sendFilesAsOneWithQuery(Server $server, string $query, array $files, array $settings = []): bool
+    {
+        $this->setLastQuery($query);
+
+        /*
+         * We will put the list of files into tmp file and then we will use command:
+         *
+         * (IFS=$'\n'; cat $(< tmp-file))
+         *
+         * to iterate through file and cat each file into stdout
+         */
+        $fileName = $this->writeTemporaryFile(implode(PHP_EOL, array_map(function(string $file) {
+            return 'cat '.$file;
+        }, $files)));
+
+        $command = $this->buildCommandForWriteFilesAsOne($server, $query, $fileName, $settings);
+
+        try {
+            $this->executeCommand($command);
+        } catch (\Throwable $e) {
+            $this->removeTemporaryFile($fileName);
+
+            throw $e;
+        }
+
+        return true;
+    }
+
+    /**
      * Executes SELECT queries and returns result.
      *
      * @param \Tinderbox\Clickhouse\Server $server
@@ -117,16 +156,16 @@ class ClickhouseCLIClientTransport implements TransportInterface
         list($command, $file) = $this->buildCommandForRead($server, $query, $tables);
 
         try {
-            $response = $this->executeCommand($command, round($server->getOptions()->getTimeout()));
+            $response = $this->executeCommand($command);
 
             if (!is_null($file)) {
-                $this->removeQueryFile($file);
+                $this->removeTemporaryFile($file);
             }
 
             return $this->assembleResult($response);
         } catch (\Throwable $e) {
             if (!is_null($file)) {
-                $this->removeQueryFile($file);
+                $this->removeTemporaryFile($file);
             }
 
             throw $e;
@@ -165,7 +204,7 @@ class ClickhouseCLIClientTransport implements TransportInterface
      *
      * @return string
      */
-    protected function writeQueryInFile(string $query) : string
+    protected function writeTemporaryFile(string $query) : string
     {
         $tmpDir = sys_get_temp_dir();
         $fileName = tempnam($tmpDir, 'clickhouse_client');
@@ -182,7 +221,7 @@ class ClickhouseCLIClientTransport implements TransportInterface
      *
      * @param string $fileName
      */
-    protected function removeQueryFile(string $fileName)
+    protected function removeTemporaryFile(string $fileName)
     {
         unlink($fileName);
     }
@@ -193,17 +232,18 @@ class ClickhouseCLIClientTransport implements TransportInterface
      * @param \Tinderbox\Clickhouse\Server $server
      * @param string                       $query
      * @param string|null                  $file
+     * @param array                        $settings
      *
      * @return string
      */
-    protected function buildCommandForWrite(Server $server, string $query, string $file = null) : string
+    protected function buildCommandForWrite(Server $server, string $query, string $file = null, array $settings = []) : string
     {
         $query = escapeshellarg($query);
 
         $command = [];
 
         if (!is_null($file)) {
-            $command[] = "cat ".$file.' |';
+            $command[] = "$(which cat) ".$file.' |';
         }
 
         $command = array_merge($command, [
@@ -214,6 +254,40 @@ class ClickhouseCLIClientTransport implements TransportInterface
             "--query={$query}"
         ]);
 
+        foreach ($settings as $key => $value) {
+            $command[] = '--'.$key.'='.escapeshellarg($value);
+        }
+
+        return implode(' ', $command);
+    }
+
+    /**
+     * Builds command for write
+     *
+     * @param \Tinderbox\Clickhouse\Server $server
+     * @param string                       $query
+     * @param string|null                  $file
+     * @param array                        $settings
+     *
+     * @return string
+     */
+    protected function buildCommandForWriteFilesAsOne(Server $server, string $query, string $file, array $settings = []) : string
+    {
+        $query = escapeshellarg($query);
+
+        $command = [
+            '$(cat '.$file.') | ',
+            $this->executablePath,
+            "--host='{$server->getHost()}'",
+            "--port='{$server->getPort()}'",
+            "--database='{$server->getDatabase()}'",
+            "--query={$query}",
+        ];
+
+        foreach ($settings as $key => $value) {
+            $command[] = '--'.$key.'='.escapeshellarg($value);
+        }
+
         return implode(' ', $command);
     }
 
@@ -223,12 +297,13 @@ class ClickhouseCLIClientTransport implements TransportInterface
      * @param \Tinderbox\Clickhouse\Server $server
      * @param string                       $query
      * @param null                         $tables
+     * @param array                        $settings
      *
      * @return array
      */
-    protected function buildCommandForRead(Server $server, string $query, $tables = null) : array
+    protected function buildCommandForRead(Server $server, string $query, $tables = null, array $settings = []) : array
     {
-        $fileName = $this->writeQueryInFile($query);
+        $fileName = $this->writeTemporaryFile($query);
 
         $command = [
             "cat {$fileName} |",
@@ -247,6 +322,10 @@ class ClickhouseCLIClientTransport implements TransportInterface
             foreach ($tables as $table) {
                 $command = array_merge($command, $this->parseTempTable($table));
             }
+        }
+
+        foreach ($settings as $key => $value) {
+            $command[] = '--'.$key.'='.escapeshellarg($value);
         }
 
         return [implode(' ', $command), $fileName];
@@ -276,18 +355,12 @@ class ClickhouseCLIClientTransport implements TransportInterface
      * Executes command and catches result or error via stdout and stderr
      *
      * @param string $command
-     * @param int $timeout
      *
      * @return string
      * @throws \Tinderbox\Clickhouse\Exceptions\ClientException
      */
-    protected function executeCommand(string $command, int $timeout = 0) : string
+    protected function executeCommand(string $command) : string
     {
-        if ($timeout > 0) {
-            $killTimeout = $timeout + 10; // Если через 10с после SIGTERM процесс висит, то послать SIGKILL
-            $command = "timeout -k {$timeout} {$killTimeout} " . $command;
-        }
-
         $process = proc_open($command, [['pipe', 'r'], ['pipe', 'w'], ['pipe', 'w']], $pipes);
 
         $response = '';
@@ -303,10 +376,6 @@ class ClickhouseCLIClientTransport implements TransportInterface
             fclose($pipes[2]);
 
             $status = proc_close($process);
-
-            if ($status === 124) {
-                $error = "The command was closed by timeout {$timeout}s.";
-            }
         }
 
         if ($status != 0) {
