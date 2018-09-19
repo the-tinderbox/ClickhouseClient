@@ -22,6 +22,13 @@ class ClickhouseCLIClientTransport implements TransportInterface
     protected $executablePath;
 
     /**
+     * Path to executable cat command
+     *
+     * @var string
+     */
+    protected $catExecutablePath;
+
+    /**
      * Last execute query
      *
      * @var string
@@ -29,13 +36,24 @@ class ClickhouseCLIClientTransport implements TransportInterface
     protected $lastQuery = '';
 
     /**
+     * Use special ccat command to cat files into one without ARG_MAX limits
+     *
+     * @var bool
+     */
+    protected $useCcat;
+
+    /**
      * ClickhouseCLIClientTransport constructor.
      *
      * @param string|null $executablePath
+     * @param string|null $catExecutablePath
+     * @param bool        $useCcat
      */
-    public function __construct(string $executablePath = null)
+    public function __construct(string $executablePath = null, string $catExecutablePath = null, bool $useCcat = false)
     {
         $this->setExecutablePath($executablePath);
+        $this->setCatExecutablePath($catExecutablePath);
+        $this->useCcat = $useCcat;
     }
 
     /**
@@ -50,6 +68,20 @@ class ClickhouseCLIClientTransport implements TransportInterface
         }
 
         $this->executablePath = $executablePath;
+    }
+
+    /**
+     * Set path to cat executable.
+     *
+     * @param string|null $catExecutablePath
+     */
+    protected function setCatExecutablePath(string $catExecutablePath = null)
+    {
+        if (is_null($catExecutablePath)) {
+            $catExecutablePath = 'cat';
+        }
+
+        $this->catExecutablePath = $catExecutablePath;
     }
 
     /**
@@ -120,15 +152,27 @@ class ClickhouseCLIClientTransport implements TransportInterface
          * (IFS=$'\n'; cat $(< tmp-file))
          *
          * to iterate through file and cat each file into stdout
+         *
+         * ccat is used to ignore ARG_MAX constant when trying to push too many files
          */
-        $fileName = $this->writeTemporaryFile(implode(PHP_EOL, array_map(function(string $file) {
-            return 'cat '.$file;
-        }, $files)));
+        if ($this->useCcat) {
+            $files = implode(PHP_EOL, $files);
+        } else {
+            $files = implode(PHP_EOL, array_map(function(string $file) {
+                return 'cat '.$file;
+            }, $files));
+        }
+
+        $fileName = $this->writeTemporaryFile($files);
 
         $command = $this->buildCommandForWriteFilesAsOne($server, $query, $fileName, $settings);
 
         try {
             $this->executeCommand($command);
+
+            if (!is_null($fileName)) {
+                $this->removeTemporaryFile($fileName);
+            }
         } catch (\Throwable $e) {
             $this->removeTemporaryFile($fileName);
 
@@ -243,7 +287,7 @@ class ClickhouseCLIClientTransport implements TransportInterface
         $command = [];
 
         if (!is_null($file)) {
-            $command[] = "$(which cat) ".$file.' |';
+            $command[] = $this->catExecutablePath.' '.$file.' |';
         }
 
         $command = array_merge($command, [
@@ -275,14 +319,21 @@ class ClickhouseCLIClientTransport implements TransportInterface
     {
         $query = escapeshellarg($query);
 
-        $command = [
-            '$(cat '.$file.') | ',
+        $command = [];
+
+        if ($this->useCcat) {
+            $command[] = $this->catExecutablePath.' '.$file.' | ';
+        } else {
+            $command[] = '$('.$this->catExecutablePath.' '.$file.') | ';
+        }
+
+        $command = array_merge($command, [
             $this->executablePath,
             "--host='{$server->getHost()}'",
             "--port='{$server->getPort()}'",
             "--database='{$server->getDatabase()}'",
             "--query={$query}",
-        ];
+        ]);
 
         foreach ($settings as $key => $value) {
             $command[] = '--'.$key.'='.escapeshellarg($value);
@@ -306,7 +357,7 @@ class ClickhouseCLIClientTransport implements TransportInterface
         $fileName = $this->writeTemporaryFile($query);
 
         $command = [
-            "cat {$fileName} |",
+            $this->catExecutablePath." {$fileName} |",
             $this->executablePath,
             "--host='{$server->getHost()}'",
             "--port='{$server->getPort()}'",
