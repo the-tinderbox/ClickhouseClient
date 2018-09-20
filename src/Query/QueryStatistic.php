@@ -39,17 +39,26 @@ class QueryStatistic
     protected $time;
 
     /**
+     * Rows before limit at least
+     *
+     * @var null|int
+     */
+    protected $rowsBeforeLimitAtLeast;
+
+    /**
      * QueryStatistic constructor.
      *
-     * @param int   $rows
-     * @param int   $bytes
-     * @param float $time
+     * @param int      $rows
+     * @param int      $bytes
+     * @param float    $time
+     * @param null|int $rowsBeforeLimitAtLeast
      */
-    public function __construct(int $rows, int $bytes, float $time)
+    public function __construct(int $rows, int $bytes, float $time, ?int $rowsBeforeLimitAtLeast)
     {
         $this->rows = $rows;
         $this->bytes = $bytes;
         $this->time = $time;
+        $this->rowsBeforeLimitAtLeast = $rowsBeforeLimitAtLeast;
     }
 
     /**
@@ -80,6 +89,16 @@ class QueryStatistic
     public function getTime(): float
     {
         return $this->time;
+    }
+
+    /**
+     * Returns rows before limit at least
+     *
+     * @return int|null
+     */
+    public function getRowsBeforeLimitAtLeast(): ?int
+    {
+        return $this->rowsBeforeLimitAtLeast;
     }
 
     /**
