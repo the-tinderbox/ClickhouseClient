@@ -394,7 +394,8 @@ class HttpTransport implements TransportInterface
             $statistic = new QueryStatistic(
                 $result['statistics']['rows_read'] ?? 0,
                 $result['statistics']['bytes_read'] ?? 0,
-                $result['statistics']['elapsed'] ?? 0
+                $result['statistics']['elapsed'] ?? 0,
+                $result['rows_before_limit_at_least'] ?? null
             );
 
             return new Result($result['data'] ?? [], $statistic);

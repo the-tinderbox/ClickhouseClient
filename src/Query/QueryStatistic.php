@@ -53,7 +53,7 @@ class QueryStatistic
      * @param float    $time
      * @param null|int $rowsBeforeLimitAtLeast
      */
-    public function __construct(int $rows, int $bytes, float $time, ?int $rowsBeforeLimitAtLeast)
+    public function __construct(int $rows, int $bytes, float $time, ?int $rowsBeforeLimitAtLeast = null)
     {
         $this->rows = $rows;
         $this->bytes = $bytes;
