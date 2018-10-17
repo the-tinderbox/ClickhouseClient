@@ -64,8 +64,8 @@ class Server
     public function __construct(
         string $host,
         string $port = '8123',
-        string $database = null,
-        string $username = null,
+        string $database = 'default',
+        string $username = 'default',
         string $password = null,
         ServerOptions $options = null
     ) {

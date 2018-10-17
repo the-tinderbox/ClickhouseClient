@@ -2,6 +2,9 @@
 
 namespace Tinderbox\Clickhouse\Exceptions;
 
+/**
+ * @codeCoverageIgnore
+ */
 class ClusterException extends \Exception
 {
     public static function missingServerHostname()
@@ -11,20 +14,11 @@ class ClusterException extends \Exception
 
     public static function serverHostnameDuplicate($hostname)
     {
-        return new static('Hostname '.$hostname.' already provided');
-    }
-
-    public static function invalidServerProvided($server)
-    {
-        return new static(
-            'Invalid server provided. Server must be the type of Server, but '.gettype(
-                $server
-            ).' given'
-        );
+        return new static('Hostname ['.$hostname.'] already provided');
     }
 
     public static function serverNotFound($hostname)
     {
-        return new static('Server with hostname '.$hostname.' is not found in cluster');
+        return new static('Server with hostname ['.$hostname.'] is not found in cluster');
     }
 }

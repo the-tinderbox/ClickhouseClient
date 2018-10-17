@@ -2,9 +2,10 @@
 
 namespace Tinderbox\Clickhouse;
 
+use Tinderbox\Clickhouse\Common\File;
 use Tinderbox\Clickhouse\Common\Format;
 use Tinderbox\Clickhouse\Common\TempTable;
-use Tinderbox\Clickhouse\Exceptions\ClientException;
+use Tinderbox\Clickhouse\Interfaces\FileInterface;
 use Tinderbox\Clickhouse\Interfaces\QueryMapperInterface;
 use Tinderbox\Clickhouse\Interfaces\TransportInterface;
 use Tinderbox\Clickhouse\Query\Mapper\UnnamedMapper;
@@ -31,77 +32,41 @@ class Client
     protected $mapper;
 
     /**
-     * Server to perform requests.
+     * Server provider
      *
-     * @var \Tinderbox\Clickhouse\Server
+     * @var ServerProvider
      */
-    protected $server;
+    protected $serverProvider;
 
     /**
-     * Cluster to perform requests.
+     * Cluster name
      *
-     * In case of using cluster server will be chosen automatically or you may specify server by call using method
-     *
-     * @var \Tinderbox\Clickhouse\Cluster
+     * @var string
      */
-    protected $cluster;
+    protected $clusterName;
 
     /**
-     * Tells client to send queries over whole cluster selecting server by random
+     * Server hostname
      *
-     * @var bool
+     * @var string
      */
-    protected $useRandomServer = false;
+    protected $serverHostname;
 
     /**
      * Client constructor.
      *
-     * @param \Tinderbox\Clickhouse\Server|\Tinderbox\Clickhouse\Cluster $server
+     * @param \Tinderbox\Clickhouse\ServerProvider                       $serverProvider
      * @param \Tinderbox\Clickhouse\Interfaces\QueryMapperInterface|null $mapper
      * @param \Tinderbox\Clickhouse\Interfaces\TransportInterface|null   $transport
-     *
-     * @throws \Tinderbox\Clickhouse\Exceptions\ClientException
      */
-    public function __construct($server, QueryMapperInterface $mapper = null, TransportInterface $transport = null)
-    {
-        $serverType = get_class($server);
-
-        switch ($serverType) {
-            case Server::class:
-                $this->setServer($server);
-                break;
-
-            case Cluster::class:
-                $this->setCluster($server);
-                break;
-
-            default:
-                throw ClientException::invalidServerProvided($server);
-                break;
-        }
-
+    public function __construct(
+        ServerProvider $serverProvider,
+        QueryMapperInterface $mapper = null,
+        TransportInterface $transport = null
+    ) {
+        $this->serverProvider = $serverProvider;
         $this->setTransport($transport);
         $this->setMapper($mapper);
-    }
-
-    /**
-     * Sets flag to use random server in cluster
-     *
-     * @param bool $flag
-     */
-    public function useRandomServer(bool $flag)
-    {
-        $this->useRandomServer = $flag;
-    }
-
-    /**
-     * Returns flag which tells client to use random server in cluster
-     *
-     * @return bool
-     */
-    protected function shouldUseRandomServer() : bool
-    {
-        return !is_null($this->getCluster()) && $this->useRandomServer;
     }
 
     /**
@@ -119,7 +84,7 @@ class Client
      *
      * @return \Tinderbox\Clickhouse\Interfaces\QueryMapperInterface
      */
-    public function getMapper(): QueryMapperInterface
+    protected function getMapper(): QueryMapperInterface
     {
         return $this->mapper;
     }
@@ -145,7 +110,7 @@ class Client
      *
      * @return \Tinderbox\Clickhouse\Client
      */
-    public function setMapper(QueryMapperInterface $mapper = null): self
+    protected function setMapper(QueryMapperInterface $mapper = null): self
     {
         if (is_null($mapper)) {
             return $this->setDefaultMapper();
@@ -169,285 +134,274 @@ class Client
     }
 
     /**
-     * Sets server to perform requests.
-     *
-     * @param \Tinderbox\Clickhouse\Server $server
-     *
-     * @return \Tinderbox\Clickhouse\Client
-     */
-    public function setServer(Server $server): self
-    {
-        $this->server = $server;
-
-        return $this;
-    }
-
-    /**
-     * Returns current server.
-     *
-     * @return \Tinderbox\Clickhouse\Server
-     */
-    public function getServer(): Server
-    {
-        if ($this->shouldUseRandomServer()) {
-            return $this->getRandomServer();
-        }
-
-        return $this->server;
-    }
-
-    /**
-     * Returns random server from cluster
-     *
-     * @return \Tinderbox\Clickhouse\Server
-     */
-    public function getRandomServer() : Server
-    {
-        $cluster = $this->getCluster();
-        $servers = $cluster->getServers();
-        $random = array_rand($servers, 1);
-
-        return $servers[$random];
-    }
-
-    /**
-     * Sets cluster.
-     *
-     * If you have previously used alone server and then want to use cluster, server will be chosen from cluster
-     *
-     * @param \Tinderbox\Clickhouse\Cluster $cluster
-     * @param string|null                   $defaultServerHostname Default server to perform requests
-     *
-     * @return \Tinderbox\Clickhouse\Client
-     */
-    public function setCluster(Cluster $cluster, string $defaultServerHostname = null): self
-    {
-        $this->server = null;
-        $this->cluster = $cluster;
-
-        $this->setServerByDefaultHostname($defaultServerHostname);
-
-        return $this;
-    }
-
-    /**
-     * Gets server from cluster and uses him to perform requests.
-     *
-     * If no hostname provided, will use first server in cluster
-     *
-     * @param string|null $hostname
-     */
-    protected function setServerByDefaultHostname(string $hostname = null)
-    {
-        if (is_null($hostname)) {
-            $servers = $this->getCluster()->getServers();
-            $hostnames = array_keys($servers);
-
-            $hostname = $hostnames[0];
-        }
-
-        $this->using($hostname);
-    }
-
-    /**
-     * Switches between servers in cluster.
-     *
-     * If no cluster provided throws exception
-     *
-     * @param string $hostname
-     *
-     * @throws \Tinderbox\Clickhouse\Exceptions\ClientException
-     *
-     * @return \Tinderbox\Clickhouse\Client
-     */
-    public function using(string $hostname): self
-    {
-        if (is_null($this->getCluster())) {
-            throw ClientException::clusterIsNotProvided();
-        }
-
-        $this->setServer($this->getCluster()->getServerByHostname($hostname));
-
-        return $this;
-    }
-
-    /**
-     * Return cluster.
-     *
-     * @return null|\Tinderbox\Clickhouse\Cluster
-     */
-    public function getCluster(): ?Cluster
-    {
-        return $this->cluster;
-    }
-
-    /**
-     * Removes cluster to use alone server.
-     *
-     * @return \Tinderbox\Clickhouse\Client
-     */
-    public function removeCluster(): self
-    {
-        $this->cluster = null;
-
-        return $this;
-    }
-
-    /**
      * Returns transport.
      *
      * @return TransportInterface
      */
-    protected function getTransport() : TransportInterface
+    protected function getTransport(): TransportInterface
     {
         return $this->transport;
     }
 
     /**
-     * Performs select query.
+     * Client will use servers from specified cluster
+     *
+     * @param string|null $cluster
+     *
+     * @return $this
+     */
+    public function onCluster(?string $cluster)
+    {
+        $this->clusterName = $cluster;
+        $this->serverHostname = null;
+
+        return $this;
+    }
+
+    /**
+     * Returns current cluster name
+     *
+     * @return null|string
+     */
+    protected function getClusterName(): ?string
+    {
+        return $this->clusterName;
+    }
+
+    /**
+     * Client will use specified server
+     *
+     * @param string $serverHostname
+     *
+     * @return $this
+     */
+    public function using(string $serverHostname)
+    {
+        $this->serverHostname = $serverHostname;
+
+        return $this;
+    }
+
+    /**
+     * Client will return random server on each query
+     *
+     * @return $this
+     */
+    public function usingRandomServer()
+    {
+        $this->serverHostname = function () {
+            if ($this->isOnCluster()) {
+                return $this->serverProvider->getRandomServerFromCluster($this->getClusterName());
+            } else {
+                return $this->serverProvider->getRandomServer();
+            }
+        };
+
+        return $this;
+    }
+
+    /**
+     * Returns true if cluster selected
+     *
+     * @return bool
+     */
+    protected function isOnCluster(): bool
+    {
+        return ! is_null($this->getClusterName());
+    }
+
+    /**
+     * Returns server to perform request
+     *
+     * @return Server
+     */
+    public function getServer(): Server
+    {
+        if ($this->serverHostname instanceof \Closure) {
+            $server = call_user_func($this->serverHostname);
+        } else {
+            if ($this->isOnCluster()) {
+                /*
+                 * If no server provided, will take random server from cluster
+                 */
+                if (is_null($this->serverHostname)) {
+                    $server = $this->serverProvider->getRandomServerFromCluster($this->getClusterName());
+                    $this->serverHostname = $server->getHost();
+                } else {
+                    $server = $this->serverProvider->getServerFromCluster($this->getClusterName(), $this->serverHostname);
+                }
+            } else {
+                /*
+                 * If no server provided, will take random server from cluster
+                 */
+                if (is_null($this->serverHostname)) {
+                    $server = $this->serverProvider->getRandomServer();
+                    $this->serverHostname = $server->getHost();
+                } else {
+                    $server = $this->serverProvider->getServer($this->serverHostname);
+                }
+            }
+        }
+
+        return $server;
+    }
+
+    /**
+     * Performs select query and returns one result
      *
      * Example:
      *
      * $client->select('select * from table where column = ?', [1]);
      *
-     * @param string               $query
-     * @param array                $bindings
-     * @param TempTable|array|null $tables
+     * @param string          $query
+     * @param array           $bindings
+     * @param FileInterface[] $tables
+     * @param array           $settings
      *
      * @return \Tinderbox\Clickhouse\Query\Result
      */
-    public function select(string $query, array $bindings = [], $tables = null): Result
+    public function readOne(string $query, array $bindings = [], $tables = [], array $settings = []): Result
     {
-        $query = $this->prepareQuery($query, $bindings).' FORMAT JSON';
+        $query = $this->createQuery($this->getServer(), $query, $bindings, $tables, $settings);
 
-        return $this->getTransport()->get($this->getServer(), $query, $tables);
+        $result = $this->getTransport()->read([$query], 1);
+
+        return $result[0];
     }
 
     /**
-     * Performs async select queries.
-     *
-     * Example:
-     *
-     * $client->selectAsync([
-     *      ['select * from table where column = ?', [1]],
-     *      ['select * from table where column = ?', [2]],
-     *      ['select * from table where column = ?', [3]],
-     * ]);
+     * Performs batch of select queries.
      *
      * @param array $queries
      * @param int   $concurrency Max concurrency requests
      *
      * @return array
      */
-    public function selectAsync(array $queries, int $concurrency = 5): array
+    public function read(array $queries, int $concurrency = 5): array
     {
         foreach ($queries as $i => $query) {
-            $queries[$i] = [$this->prepareQuery($query[0], $query[1] ?? []).' FORMAT JSON', $query[2] ?? null];
+            if (! $query instanceof Query) {
+                $queries[$i] = $this->guessQuery($query);
+            }
         }
 
-        return $this->getTransport()->getAsync($this->getServer(), $queries, $concurrency);
+        return $this->getTransport()->read($queries, $concurrency);
     }
 
     /**
-     * Performs insert query.
-     *
-     * Example:
-     *
-     * $client->insert('insert into table (column, column) values (?, ?), (?,?)', ['1', '2', '3', '4']);
+     * Performs insert or simple statement query.
      *
      * @param string $query
      * @param array  $bindings
      *
      * @return bool
      */
-    public function insert(string $query, array $bindings = []): bool
+    public function writeOne(string $query, array $bindings = []): bool
     {
-        $query = $this->prepareQuery($query, $bindings);
+        if (! $query instanceof Query) {
+            $query = $this->createQuery($this->getServer(), $query, $bindings);
+        }
 
-        return $this->getTransport()->send($this->getServer(), $query);
+        $result = $this->getTransport()->write([$query], 1);
+
+        return $result[0][0];
+    }
+
+    /**
+     * Performs batch of insert or simple statement queries.
+     *
+     * @param array $queries
+     * @param int   $concurrency
+     *
+     * @return array
+     */
+    public function write(array $queries, int $concurrency = 5): array
+    {
+        foreach ($queries as $i => $query) {
+            if (! $query instanceof Query) {
+                $queries[$i] = $this->guessQuery($query);
+            }
+        }
+
+        return $this->getTransport()->write($queries, $concurrency);
     }
 
     /**
      * Performs async insert queries using local csv or tsv files.
      *
-     * Example:
-     *
-     * $result = $client->insertFiles('table', ['column', 'column'], [
-     *      'file1.csv',
-     *      'file2.csv',
-     *      'file3.csv',
-     *      'file4.csv',
-     * ]);
-     *
      * @param string      $table
      * @param array       $columns
      * @param array       $files
      * @param string|null $format
+     * @param array       $settings
      * @param int         $concurrency Max concurrency requests
-     *
-     * @throws \Tinderbox\Clickhouse\Exceptions\ClientException
      *
      * @return array
      */
-    public function insertFiles(string $table, array $columns, array $files, string $format = null, int $concurrency = 5)
-    {
+    public function writeFiles(
+        string $table,
+        array $columns,
+        array $files,
+        string $format = null,
+        array $settings = [],
+        int $concurrency = 5
+    ) {
         if (is_null($format)) {
             $format = Format::CSV;
         }
 
-        $query = 'INSERT INTO '.$table.' ('.implode(', ', $columns).') FORMAT '.strtoupper($format);
+        $sql = 'INSERT INTO '.$table.' ('.implode(', ', $columns).') FORMAT '.strtoupper($format);
 
-        foreach ($files as $file) {
-            if (!is_file($file)) {
-                throw ClientException::insertFileNotFound($file);
+        foreach ($files as $i => $file) {
+            if (! $file instanceof FileInterface) {
+                $files[$i] = new File($file);
             }
         }
 
-        return $this->getTransport()->sendAsyncFilesWithQuery($this->getServer(), $query, $files, $concurrency);
+        $query = $this->createQuery($this->getServer(), $sql, [], $files, $settings);
+
+        return $this->getTransport()->write([$query], $concurrency);
     }
 
     /**
-     * Performs insert query using all given files as one block of data
+     * Creates query instance from specified arguments.
      *
-     * @param string      $table
-     * @param array       $columns
-     * @param array       $files
-     * @param string|null $format
-     * @param array       $options
+     * @param \Tinderbox\Clickhouse\Server $server
+     * @param string                       $sql
+     * @param array                        $bindings
+     * @param array                        $files
+     * @param array                        $settings
      *
-     * @return mixed
-     * @throws ClientException
+     * @return \Tinderbox\Clickhouse\Query
      */
-    public function insertFilesAsOne(string $table, array $columns, array $files, string $format = null, $options = [])
-    {
-        if (is_null($format)) {
-            $format = Format::CSV;
-        }
+    protected function createQuery(
+        Server $server,
+        string $sql,
+        array $bindings = [],
+        array $files = [],
+        array $settings = []
+    ): Query {
+        $preparedSql = $this->prepareSql($sql, $bindings).' FORMAT JSON';
 
-        $query = 'INSERT INTO '.$table.' ('.implode(', ', $columns).') FORMAT '.strtoupper($format);
-
-        foreach ($files as $file) {
-            if (!is_file($file)) {
-                throw ClientException::insertFileNotFound($file);
-            }
-        }
-
-        return $this->getTransport()->sendFilesAsOneWithQuery($this->getServer(), $query, $files, $options);
+        return new Query($server, $preparedSql, $files, $settings);
     }
 
     /**
-     * Executes query.
+     * Parses query array and returns query instance.
      *
-     * Alias for method insert
+     * @param array $query
      *
-     * @param string $query
-     * @param array  $bindings
-     *
-     * @return bool
+     * @return \Tinderbox\Clickhouse\Query
      */
-    public function statement(string $query, array $bindings = []): bool
+    protected function guessQuery(array $query): Query
     {
-        return $this->insert($query, $bindings);
+        $server = $query['server'] ?? $this->getServer();
+        $sql = $query['query'];
+        $bindings = $query['bindings'] ?? [];
+        $tables = $query['files'] ?? [];
+        $settings = $query['settings'] ?? [];
+
+        return $this->createQuery($server, $sql, $bindings, $tables, $settings);
     }
 
     /**
@@ -458,7 +412,7 @@ class Client
      *
      * @return string
      */
-    protected function prepareQuery(string $query, array $bindings)
+    protected function prepareSql(string $query, array $bindings)
     {
         return $this->getMapper()->bind($query, $bindings);
     }

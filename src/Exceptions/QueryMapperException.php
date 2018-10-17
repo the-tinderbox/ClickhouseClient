@@ -2,6 +2,9 @@
 
 namespace Tinderbox\Clickhouse\Exceptions;
 
+/**
+ * @codeCoverageIgnore
+ */
 class QueryMapperException extends \Exception
 {
     public static function wrongBindingsNumber($inQuery, $count)

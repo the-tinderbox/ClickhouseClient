@@ -5,9 +5,11 @@ namespace Tinderbox\Clickhouse;
 use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Psr7\Response;
+use function GuzzleHttp\Psr7\stream_for;
 use PHPUnit\Framework\TestCase;
 use Tinderbox\Clickhouse\Exceptions\ClientException;
 use Tinderbox\Clickhouse\Exceptions\ClusterException;
+use Tinderbox\Clickhouse\Exceptions\ServerProviderException;
 use Tinderbox\Clickhouse\Query\Mapper\NamedMapper;
 use Tinderbox\Clickhouse\Transport\HttpTransport;
 
@@ -18,217 +20,145 @@ use Tinderbox\Clickhouse\Transport\HttpTransport;
  */
 class ClientTest extends TestCase
 {
-    public function testClickhouseUsingServer()
+    public function testGetters()
     {
         $server = new Server('127.0.0.1');
-        $client = new Client($server);
+        $serverProvider = new ServerProvider();
+        $serverProvider->addServer($server);
 
-        $this->assertEquals($server, $client->getServer());
+        $client = new Client($serverProvider);
 
-        $e = ClientException::clusterIsNotProvided();
-        $this->expectException(ClientException::class);
-        $this->expectExceptionMessage($e->getMessage());
-
-        $client->using('h1');
+        $this->assertEquals($serverProvider->getRandomServer(), $client->getServer(), 'Correctly passes server provider');
     }
 
-    public function testClickhouseUsingCluster()
+    public function testClusters()
     {
-        $h1 = new Server('127.0.0.1');
-        $h2 = new Server('127.0.0.2');
-        $h3 = new Server('127.0.0.3');
+        $cluster = new Cluster('test', [
+            new Server('127.0.0.1'),
+            new Server('127.0.0.2'),
+            new Server('127.0.0.3'),
+        ]);
 
-        $cluster = new Cluster(
-            [
-                'h1' => $h1,
-                'h2' => $h2,
-                'h3' => $h3,
-            ]
-        );
+        $cluster2 = new Cluster('test2', [
+            new Server('127.0.0.4'),
+            new Server('127.0.0.5'),
+            new Server('127.0.0.6'),
+        ]);
 
-        $client = new Client($cluster);
+        $serverProvider = new ServerProvider();
+        $serverProvider->addCluster($cluster)->addCluster($cluster2);
 
-        $this->assertEquals($cluster, $client->getCluster());
+        $client = new Client($serverProvider);
 
-        $this->assertEquals($h1, $client->getServer());
+        $server = $client->onCluster('test')->getServer(); /* will return random server from cluster */
+        $this->assertContains($server, $cluster->getServers(), 'Correctly returns random server from specified cluster');
 
-        $client->using('h2');
+        $this->assertEquals($server, $client->getServer(), 'Remembers firstly selected random server for next calls');
 
-        $this->assertEquals($h2, $client->getServer());
+        $client->using('127.0.0.3');
+        $server = $client->getServer();
 
-        $client->removeCluster();
+        $this->assertEquals('127.0.0.3', $server->getHost(), 'Correctly returns specified server from specified cluster');
 
-        $this->assertNull($client->getCluster());
+        $server = $client->onCluster('test2')->getServer(); /* will return random server from cluster */
+        $this->assertContains($server, $cluster2->getServers(), 'Correctly returns random server from specified cluster');
 
-        $client->setCluster($cluster);
+        $client->usingRandomServer();
+        $server = $client->getServer();
 
-        $e = ClusterException::serverNotFound('h4');
+        while ($server === $client->getServer()) {
+            /* Randomize while get non used server */
+        }
+
+        $this->assertTrue(true, 'Correctly randomizes cluster servers on each call');
+
         $this->expectException(ClusterException::class);
-        $this->expectExceptionMessage($e->getMessage());
+        $this->expectExceptionMessage('Server with hostname [127.0.0.0] is not found in cluster');
 
-        $client->using('h4');
+        $client->onCluster('test')->using('127.0.0.0')->getServer();
     }
 
-    public function testClickhouseUsingWrongServer()
+    public function testServers()
     {
-        $wrongServer = null;
+        $server1 = new Server('127.0.0.1');
+        $server2 = new Server('127.0.0.2');
+        $server3 = new Server('127.0.0.3');
 
-        $e = ClientException::invalidServerProvided($wrongServer);
-        $this->expectException(ClientException::class);
-        $this->expectExceptionMessage($e->getMessage());
+        $serverProvider = new ServerProvider();
+        $serverProvider->addServer($server1)->addServer($server2)->addServer($server3);
 
-        $client = new Client($wrongServer);
+        $client = new Client($serverProvider);
+
+        $server = $client->getServer();
+        $this->assertTrue(in_array($server->getHost(), ['127.0.0.1', '127.0.0.2', '127.0.0.3'], true), 'Correctly returns random server');
+
+        $this->assertEquals($server, $client->getServer(), 'Remembers firstly selected random server for next calls');
+
+        $server = $client->using('127.0.0.3')->getServer();
+        $this->assertEquals('127.0.0.3', $server->getHost(), 'Correctly returns specified server');
+
+        $client->usingRandomServer();
+        $server = $client->getServer();
+
+        while ($server === $client->getServer()) {
+            /* Randomize while get non used server */
+        }
+
+        $this->assertTrue(true, 'Correctly randomizes cluster servers on each call');
+
+        $this->expectException(ServerProviderException::class);
+        $this->expectExceptionMessage('Can not find server with hostname [127.0.0.0]');
+
+        $client->using('127.0.0.0')->getServer();
     }
 
-    protected function getMockedTransport(array $responses)
+    public function testClusterAndServersTogether()
     {
-        $mock = new MockHandler($responses);
-
-        $handler = HandlerStack::create($mock);
-
-        return new HttpTransport(new \GuzzleHttp\Client([
-            'handler' => $handler,
-        ]));
-    }
-
-    public function testClickhouseClientSyntaxError()
-    {
-        $transport = $transport = $this->getMockedTransport([
-            new Response(500, [], 'Syntax error'),
+        $cluster = new Cluster('test', [
+            new Server('127.0.0.1'),
+            new Server('127.0.0.2'),
+            new Server('127.0.0.3'),
         ]);
 
-        $server = new Server('127.0.0.1');
-        $client = new Client($server, null, $transport);
+        $server1 = new Server('127.0.0.4');
+        $server2 = new Server('127.0.0.5');
+        $server3 = new Server('127.0.0.6');
 
-        $e = ClientException::serverReturnedError('Syntax error');
-        $this->expectException(ClientException::class);
-        $this->expectExceptionMessage($e->getMessage());
+        $serverProvider = new ServerProvider();
+        $serverProvider->addCluster($cluster)->addServer($server1)->addServer($server2)->addServer($server3);
 
-        $client->select('seelect 1');
+        $client = new Client($serverProvider);
+
+        $server = $client->getServer();
+        $this->assertTrue(in_array($server->getHost(), ['127.0.0.4', '127.0.0.5', '127.0.0.6'], true), 'Correctly returns random server not in cluster');
+
+        $this->assertEquals($server, $client->getServer(), 'Remembers firstly selected random server for next calls');
+
+        $client->onCluster('test');
+
+        $server = $client->onCluster('test')->getServer(); /* will return random server from cluster */
+        $this->assertContains($server, $cluster->getServers(), 'Correctly returns random server from specified cluster');
+
+        $this->assertEquals($server, $client->getServer(), 'Remembers firstly selected random server for next calls');
+
+        $server = $client->onCluster(null)->getServer();
+        $this->assertTrue(in_array($server->getHost(), ['127.0.0.4', '127.0.0.5', '127.0.0.6'], true), 'Correctly returns random server after disabling cluster mode');
     }
 
-    public function testClickhouseQueries()
+    protected function getClient() : Client
     {
-        $transport = $transport = $this->getMockedTransport([
-            new Response(200, [], json_encode([
-                'data' => [
-                    [
-                        '1' => 1,
-                    ],
-                ],
-                'statistics' => [
-                    'rows_read'  => 1,
-                    'bytes_read' => 1,
-                    'elapsed'    => 0.100,
-                ],
-            ])),
+        $serverProvider = new ServerProvider();
+        $serverProvider->addServer(new Server('127.0.0.1', '8123', 'default', 'default', ''));
 
-            new Response(200, [], json_encode([
-                'data' => [
-                    [
-                        '1' => 1,
-                    ],
-                ],
-                'statistics' => [
-                    'rows_read'  => 1,
-                    'bytes_read' => 1,
-                    'elapsed'    => 0.100,
-                ],
-            ])),
-
-            new Response(200, [], json_encode([
-                'data' => [
-                    [
-                        '2' => 2,
-                    ],
-                ],
-                'statistics' => [
-                    'rows_read'  => 1,
-                    'bytes_read' => 1,
-                    'elapsed'    => 0.100,
-                ],
-            ])),
-
-            new Response(200, [], json_encode([
-                'data' => [
-                    [
-                        '3' => 3,
-                    ],
-                ],
-                'statistics' => [
-                    'rows_read'  => 1,
-                    'bytes_read' => 1,
-                    'elapsed'    => 0.100,
-                ],
-            ])),
-
-            new Response(200, [], ''),
-            new Response(200, [], ''),
-            new Response(200, [], ''),
-            new Response(200, [], ''),
-            new Response(200, [], ''),
-        ]);
-
-        $server = new Server('127.0.0.1');
-        $client = new Client($server, null, $transport);
-
-        $result = $client->select('select 1');
-
-        $this->assertEquals(1, $result[0]['1']);
-
-        $this->assertEquals(1, $result->statistic->rows);
-        $this->assertEquals(1, $result->statistic->bytes);
-        $this->assertEquals(0.100, $result->statistic->time);
-
-        $result = $client->selectAsync([
-            ['select 1'],
-            ['select 2'],
-            ['select 3'],
-        ]);
-
-        $this->assertEquals(1, $result[0][0]['1']);
-        $this->assertEquals(2, $result[1][0]['2']);
-        $this->assertEquals(3, $result[2][0]['3']);
-
-        $result = $client->statement('drop table test');
-
-        $this->assertTrue($result);
-
-        $result = $client->insert('insert into table (date, column) VALUES (\'2017-01-01\', 1)');
-
-        $this->assertTrue($result);
-
-        $files = [
-            sys_get_temp_dir().'/test.csv',
-            sys_get_temp_dir().'/test.csv',
-            sys_get_temp_dir().'/test.csv',
-        ];
-
-        file_put_contents($files[0], '');
-
-        $result = $client->insertFiles('table', ['column', 'column'], $files);
-
-        $this->assertEquals(3, count($result));
-        $this->assertTrue($result[0]);
-        $this->assertTrue($result[1]);
-        $this->assertTrue($result[2]);
-
-        unlink($files[0]);
-
-        $e = ClientException::insertFileNotFound($files[0]);
-        $this->expectException(ClientException::class);
-        $this->expectExceptionMessage($e->getMessage());
-
-        $client->insertFiles('table', ['column', 'column'], $files, 'csv');
+        return new Client($serverProvider);
     }
 
-    public function testClickhouseMapper()
+    public function testReadOne()
     {
-        $mapper = new NamedMapper();
+        $client = $this->getClient();
 
-        $server = new Server('127.0.0.1');
-        $client = new Client($server, $mapper);
+        $result = $client->readOne('select * from numbers(?, ?) order by number desc', [0, 10]);
 
-        $this->assertInstanceOf(NamedMapper::class, $client->getMapper());
+        $this->assertEquals(10, count($result->rows), 'Correctly executes query using mapper');
     }
 }

@@ -2,10 +2,13 @@
 
 namespace Tinderbox\Clickhouse\Common;
 
+use Psr\Http\Message\StreamInterface;
+use Tinderbox\Clickhouse\Interfaces\FileInterface;
+
 /**
  * Temporary table for select requests which receives data from local file.
  */
-class TempTable
+class TempTable implements FileInterface
 {
     /**
      * Table name to use in query in where section.
@@ -22,89 +25,43 @@ class TempTable
     protected $structure = [];
 
     /**
-     * Source file.
-     *
-     * @var string
-     */
-    protected $source;
-
-    /**
-     * Source data format.
+     * Format
      *
      * @var string
      */
     protected $format;
 
     /**
+     * Source
+     *
+     * @var string|FileInterface
+     */
+    protected $source;
+
+    /**
      * TempTable constructor.
      *
-     * @param string $name
-     * @param string $source
-     * @param array  $structure
-     * @param string $format
+     * @param string               $name
+     * @param string|FileInterface $source
+     * @param array                $structure
+     * @param string               $format
      */
-    public function __construct(string $name, string $source, array $structure, string $format = Format::CSV)
-    {
-        $this->setName($name);
-        $this->setSource($source);
-        $this->setStructure($structure);
-        $this->setFormat($format);
-    }
-
-    /**
-     * Set name of table.
-     *
-     * @param string $name
-     *
-     * @return \Tinderbox\Clickhouse\Common\TempTable
-     */
-    public function setName(string $name): self
+    public function __construct(string $name, $source, array $structure, string $format = Format::CSV)
     {
         $this->name = $name;
-
-        return $this;
-    }
-
-    /**
-     * Set full path to source file.
-     *
-     * @param string $source
-     *
-     * @return \Tinderbox\Clickhouse\Common\TempTable
-     */
-    public function setSource(string $source): self
-    {
-        $this->source = $source;
-
-        return $this;
-    }
-
-    /**
-     * Set data format in source file.
-     *
-     * @param string $format
-     *
-     * @return \Tinderbox\Clickhouse\Common\TempTable
-     */
-    public function setFormat(string $format): self
-    {
+        $this->structure = $structure;
         $this->format = $format;
 
-        return $this;
+        $this->setSource($source);
     }
 
-    /**
-     * Set table structure.
-     *
-     * @param array $structure
-     *
-     * @return \Tinderbox\Clickhouse\Common\TempTable
-     */
-    public function setStructure(array $structure): self
+    protected function setSource($source)
     {
-        $this->structure = $structure;
+        if (is_scalar($source)) {
+            $source = new File($source);
+        }
 
-        return $this;
+        $this->source = $source;
     }
 
     /**
@@ -118,17 +75,17 @@ class TempTable
     }
 
     /**
-     * Returns full path to source file.
+     * Returns table structure.
      *
-     * @return string
+     * @return array
      */
-    public function getSource(): string
+    public function getStructure(): array
     {
-        return $this->source;
+        return $this->structure;
     }
 
     /**
-     * Returns format of data in source file.
+     * Returns format
      *
      * @return string
      */
@@ -137,13 +94,8 @@ class TempTable
         return $this->format;
     }
 
-    /**
-     * Returns table structure.
-     *
-     * @return array
-     */
-    public function getStructure(): array
+    public function open(bool $gzip = true) : StreamInterface
     {
-        return $this->structure;
+        return $this->source->open($gzip);
     }
 }

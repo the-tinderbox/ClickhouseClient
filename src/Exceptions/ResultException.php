@@ -2,6 +2,9 @@
 
 namespace Tinderbox\Clickhouse\Exceptions;
 
+/**
+ * @codeCoverageIgnore
+ */
 class ResultException extends \Exception
 {
     public static function propertyNotExists($name)

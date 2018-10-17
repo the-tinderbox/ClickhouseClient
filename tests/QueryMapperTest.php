@@ -8,6 +8,7 @@ use Tinderbox\Clickhouse\Query\Mapper\NamedMapper;
 use Tinderbox\Clickhouse\Query\Mapper\UnnamedMapper;
 
 /**
+ * @covers \Tinderbox\Clickhouse\Query\Mapper\AbstractMapper
  * @covers \Tinderbox\Clickhouse\Query\Mapper\NamedMapper
  * @covers \Tinderbox\Clickhouse\Query\Mapper\UnnamedMapper
  */
@@ -17,53 +18,66 @@ class QueryMapperTest extends TestCase
     {
         $mapper = new UnnamedMapper();
         $sql = 'SELECT * FROM table WHERE column = ? AND column2 IN (?, ?, ?, ?, ?)';
-        $bindigns = [1, 2, 3, 4, 5, 'named' => 'test'];
+        $bindings = [1, 2, 3, 4, 5, 'named' => 'test'];
 
         $e = QueryMapperException::multipleBindingsType();
         $this->expectException(QueryMapperException::class);
         $this->expectExceptionMessage($e->getMessage());
 
-        $mapper->bind($sql, $bindigns);
+        $mapper->bind($sql, $bindings);
+    }
+
+    public function testUnnamedMapperWrongBindingsCount()
+    {
+        $mapper = new UnnamedMapper();
+        $sql = 'SELECT * FROM table WHERE column = ? AND column2 IN (?, ?, ?, ?, ?)';
+        $bindings = [1, 2, 3, 4, 5];
+
+        $e = QueryMapperException::wrongBindingsNumber(6, 5);
+        $this->expectException(QueryMapperException::class);
+        $this->expectExceptionMessage($e->getMessage());
+
+        $mapper->bind($sql, $bindings);
     }
 
     public function testUnnamedNumericBindings()
     {
         $mapper = new UnnamedMapper();
         $sql = 'SELECT * FROM table WHERE column = ? AND column2 IN (?, ?, ?, ?, ?)';
-        $bindigns = [1, 2, 3, 4, 5, 6];
+        $bindings = [1, 2, 3, 4, 5, 6];
 
-        $result = $mapper->bind($sql, $bindigns);
+        $result = $mapper->bind($sql, $bindings);
 
-        $this->assertEquals('SELECT * FROM table WHERE column = 1 AND column2 IN (2, 3, 4, 5, 6)', $result);
+        $this->assertEquals('SELECT * FROM table WHERE column = 1 AND column2 IN (2, 3, 4, 5, 6)', $result, 'Correctly replaces numeric bindings');
     }
 
     public function testUnnamedStringBindings()
     {
         $mapper = new UnnamedMapper();
         $sql = 'SELECT * FROM table WHERE column = ? AND column2 IN (?, ?, ?, ?, ?)';
-        $bindigns = ['test', 'a', 'b', 'c', 'd', 'e'];
+        $bindings = ['test', 'a', 'b', 'c', 'd', 'e'];
 
-        $result = $mapper->bind($sql, $bindigns);
+        $result = $mapper->bind($sql, $bindings);
 
-        $this->assertEquals("SELECT * FROM table WHERE column = 'test' AND column2 IN ('a', 'b', 'c', 'd', 'e')", $result);
+        $this->assertEquals("SELECT * FROM table WHERE column = 'test' AND column2 IN ('a', 'b', 'c', 'd', 'e')", $result, 'Correctly replaces string bindings');
 
-        $bindigns = ["test with 'quotes' and / other \\bad stuff", 'a', 'b', 'c', 'd', 'e'];
+        $bindings = ["test with 'quotes' and / other \\bad stuff", 'a', 'b', 'c', 'd', 'e'];
 
-        $result = $mapper->bind($sql, $bindigns);
+        $result = $mapper->bind($sql, $bindings);
 
-        $this->assertEquals("SELECT * FROM table WHERE column = 'test with \'quotes\' and / other \\\\bad stuff' AND column2 IN ('a', 'b', 'c', 'd', 'e')", $result);
+        $this->assertEquals("SELECT * FROM table WHERE column = 'test with \'quotes\' and / other \\\\bad stuff' AND column2 IN ('a', 'b', 'c', 'd', 'e')", $result, 'Correctly replaces string bindings with slashes and quotes');
 
-        $bindigns = ['test with ? mark', 'a', 'b and here ? too', 'c', 'd', 'e'];
+        $bindings = ['test with ? mark', 'a', 'b and here ? too', 'c', 'd', 'e'];
 
-        $result = $mapper->bind($sql, $bindigns);
+        $result = $mapper->bind($sql, $bindings);
 
-        $this->assertEquals("SELECT * FROM table WHERE column = 'test with ? mark' AND column2 IN ('a', 'b and here ? too', 'c', 'd', 'e')", $result);
+        $this->assertEquals("SELECT * FROM table WHERE column = 'test with ? mark' AND column2 IN ('a', 'b and here ? too', 'c', 'd', 'e')", $result, 'Correctly replaces string bindings with ? symbols');
 
-        $bindigns = ['test with %s text', 'a', 'b', 'c', 'd', 'e'];
+        $bindings = ['test with %s text', 'a', 'b', 'c', 'd', 'e'];
 
-        $result = $mapper->bind($sql, $bindigns);
+        $result = $mapper->bind($sql, $bindings);
 
-        $this->assertEquals("SELECT * FROM table WHERE column = 'test with %s text' AND column2 IN ('a', 'b', 'c', 'd', 'e')", $result);
+        $this->assertEquals("SELECT * FROM table WHERE column = 'test with %s text' AND column2 IN ('a', 'b', 'c', 'd', 'e')", $result, 'Correctly replaces string bindings with %s symbols');
     }
 
     public function testNamedMapperCheckMultipleBindings()
@@ -71,20 +85,34 @@ class QueryMapperTest extends TestCase
         $mapper = new NamedMapper();
         $sql = 'SELECT * FROM table WHERE column = :a AND column2 IN (:b, :c, :d, :e, :f)';
 
-        $bindigns = [1, 2, 3, 4, 5, 'named' => 'test'];
+        $bindings = [1, 2, 3, 4, 5, 'named' => 'test'];
 
         $e = QueryMapperException::multipleBindingsType();
         $this->expectException(QueryMapperException::class);
         $this->expectExceptionMessage($e->getMessage());
 
-        $mapper->bind($sql, $bindigns);
+        $mapper->bind($sql, $bindings);
+    }
+
+    public function testNamedMapperWrongBindingsCount()
+    {
+        $mapper = new NamedMapper();
+        $sql = 'SELECT * FROM table WHERE column = :a AND column2 IN (:b, :c, :d, :e, :f)';
+
+        $bindings = ['named' => 'test'];
+
+        $e = QueryMapperException::wrongBindingsNumber(6, 1);
+        $this->expectException(QueryMapperException::class);
+        $this->expectExceptionMessage($e->getMessage());
+
+        $mapper->bind($sql, $bindings);
     }
 
     public function testNamedNumericBindings()
     {
         $mapper = new NamedMapper();
         $sql = 'SELECT * FROM table WHERE column = :a AND column2 IN (:b, :c, :d, :e, :f)';
-        $bindigns = [
+        $bindings = [
             'a' => 1,
             'b' => 2,
             'c' => 3,
@@ -93,16 +121,16 @@ class QueryMapperTest extends TestCase
             'f' => 6,
         ];
 
-        $result = $mapper->bind($sql, $bindigns);
+        $result = $mapper->bind($sql, $bindings);
 
-        $this->assertEquals('SELECT * FROM table WHERE column = 1 AND column2 IN (2, 3, 4, 5, 6)', $result);
+        $this->assertEquals('SELECT * FROM table WHERE column = 1 AND column2 IN (2, 3, 4, 5, 6)', $result, 'Correctly replaces numeric bindings');
     }
 
     public function testNamedStringBindings()
     {
         $mapper = new NamedMapper();
         $sql = 'SELECT * FROM table WHERE column = :a AND column2 IN (:b, :c, :d, :e, :f)';
-        $bindigns = [
+        $bindings = [
             'a' => 'test',
             'b' => 'a',
             'c' => 'b',
@@ -111,11 +139,11 @@ class QueryMapperTest extends TestCase
             'f' => 'e',
         ];
 
-        $result = $mapper->bind($sql, $bindigns);
+        $result = $mapper->bind($sql, $bindings);
 
-        $this->assertEquals("SELECT * FROM table WHERE column = 'test' AND column2 IN ('a', 'b', 'c', 'd', 'e')", $result);
+        $this->assertEquals("SELECT * FROM table WHERE column = 'test' AND column2 IN ('a', 'b', 'c', 'd', 'e')", $result, 'Correctly replaces string bindings');
 
-        $bindigns = [
+        $bindings = [
             'a' => 'test with \'quotes\' and / other \\bad stuff',
             'b' => 'a',
             'c' => 'b',
@@ -124,11 +152,11 @@ class QueryMapperTest extends TestCase
             'f' => 'e',
         ];
 
-        $result = $mapper->bind($sql, $bindigns);
+        $result = $mapper->bind($sql, $bindings);
 
-        $this->assertEquals("SELECT * FROM table WHERE column = 'test with \'quotes\' and / other \\\\bad stuff' AND column2 IN ('a', 'b', 'c', 'd', 'e')", $result);
+        $this->assertEquals("SELECT * FROM table WHERE column = 'test with \'quotes\' and / other \\\\bad stuff' AND column2 IN ('a', 'b', 'c', 'd', 'e')", $result, 'Correctly replaces string bindings with slashes and quotes');
 
-        $bindigns = [
+        $bindings = [
             'a' => 'test with :name',
             'b' => 'a',
             'c' => 'b',
@@ -137,8 +165,8 @@ class QueryMapperTest extends TestCase
             'f' => 'e',
         ];
 
-        $result = $mapper->bind($sql, $bindigns);
+        $result = $mapper->bind($sql, $bindings);
 
-        $this->assertEquals("SELECT * FROM table WHERE column = 'test with :name' AND column2 IN ('a', 'b', 'c', 'd', 'e')", $result);
+        $this->assertEquals("SELECT * FROM table WHERE column = 'test with :name' AND column2 IN ('a', 'b', 'c', 'd', 'e')", $result, 'Correctly replaces string bindings with :name string');
     }
 }

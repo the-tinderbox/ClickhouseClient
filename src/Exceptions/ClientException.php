@@ -2,44 +2,18 @@
 
 namespace Tinderbox\Clickhouse\Exceptions;
 
+/**
+ * @codeCoverageIgnore
+ */
 class ClientException extends \Exception
 {
-    public static function invalidServerProvided($server)
-    {
-        return new static(
-            'Invalid server provided. Server must be the type of Server or Cluster, but '.gettype(
-                $server
-            ).' given'
-        );
-    }
-
     public static function clusterIsNotProvided()
     {
         return new static('Can not execute query using specified server because cluster is not provided');
     }
 
-    public static function connectionError()
+    public static function clusterExists(string $name)
     {
-        return new static('Can\'t connect to the server');
-    }
-
-    public static function serverReturnedError($error)
-    {
-        return new static('Server returned error: '.$error);
-    }
-
-    public static function malformedResponseFromServer($response)
-    {
-        return new static('Malformed response from server: '.$response);
-    }
-
-    public static function insertFileNotFound($file)
-    {
-        return new static('File '.$file.' is not found');
-    }
-
-    public static function notSupported($operation)
-    {
-        return new static('Operation '.$operation.' is not supported');
+        return new static('Can not add cluster with name ['.$name.'], because it already added');
     }
 }

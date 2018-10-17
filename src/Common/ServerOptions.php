@@ -7,12 +7,6 @@ namespace Tinderbox\Clickhouse\Common;
  */
 class ServerOptions
 {
-    /**
-     * Connection timeout.
-     *
-     * @var float
-     */
-    protected $timeout = 5.0;
 
     /**
      * Protocol.
@@ -43,29 +37,5 @@ class ServerOptions
     public function getProtocol(): string
     {
         return $this->protocol;
-    }
-
-    /**
-     * Sets timeout.
-     *
-     * @param float $timeout
-     *
-     * @return \Tinderbox\Clickhouse\Common\ServerOptions
-     */
-    public function setTimeout(float $timeout): self
-    {
-        $this->timeout = $timeout;
-
-        return $this;
-    }
-
-    /**
-     * Returns timeout.
-     *
-     * @return float
-     */
-    public function getTimeout(): float
-    {
-        return $this->timeout;
     }
 }

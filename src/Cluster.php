@@ -10,6 +10,13 @@ use Tinderbox\Clickhouse\Exceptions\ClusterException;
 class Cluster
 {
     /**
+     * Cluster name like in configuration file
+     *
+     * @var string
+     */
+    protected $name;
+
+    /**
      * Servers in cluster.
      *
      * @var \Tinderbox\Clickhouse\Server[]
@@ -19,12 +26,14 @@ class Cluster
     /**
      * Cluster constructor.
      *
-     * $servers may be empty, but when you decide to make request it will fail
-     *
+     * @param string $name
      * @param array $servers
+     *
+     * @throws ClusterException
      */
-    public function __construct(array $servers = [])
+    public function __construct(string $name, array $servers)
     {
+        $this->name = $name;
         $this->addServers($servers);
     }
 
@@ -40,10 +49,6 @@ class Cluster
     public function addServers(array $servers): self
     {
         foreach ($servers as $hostname => $server) {
-            if (!is_string($hostname)) {
-                throw ClusterException::missingServerHostname();
-            }
-
             if (!$server instanceof Server && is_array($server)) {
                 $host = $server['host'];
                 $port = $server['port'] ?? null;
@@ -53,6 +58,11 @@ class Cluster
                 $options = $server['options'] ?? null;
 
                 $server = new Server($host, $port, $database, $username, $password, $options);
+            }
+
+            /* @var Server $server */
+            if (!is_string($hostname)) {
+                $hostname = $server->getHost();
             }
 
             $this->addServer($hostname, $server);
@@ -104,5 +114,15 @@ class Cluster
         }
 
         return $this->servers[$hostname];
+    }
+
+    /**
+     * Returns cluster name
+     *
+     * @return string
+     */
+    public function getName() : string
+    {
+        return $this->name;
     }
 }

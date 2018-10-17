@@ -22,4 +22,8 @@
     <logging>
         <log type="coverage-html" target="tests/coverage" charset="UTF-8"/>
     </logging>
+    <php>
+        <const name="CLICKHOUSE_SERVER_HOST" value="127.0.0.1"/>
+        <const name="CLICKHOUSE_SERVER_PORT" value="8123"/>
+    </php>
 </phpunit>

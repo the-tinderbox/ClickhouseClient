@@ -14,7 +14,7 @@ use Tinderbox\Clickhouse\Query\Result;
  */
 class ResultTest extends TestCase
 {
-    public function testResult()
+    public function testGetters()
     {
         $rows = [
             [
@@ -37,11 +37,11 @@ class ResultTest extends TestCase
 
         $result = new Result($rows, $statistic);
 
-        $this->assertEquals($rows, $result->getRows());
-        $this->assertEquals($statistic, $result->getStatistic());
+        $this->assertEquals($rows, $result->getRows(), 'Returns rows passed to constructor');
+        $this->assertEquals($statistic, $result->getStatistic(), 'Returns statistic passed to constructor');
 
-        $this->assertEquals($rows, $result->rows);
-        $this->assertEquals($statistic, $result->statistic);
+        $this->assertEquals($rows, $result->rows, 'Returns rows passed to constructor via magic property');
+        $this->assertEquals($statistic, $result->statistic, 'Returns statistic passed to constructor via magic property');
 
         $e = ResultException::propertyNotExists('miss');
         $this->expectException(ResultException::class);
@@ -56,7 +56,7 @@ class ResultTest extends TestCase
 
         $result = new Result(['', '', ''], $statistic);
 
-        $this->assertEquals(3, count($result));
+        $this->assertEquals(3, count($result), 'Returns correct rows count via Countable interface');
     }
 
     public function testResultArrayAccessSet()
@@ -82,14 +82,38 @@ class ResultTest extends TestCase
 
         $result = new Result($rows, $statistic);
 
-        $this->assertArrayHasKey(3, $result);
-        $this->assertEquals($rows[2], $result[2]);
-
         $e = ResultException::isReadonly();
         $this->expectException(ResultException::class);
         $this->expectExceptionMessage($e->getMessage());
 
         $result[1] = 'test';
+    }
+
+    public function testResultArrayAccessGet()
+    {
+        $rows = [
+            [
+                'col' => 1,
+            ],
+            [
+                'col' => 2,
+            ],
+            [
+                'col' => 3,
+            ],
+            [
+                'col' => 4,
+            ],
+            [
+                'col' => 5,
+            ],
+        ];
+        $statistic = new QueryStatistic(5, 1024, 0.122);
+
+        $result = new Result($rows, $statistic);
+        $this->assertTrue(isset($result[1]), 'Correctly determines that offset exists via ArrayAccess interface');
+        $this->assertFalse(isset($result[10]), 'Correctly determines that offset does not exists via ArrayAccess interface');
+        $this->assertEquals($rows[0], $result[0], 'Correctly returns offset via ArrayAccess interface');
     }
 
     public function testResultArrayAccessUnset()
@@ -124,6 +148,8 @@ class ResultTest extends TestCase
 
     public function testResultIterator()
     {
+        $this->setName('Correctly iterates over rows via Iterator interface');
+
         $rows = [
             [
                 'col' => 1,

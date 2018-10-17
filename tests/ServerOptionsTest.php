@@ -14,20 +14,10 @@ class ServerOptionsTest extends TestCase
     {
         $options = new ServerOptions();
 
-        $this->assertEquals(5.0, $options->getTimeout());
-
-        $options->setTimeout(1);
-
-        $this->assertEquals(1, $options->getTimeout());
-
-        $this->assertEquals('http', $options->getProtocol());
+        $this->assertEquals('http', $options->getProtocol(), 'Sets correct default protocol');
 
         $options->setProtocol('https');
 
-        $this->assertEquals('https', $options->getProtocol());
-
-        $this->expectException(\TypeError::class);
-
-        $options->setTimeout('not float');
+        $this->assertEquals('https', $options->getProtocol(), 'Sets correct protocol');
     }
 }
