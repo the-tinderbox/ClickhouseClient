@@ -9,7 +9,7 @@ services:
   - docker
 
 before_install:
-  - composer require satooshi/php-coveralls:dev-master
+  - composer require satooshi/php-coveralls
 
 before_script:
   - composer self-update
