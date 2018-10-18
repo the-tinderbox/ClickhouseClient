@@ -165,7 +165,7 @@ class HttpTransportTest extends TestCase
 
         $table = new TempTable('temp', $tableSource, ['UInt64'], Format::TSV);
 
-        $query = new Query($this->getServer(), 'select * from numbers(0, 10) where number in temp format JSON', [$table]);
+        $query = new Query($this->getServer(), 'select * from numbers(0, 10) where number in temp', [$table]);
         $result = $transport->read([$query]);
 
         $this->assertEquals([1,2], array_column($result[0]->rows, 'number'));
@@ -183,7 +183,7 @@ class HttpTransportTest extends TestCase
 
         $table = new TempTable('temp', $tableSource, ['number' => 'UInt64'], Format::TSV);
 
-        $query = new Query($this->getServer(), 'select number from temp format JSON', [$table]);
+        $query = new Query($this->getServer(), 'select number from temp', [$table]);
         $result = $transport->read([$query]);
 
         $this->assertEquals([1,2], array_column($result[0]->rows, 'number'), 'Returns correct result when uses temp tables for read queries');
@@ -195,7 +195,7 @@ class HttpTransportTest extends TestCase
     {
         $transport = $this->getTransport();
 
-        $query = new Query($this->getServer(), 'select * from temp2 format JSON');
+        $query = new Query($this->getServer(), 'select * from temp2');
 
         $this->expectException(TransportException::class);
 
@@ -206,12 +206,12 @@ class HttpTransportTest extends TestCase
     {
         $transport = $this->getTransport();
 
-        $query = new Query($this->getServer(), 'drop table if exists default.tdchc_test_table format JSON');
+        $query = new Query($this->getServer(), 'drop table if exists default.tdchc_test_table');
         $result = $transport->write([$query]);
 
         $this->assertTrue($result[0][0], 'Returns true on write queries without files');
 
-        $query = new Query($this->getServer(), 'create table default.tdchc_test_table (number UInt64, string String) engine = Memory format JSON');
+        $query = new Query($this->getServer(), 'create table default.tdchc_test_table (number UInt64, string String) engine = Memory');
         $transport->write([$query]);
 
         $tableSource = $this->getTempFileName();
@@ -225,7 +225,7 @@ class HttpTransportTest extends TestCase
 
         $this->assertTrue($result[0][0], 'Returns true on write queries');
 
-        $query = new Query($this->getServer(), 'select * from default.tdchc_test_table order by number format JSON');
+        $query = new Query($this->getServer(), 'select * from default.tdchc_test_table order by number');
         $result = $transport->read([$query]);
 
         $this->assertEquals([
@@ -246,7 +246,7 @@ class HttpTransportTest extends TestCase
 
         $this->assertNotEquals($handle, $table->open(), 'Correctly closes file stream after write query');
 
-        $query = new Query($this->getServer(), 'drop table if exists default.tdchc_test_table format JSON');
+        $query = new Query($this->getServer(), 'drop table if exists default.tdchc_test_table');
         $transport->write([$query]);
 
         unlink($tableSource);
@@ -257,13 +257,13 @@ class HttpTransportTest extends TestCase
         $transport = $this->getTransport();
 
         $transport->write([
-            new Query($this->getServer(), 'drop table if exists default.tdchc_test_table format JSON'),
-            new Query($this->getServer(), 'drop table if exists default.tdchc_test_table_2 format JSON'),
+            new Query($this->getServer(), 'drop table if exists default.tdchc_test_table'),
+            new Query($this->getServer(), 'drop table if exists default.tdchc_test_table_2'),
         ]);
 
         $transport->write([
-            new Query($this->getServer(), 'create table default.tdchc_test_table (number UInt64, string String) engine = Memory format JSON'),
-            new Query($this->getServer(), 'create table default.tdchc_test_table_2 (number UInt64, string String) engine = Memory format JSON'),
+            new Query($this->getServer(), 'create table default.tdchc_test_table (number UInt64, string String) engine = Memory'),
+            new Query($this->getServer(), 'create table default.tdchc_test_table_2 (number UInt64, string String) engine = Memory'),
         ]);
 
         $tableSource = $this->getTempFileName();
@@ -283,8 +283,8 @@ class HttpTransportTest extends TestCase
         $this->assertTrue($result[0][0] && $result[0][1] && $result[1][0], 'Returns true on multiple write queries with multiple files');
 
         $result = $transport->read([
-            new Query($this->getServer(), 'select * from default.tdchc_test_table order by number format JSON'),
-            new Query($this->getServer(), 'select * from default.tdchc_test_table_2 order by number  format JSON'),
+            new Query($this->getServer(), 'select * from default.tdchc_test_table order by number'),
+            new Query($this->getServer(), 'select * from default.tdchc_test_table_2 order by number '),
         ]);
 
         $this->assertEquals([
@@ -318,8 +318,8 @@ class HttpTransportTest extends TestCase
         ], $result[1]->rows, 'Returns correct result from recently created table and filled with temp files');
 
         $transport->write([
-            new Query($this->getServer(), 'drop table if exists default.tdchc_test_table format JSON'),
-            new Query($this->getServer(), 'drop table if exists default.tdchc_test_table_2 format JSON'),
+            new Query($this->getServer(), 'drop table if exists default.tdchc_test_table'),
+            new Query($this->getServer(), 'drop table if exists default.tdchc_test_table_2'),
         ]);
 
         unlink($tableSource);
@@ -380,7 +380,23 @@ class HttpTransportTest extends TestCase
         $this->expectExceptionMessageRegExp('/Wrong password for user default/');
 
         $transport->read([
-            new Query(new Server('127.0.0.1', 8123, 'default','default', 'pass'), 'select 1')
+            new Query(new Server('127.0.0.1', 8123, 'default','default', 'pass'), 'select 1', [
+                new TempTable('name', new FileFromString('aaa'), ['string' => 'String'], Format::TSV)
+            ])
+        ]);
+    }
+
+    public function testConnectionWithPasswordOnWrite()
+    {
+        $transport = $this->getTransport();
+
+        $this->expectException(TransportException::class);
+        $this->expectExceptionMessageRegExp('/Wrong password for user default/');
+
+        $transport->write([
+            new Query(new Server('127.0.0.1', 8123, 'default','default', 'pass'), 'insert into table 1', [
+                new FileFromString('aaa')
+            ])
         ]);
     }
 
@@ -400,11 +416,11 @@ class HttpTransportTest extends TestCase
         $transport = $this->getTransport();
 
         $transport->write([
-            new Query($this->getServer(), 'drop table if exists default.tdchc_test_table format JSON'),
+            new Query($this->getServer(), 'drop table if exists default.tdchc_test_table'),
         ]);
 
         $transport->write([
-            new Query($this->getServer(), 'create table default.tdchc_test_table (number UInt64) engine = MergeTree order by number format JSON'),
+            new Query($this->getServer(), 'create table default.tdchc_test_table (number UInt64) engine = MergeTree order by number'),
         ]);
 
         $transport->write([
@@ -412,13 +428,13 @@ class HttpTransportTest extends TestCase
         ]);
 
         $result = $transport->read([
-            new Query($this->getServer(), 'select count() from default.tdchc_test_table format JSON'),
+            new Query($this->getServer(), 'select count() from default.tdchc_test_table'),
         ]);
 
         $this->assertEquals(100, $result[0]->rows[0]['count()'], 'File content may be used in insert statements');
 
         $transport->write([
-            new Query($this->getServer(), 'drop table if exists default.tdchc_test_table format JSON'),
+            new Query($this->getServer(), 'drop table if exists default.tdchc_test_table'),
         ]);
     }
 
@@ -441,11 +457,11 @@ class HttpTransportTest extends TestCase
         $transport = $this->getTransport();
 
         $transport->write([
-            new Query($this->getServer(), 'drop table if exists default.tdchc_test_table format JSON'),
+            new Query($this->getServer(), 'drop table if exists default.tdchc_test_table'),
         ]);
 
         $transport->write([
-            new Query($this->getServer(), 'create table default.tdchc_test_table (number UInt64) engine = MergeTree order by number format JSON'),
+            new Query($this->getServer(), 'create table default.tdchc_test_table (number UInt64) engine = MergeTree order by number'),
         ]);
 
         $transport->write([
@@ -453,13 +469,13 @@ class HttpTransportTest extends TestCase
         ]);
 
         $result = $transport->read([
-            new Query($this->getServer(), 'select count() from default.tdchc_test_table format JSON'),
+            new Query($this->getServer(), 'select count() from default.tdchc_test_table'),
         ]);
 
         $this->assertEquals(100, $result[0]->rows[0]['count()'], 'File content may be used in insert statements');
 
         $transport->write([
-            new Query($this->getServer(), 'drop table if exists default.tdchc_test_table format JSON'),
+            new Query($this->getServer(), 'drop table if exists default.tdchc_test_table'),
         ]);
     }
 
@@ -479,11 +495,11 @@ class HttpTransportTest extends TestCase
         $transport = $this->getTransport();
 
         $transport->write([
-            new Query($this->getServer(), 'drop table if exists default.tdchc_test_table format JSON'),
+            new Query($this->getServer(), 'drop table if exists default.tdchc_test_table'),
         ]);
 
         $transport->write([
-            new Query($this->getServer(), 'create table default.tdchc_test_table (number UInt64, string String) engine = MergeTree order by number format JSON'),
+            new Query($this->getServer(), 'create table default.tdchc_test_table (number UInt64, string String) engine = MergeTree order by number'),
         ]);
 
         $transport->write([
@@ -491,19 +507,51 @@ class HttpTransportTest extends TestCase
         ]);
 
         $result = $transport->read([
-            new Query($this->getServer(), 'select string, count() from default.tdchc_test_table group by string format JSON'),
+            new Query($this->getServer(), 'select string, count() from default.tdchc_test_table group by string'),
         ]);
 
         $this->assertTrue($result[0]->rows[0]['count()'] == 50 && $result[0]->rows[1]['count()'] == 50, 'File content may be used in insert statements');
 
         $result = $transport->read([
-            new Query($this->getServer(), 'select string, count() from name group by string format JSON', [$file]),
+            new Query($this->getServer(), 'select string, count() from name group by string', [$file]),
         ]);
 
         $this->assertTrue($result[0]->rows[0]['count()'] == 50 && $result[0]->rows[1]['count()'] == 50, 'File content may be used in read statements');
 
         $transport->write([
-            new Query($this->getServer(), 'drop table if exists default.tdchc_test_table format JSON'),
+            new Query($this->getServer(), 'drop table if exists default.tdchc_test_table'),
+        ]);
+    }
+
+    public function testFileFromStringReadAndWrite()
+    {
+        $fileContent = [];
+
+        for ($i = 0; $i < 100; $i++) {
+            $fileContent[] = $i."\t".($i >= 50 ? 'string' : 'some').PHP_EOL;
+        }
+
+        $file = new FileFromString(implode('', $fileContent));
+        $table = new TempTable('name', $file, ['number' => 'UInt64', 'string' => 'String'], Format::TSV);
+
+        $transport = $this->getTransport();
+
+        $transport->write([
+            new Query($this->getServer(), 'drop table if exists default.tdchc_test_table'),
+            new Query($this->getServer(), 'create table default.tdchc_test_table (number UInt64, string String) engine = MergeTree order by number'),
+            new Query($this->getServer(), 'insert into default.tdchc_test_table (number, string) FORMAT TSV', [$file]),
+        ]);
+
+        $result = $transport->read([
+            new Query($this->getServer(), 'select string, count() from default.tdchc_test_table group by string'),
+            new Query($this->getServer(), 'select string, count() from name group by string', [$table]),
+        ]);
+
+        $this->assertTrue($result[0]->rows[0]['count()'] == 50 && $result[0]->rows[1]['count()'] == 50, 'File content may be used in insert statements');
+        $this->assertTrue($result[1]->rows[0]['count()'] == 50 && $result[1]->rows[1]['count()'] == 50, 'File content may be used in read statements');
+
+        $transport->write([
+            new Query($this->getServer(), 'drop table if exists default.tdchc_test_table'),
         ]);
     }
 }

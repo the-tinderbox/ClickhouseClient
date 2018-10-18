@@ -82,13 +82,15 @@ class HttpTransport implements TransportInterface
     {
         return new Client();
     }
-
+    
     /**
+     * Executes write queries.
      *
      * @param array $queries
-     * @param int $concurrency
+     * @param int   $concurrency
      *
      * @return array
+     * @throws \Throwable
      */
     public function write(array $queries, int $concurrency = 5) : array
     {
@@ -179,7 +181,7 @@ class HttpTransport implements TransportInterface
                 $multipart = [
                     [
                         'name' => 'query',
-                        'contents' => $query->getQuery()
+                        'contents' => $query->getQuery().' FORMAT JSON'
                     ]
                 ];
 
@@ -191,9 +193,9 @@ class HttpTransport implements TransportInterface
                     $openedStreams[] = $stream;
 
                     $multipart[] = [
-                        'name' => $file->getName(),
+                        'name'     => $file->getName(),
                         'contents' => $stream,
-                        'headers' => $this->getHeaders()
+                        'filename' => $file->getName(),
                     ];
 
                     $params = array_merge($tableQueryParams, $params);
@@ -319,8 +321,6 @@ class HttpTransport implements TransportInterface
      * Assembles Result instance from server response.
      *
      * @param \Psr\Http\Message\ResponseInterface $response
-     *
-     * @throws \Tinderbox\Clickhouse\Exceptions\ClientException
      *
      * @return \Tinderbox\Clickhouse\Query\Result
      */
