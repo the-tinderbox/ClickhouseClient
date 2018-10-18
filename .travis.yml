@@ -23,10 +23,10 @@ before_script:
   - make && make install
   - cd ../../
 
-script: phpunit --coverage-clover ./tests/logs/clover.xml
+script: phpunit --coverage-php coverage/coverage.cov
 
-after_script:
- - php vendor/bin/coveralls -v
+after_success:
+ - php vendor/bin/php-coveralls -v
 
 notifications:
     on_success: never
