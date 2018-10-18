@@ -4,7 +4,7 @@
 Package was written as client for [Clickhouse](https://clickhouse.yandex/).
 
 Client uses [Guzzle](https://github.com/guzzle/guzzle) for sending Http requests to Clickhouse servers.
- 
+
 ## Requirements
 `php7.1`
 
@@ -16,7 +16,7 @@ Composer
 composer require the-tinderbox/clickhouse-php-client
 ```
 
-# Using
+# Usage
 
 Client works with alone server and cluster. Also, client can make async select and insert (from local files) queries.
 
@@ -24,13 +24,15 @@ Client works with alone server and cluster. Also, client can make async select a
 
 ```php
 $server = new Tinderbox\Clickhouse\Server('127.0.0.1', '8123', 'default', 'user', 'pass');
-$client = new Tinderbox\Clickhouse\Client($server);
+$serverProvider = (new Tinderbox\Clickhouse\ServerProvider())->addServer($server);
+
+$client = new Tinderbox\Clickhouse\Client($serverProvider);
 ```
 
 ## Cluster
 
 ```php
-$cluster = new Tinderbox\Clickhouse\Cluster([
+$testCluster = new Tinderbox\Clickhouse\Cluster('cluster-name', [
     'server-1' => [
         'host' => '127.0.0.1',
         'port' => '8123',
@@ -40,11 +42,31 @@ $cluster = new Tinderbox\Clickhouse\Cluster([
     ],
     'server-2' => new Tinderbox\Clickhouse\Server('127.0.0.1', '8124', 'default', 'user', 'pass')
 ]);
-$client = new Tinderbox\Clickhouse\Client($cluster);
+
+$anotherCluster = new Tinderbox\Clickhouse\Cluster('cluster-name', [
+    [
+        'host' => '127.0.0.1',
+        'port' => '8125',
+        'database' => 'default',
+        'user' => 'user',
+        'password' => 'pass'
+    ],
+    new Tinderbox\Clickhouse\Server('127.0.0.1', '8126', 'default', 'user', 'pass')
+]);
+
+$serverProvider = (new Tinderbox\Clickhouse\ServerProvider())->addCluster($testCluster)->addCluster($anotherCluster);
+
+$client = (new Tinderbox\Clickhouse\Client($serverProvider));
 ```
 
-By default client will use first server in given list. If you want to perform request on another server you should use 
-`using($hostname)` method on client and then run query;
+Before execute any query on cluster, you should provide cluster name and client will run all queries on specified cluster.
+
+```
+$client->onCluster('test-cluster');
+```
+
+By default client will use random server in given list of servers or in specified cluster. If you want to perform request on specified server you should use
+`using($hostname)` method on client and then run query. Client will remember hostname for next queries:
 
 ```php
 $client->using('server-2')->select('select * from table');
@@ -91,7 +113,7 @@ $client->select('select * from table where column = :column', [
 
 ## Select queries
 
-Any SELECT query will return instance of `Result`. This class implements interfaces `\ArrayAccess`, `\Countable` и `\Iterator`, 
+Any SELECT query will return instance of `Result`. This class implements interfaces `\ArrayAccess`, `\Countable` и `\Iterator`,
 which means that it can be used as an array.
 
 Array with result rows can be obtained via `rows` property
@@ -104,8 +126,9 @@ $rows = $result->getRows();
 Also you can get some statistic of your query execution:
 
 1. Number of read rows
-2. Number of read bytes 
+2. Number of read bytes
 3. Time of query execution
+4. Rows before limit at least
 
 Statistic can be obtained via `statistic` property
 
@@ -121,12 +144,15 @@ echo $statistic->getBytes();
 
 echo $statistic->time;
 echo $statistic->getTime();
+
+echo $statistic->rowsBeforeLimitAtLeast;
+echo $statistic->getRowsBeforeLimitAtLeast();
 ```
 
 ### Sync
 
 ```php
-$result = $client->select('select number from system.numbers limit 100');
+$result = $client->readOne('select number from system.numbers limit 100');
 
 foreach ($result as $number) {
     echo $number['number'].PHP_EOL;
@@ -135,7 +161,7 @@ foreach ($result as $number) {
 
 **Using local files**
 
-You can use local files as temporary tables in Clickhouse. You should pass as second argument array of `TempTable` instances or single `TempTable`
+You can use local files as temporary tables in Clickhouse. You should pass as third argument array of `TempTable` instances.
 instance.
 
 In this case will be sent one file to the server from which Clickhouse will extract data to temporary table.
@@ -152,7 +178,7 @@ If you pass such an array as a structure:
 Then each column from file wil be named as _1, _2, _3.
 
 ```php
-$result = $client->select('select number from system.numbers where number in _numbers limit 100', new TempTable('_numbers', 'numbers.csv', [
+$result = $client->readOne('select number from system.numbers where number in _numbers limit 100', new TempTable('_numbers', 'numbers.csv', [
     'number' => 'UInt64'
 ]));
 
@@ -161,16 +187,18 @@ foreach ($result as $number) {
 }
 ```
 
+You can provide path to file or pass `FileInterface` instance as second argument.
+
 ### Async
 
-Unlike the `select` method, which returns` Result`, the `selectAsync` method returns an array of` Result` for each executed query.
+Unlike the `readOne` method, which returns` Result`, the `read` method returns an array of` Result` for each executed query.
 
 ```php
 
-list($clicks, $visits, $views) = $client->selectAsync([
-    ['select * from clicks where date = ?', ['2017-01-01']],
-    ['select * from visits where date = ?', ['2017-01-01']],
-    ['select * from views where date = ?', ['2017-01-01']],
+list($clicks, $visits, $views) = $client->read([
+    ['query' => 'select * from clicks where date = ?', 'bindings' => ['2017-01-01']],
+    ['query' => 'select * from visits where date = ?', 'bindings' => ['2017-01-01']],
+    ['query' => 'select * from views where date = ?', 'bindings' => ['2017-01-01']],
 ]);
 
 foreach ($clicks as $click) {
@@ -178,7 +206,7 @@ foreach ($clicks as $click) {
 }
 
 ```
-**In `selectAsync` method, you can pass the parameter `$concurrency` which is responsible for the maximum simultaneous number of requests.**
+**In `read` method, you can pass the parameter `$concurrency` which is responsible for the maximum simultaneous number of requests.**
 
 **Using local files**
 
@@ -186,10 +214,10 @@ As with synchronous select request you can pass files to the server:
 
 ```php
 
-list($clicks, $visits, $views) = $client->selectAsync([
-    ['select * from clicks where date = ? and userId in _users', ['2017-01-01'], new TempTable('_users', 'users.csv', ['number' => 'UInt64'])],
-    ['select * from visits where date = ?', ['2017-01-01']],
-    ['select * from views where date = ?', ['2017-01-01']],
+list($clicks, $visits, $views) = $client->read([
+    ['query' => 'select * from clicks where date = ? and userId in _users', 'bindings' => ['2017-01-01'], new TempTable('_users', 'users.csv', ['number' => 'UInt64'])],
+    ['query' => 'select * from visits where date = ?', 'bindings' => ['2017-01-01']],
+    ['query' => 'select * from views where date = ?', 'bindings' => ['2017-01-01']],
 ]);
 
 foreach ($clicks as $click) {
@@ -207,29 +235,47 @@ Insert queries always returns true or throws exceptions in case of error.
 Data can be written row by row or from local CSV or TSV files.
 
 ```php
-$client->insert('insert into table (date, column) values (?,?), (?,?)', ['2017-01-01', 1, '2017-01-02', 2]);
+$client->writeOne('insert into table (date, column) values (?,?), (?,?)', ['2017-01-01', 1, '2017-01-02', 2]);
+$client->write([
+    ['query' => 'insert into table (date, column) values (?,?), (?,?)', 'bindings' => ['2017-01-01', 1, '2017-01-02', 2]],
+    ['query' => 'insert into table (date, column) values (?,?), (?,?)', 'bindings' => ['2017-01-01', 1, '2017-01-02', 2]],
+    ['query' => 'insert into table (date, column) values (?,?), (?,?)', 'bindings' => ['2017-01-01', 1, '2017-01-02', 2]]
+]);
 
-$client->insertFiles('table', ['date', 'column'], [
-    '/file-1.csv',
-    '/file-2.csv'
+$client->writeFiles('table', ['date', 'column'], [
+    new Tinderbox\Clickhouse\Common\File('/file-1.csv'),
+    new Tinderbox\Clickhouse\Common\File('/file-2.csv')
 ]);
 
 $client->insertFiles('table', ['date', 'column'], [
-    '/file-1.tsv',
-    '/file-2.tsv'
+    new Tinderbox\Clickhouse\Common\File('/file-1.tsv'),
+    new Tinderbox\Clickhouse\Common\File('/file-2.tsv')
 ], Tinderbox\Clickhouse\Common\Format::TSV);
 ```
 
-In case of `insertFiles` queries exetues asynchronously
+In case of `writeFiles` queries executes asynchronously. If you have butch of files and you want to insert them in one insert query, you can
+use our `ccat` utility and `MergedFiles` instance instead of `File`. You should put list of files to insert into
+one file:
 
-**In `insertFiles` method, you can pass the parameter `$concurrency` which is responsible for the maximum simultaneous number of requests.**
+```
+file-1.tsv
+file-2.tsv
+```
+
+### Building ccat
+
+`ccat` sources placed into `utils/ccat` directory. Just run `make && make install` to build and install library into
+`bin` directory of package. There are already compiled binary of `ccat` in `bin` directory, but it
+may not work on some systems.
+
+**In `writeFiles` method, you can pass the parameter `$concurrency` which is responsible for the maximum simultaneous number of requests.**
 
 ## Other queries
 
 In addition to SELECT and INSERT queries, you can execute other queries :) There is `statement` method for this purposes.
 
 ```php
-$client->statement('DROP TABLE table');
+$client->writeOne('DROP TABLE table');
 ```
 
 ## Testing
