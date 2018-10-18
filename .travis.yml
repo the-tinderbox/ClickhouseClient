@@ -8,6 +8,12 @@ sudo: required
 services:
   - docker
 
+install: make get-deps
+
+compiler:
+  - clang
+  - g++
+
 before_install:
   - composer require satooshi/php-coveralls
 
@@ -15,6 +21,8 @@ before_script:
   - composer self-update
   - composer install --prefer-source --dev
   - docker run -p 9000:9000 -p 8123:8123 -d --name some-clickhouse-server --ulimit nofile=262144:262144 yandex/clickhouse-server
+  - cd utils/ccat
+  - make && make install
 
 script: phpunit --coverage-clover ./tests/logs/clover.xml
 
