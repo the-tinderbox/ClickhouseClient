@@ -13,7 +13,7 @@ compiler:
   - g++
 
 before_install:
-  - composer require php-coveralls/php-coveralls
+  - composer require satooshi/php-coveralls
 
 before_script:
   - composer self-update
@@ -23,10 +23,10 @@ before_script:
   - make && make install
   - cd ../../
 
-script: phpunit --coverage-php coverage/coverage.cov
+script: phpunit --coverage-clover ./tests/logs/clover.xml
 
-after_success:
- - php vendor/bin/php-coveralls -v
+after_script:
+ - php vendor/bin/coveralls -v
 
 notifications:
     on_success: never
