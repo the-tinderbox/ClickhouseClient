@@ -215,7 +215,7 @@ class HttpTransport implements TransportInterface
             $this->httpClient, $requests($queries), [
                 'concurrency' => $concurrency,
                 'fulfilled' => function ($response, $index) use (&$result, $queries) {
-                    $result[$index] = $this->assembleResult($response);
+                    $result[$index] = $this->assembleResult($queries[$index], $response);
                 },
                 'rejected' => function ($response, $index) use ($queries) {
                     $query = $queries[$index];
@@ -320,11 +320,12 @@ class HttpTransport implements TransportInterface
     /**
      * Assembles Result instance from server response.
      *
+     * @param Query $query
      * @param \Psr\Http\Message\ResponseInterface $response
      *
      * @return \Tinderbox\Clickhouse\Query\Result
      */
-    protected function assembleResult(ResponseInterface $response): Result
+    protected function assembleResult(Query $query, ResponseInterface $response): Result
     {
         $response = $response->getBody()->getContents();
 
@@ -338,7 +339,7 @@ class HttpTransport implements TransportInterface
                 $result['rows_before_limit_at_least'] ?? null
             );
 
-            return new Result($result['data'] ?? [], $statistic);
+            return new Result($query, $result['data'] ?? [], $statistic);
         } catch (\Exception $e) {
             throw TransportException::malformedResponseFromServer($response);
         }

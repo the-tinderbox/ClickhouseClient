@@ -56,7 +56,7 @@ class ClientTest extends TestCase
     
         $transport = $this->createMock(TransportInterface::class);
         $transport->method('read')->willReturn([
-            new Result([0,1], new QueryStatistic(0,0,0,0))
+            new Result(new Query($server, ''), [0,1], new QueryStatistic(0,0,0,0))
         ]);
         
         $client = new Client($serverProvider, null, $transport);

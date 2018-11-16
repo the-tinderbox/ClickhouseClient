@@ -33,16 +33,19 @@ class ResultTest extends TestCase
                 'col' => 5,
             ],
         ];
+        $query = new Query(new Server('localhost'), '');
         $statistic = new QueryStatistic(5, 1024, 0.122);
 
-        $result = new Result($rows, $statistic);
+        $result = new Result($query, $rows, $statistic);
 
         $this->assertEquals($rows, $result->getRows(), 'Returns rows passed to constructor');
         $this->assertEquals($statistic, $result->getStatistic(), 'Returns statistic passed to constructor');
+        $this->assertEquals($query, $result->getQuery(), 'Returns query passed to constructor');
 
         $this->assertEquals($rows, $result->rows, 'Returns rows passed to constructor via magic property');
         $this->assertEquals($statistic, $result->statistic, 'Returns statistic passed to constructor via magic property');
-
+        $this->assertEquals($query, $result->query, 'Returns query passed to constructor via magic property');
+        
         $e = ResultException::propertyNotExists('miss');
         $this->expectException(ResultException::class);
         $this->expectExceptionMessage($e->getMessage());
@@ -52,9 +55,10 @@ class ResultTest extends TestCase
 
     public function testResultCountable()
     {
+        $query = new Query(new Server('localhost'), '');
         $statistic = new QueryStatistic(5, 1024, 0.122);
 
-        $result = new Result(['', '', ''], $statistic);
+        $result = new Result($query, ['', '', ''], $statistic);
 
         $this->assertEquals(3, count($result), 'Returns correct rows count via Countable interface');
     }
@@ -78,9 +82,10 @@ class ResultTest extends TestCase
                 'col' => 5,
             ],
         ];
+        $query = new Query(new Server('localhost'), '');
         $statistic = new QueryStatistic(5, 1024, 0.122);
 
-        $result = new Result($rows, $statistic);
+        $result = new Result($query, $rows, $statistic);
 
         $e = ResultException::isReadonly();
         $this->expectException(ResultException::class);
@@ -108,9 +113,10 @@ class ResultTest extends TestCase
                 'col' => 5,
             ],
         ];
+        $query = new Query(new Server('localhost'), '');
         $statistic = new QueryStatistic(5, 1024, 0.122);
 
-        $result = new Result($rows, $statistic);
+        $result = new Result($query, $rows, $statistic);
         $this->assertTrue(isset($result[1]), 'Correctly determines that offset exists via ArrayAccess interface');
         $this->assertFalse(isset($result[10]), 'Correctly determines that offset does not exists via ArrayAccess interface');
         $this->assertEquals($rows[0], $result[0], 'Correctly returns offset via ArrayAccess interface');
@@ -135,9 +141,10 @@ class ResultTest extends TestCase
                 'col' => 5,
             ],
         ];
+        $query = new Query(new Server('localhost'), '');
         $statistic = new QueryStatistic(5, 1024, 0.122);
-
-        $result = new Result($rows, $statistic);
+        
+        $result = new Result($query, $rows, $statistic);
 
         $e = ResultException::isReadonly();
         $this->expectException(ResultException::class);
@@ -167,9 +174,10 @@ class ResultTest extends TestCase
                 'col' => 5,
             ],
         ];
+        $query = new Query(new Server('localhost'), '');
         $statistic = new QueryStatistic(5, 1024, 0.122);
 
-        $result = new Result($rows, $statistic);
+        $result = new Result($query, $rows, $statistic);
 
         $prev = null;
 
