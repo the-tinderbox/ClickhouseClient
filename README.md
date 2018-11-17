@@ -189,6 +189,15 @@ foreach ($result as $number) {
 
 You can provide path to file or pass `FileInterface` instance as second argument.
 
+There is some other types of file streams which could be used to send to server:
+* File - simple file stored on disk;
+* FileFromString - stream created from string. For example: `new FileFromString('1'.PHP_EOL.'2'.PHP_EOL.'3'.PHP_EOL)`
+* MergedFiles - stream which includes many files and merges them all in one.
+You should pass to constructor file path, which contains list of files which
+should be megred in one stream.
+* TempTable - wrapper to any of `FileInterface` instance and contains structure. Usefull
+to make inserts using with `MergedFiles`.
+
 ### Async
 
 Unlike the `readOne` method, which returns` Result`, the `read` method returns an array of` Result` for each executed query.
