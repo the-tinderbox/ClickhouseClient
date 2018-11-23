@@ -171,7 +171,7 @@ class HttpTransport implements TransportInterface
         $openedStreams = [];
 
         $requests = function ($queries) use(&$openedStreams) {
-            foreach ($queries as $query) {
+            foreach ($queries as $index => $query) {
                 /* @var Query $query */
 
                 $params = [
@@ -205,7 +205,7 @@ class HttpTransport implements TransportInterface
 
                 $uri = $this->buildRequestUri($query->getServer(), $params);
 
-                yield new Request('POST', $uri, [], $body);
+                yield $index => new Request('POST', $uri, [], $body);
             }
         };
 
