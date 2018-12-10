@@ -106,7 +106,7 @@ class HttpTransport implements TransportInterface
 
                         $uri = $this->buildRequestUri($query->getServer(), [
                             'query' => $query->getQuery()
-                        ]);
+                        ], $query->getSettings());
 
                         $stream = $file->open();
                         $openedStreams[] = $stream;
@@ -118,7 +118,7 @@ class HttpTransport implements TransportInterface
                 } else {
                     $headers = $this->getHeaders();
 
-                    $uri = $this->buildRequestUri($query->getServer());
+                    $uri = $this->buildRequestUri($query->getServer(), [], $query->getSettings());
 
                     $request = new Request('POST', $uri, $headers, gzencode($query->getQuery()));
 
@@ -203,7 +203,7 @@ class HttpTransport implements TransportInterface
 
                 $body = new MultipartStream($multipart);
 
-                $uri = $this->buildRequestUri($query->getServer(), $params);
+                $uri = $this->buildRequestUri($query->getServer(), $params, $query->getSettings());
 
                 yield $index => new Request('POST', $uri, [], $body);
             }
@@ -349,11 +349,12 @@ class HttpTransport implements TransportInterface
      * Builds uri with necessary params.
      *
      * @param \Tinderbox\Clickhouse\Server $server
-     * @param array $query
+     * @param array                        $query
+     * @param array                        $settings
      *
      * @return string
      */
-    protected function buildRequestUri(Server $server, array $query = []): string
+    protected function buildRequestUri(Server $server, array $query = [], array $settings = []): string
     {
         $uri = $server->getOptions()->getProtocol() . '://' . $server->getHost() . ':' . $server->getPort();
 
@@ -368,6 +369,8 @@ class HttpTransport implements TransportInterface
         if (!is_null($server->getPassword())) {
             $query['password'] = $server->getPassword();
         }
+
+        $query = array_merge($query, $settings);
 
         return $uri . '?' . http_build_query($query);
     }
