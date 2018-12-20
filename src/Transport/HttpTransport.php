@@ -339,7 +339,7 @@ class HttpTransport implements TransportInterface
                 $result['rows_before_limit_at_least'] ?? null
             );
 
-            return new Result($query, $result['data'] ?? [], $statistic);
+            return new Result($query, $result['data'] ?? [], $statistic, $result['totals'] ?? null);
         } catch (\Exception $e) {
             throw TransportException::malformedResponseFromServer($response);
         }

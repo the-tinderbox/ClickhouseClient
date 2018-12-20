@@ -35,17 +35,20 @@ class ResultTest extends TestCase
         ];
         $query = new Query(new Server('localhost'), '');
         $statistic = new QueryStatistic(5, 1024, 0.122);
+        $totals = ['col' => 15];
 
         $result = new Result($query, $rows, $statistic);
 
         $this->assertEquals($rows, $result->getRows(), 'Returns rows passed to constructor');
         $this->assertEquals($statistic, $result->getStatistic(), 'Returns statistic passed to constructor');
         $this->assertEquals($query, $result->getQuery(), 'Returns query passed to constructor');
+        $this->assertEquals($totals, $result->getTotals(), 'Returns totals passed to constructor');
 
         $this->assertEquals($rows, $result->rows, 'Returns rows passed to constructor via magic property');
         $this->assertEquals($statistic, $result->statistic, 'Returns statistic passed to constructor via magic property');
         $this->assertEquals($query, $result->query, 'Returns query passed to constructor via magic property');
-        
+        $this->assertEquals($totals, $result->totals, 'Returns totals passed to constructor via magic property');
+
         $e = ResultException::propertyNotExists('miss');
         $this->expectException(ResultException::class);
         $this->expectExceptionMessage($e->getMessage());

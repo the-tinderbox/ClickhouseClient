@@ -13,6 +13,7 @@ use Tinderbox\Clickhouse\Query;
  * @property Query          $query
  * @property array          $rows
  * @property QueryStatistic $statistic
+ * @property array          $totals
  */
 class Result implements \ArrayAccess, \Iterator, \Countable
 {
@@ -29,6 +30,11 @@ class Result implements \ArrayAccess, \Iterator, \Countable
      * @var array
      */
     protected $rows;
+
+    /**
+     * @var array|null
+     */
+    protected $totals;
     
     /**
      * Query which was executed to get this result.
@@ -43,19 +49,19 @@ class Result implements \ArrayAccess, \Iterator, \Countable
      * @var int
      */
     protected $current = 0;
-    
+
     /**
-     * Result constructor.
-     *
-     * @param Query                                      $query
-     * @param array                                      $rows
+     * @param Query $query
+     * @param array $rows
      * @param \Tinderbox\Clickhouse\Query\QueryStatistic $statistic
+     * @param array $totals
      */
-    public function __construct(Query $query, array $rows, QueryStatistic $statistic)
+    public function __construct(Query $query, array $rows, QueryStatistic $statistic, ?array $totals = null)
     {
         $this->setQuery($query);
         $this->setRows($rows);
         $this->setStatistic($statistic);
+        $this->setTotals($totals);
     }
     
     /**
@@ -87,6 +93,14 @@ class Result implements \ArrayAccess, \Iterator, \Countable
     {
         $this->rows = $rows;
     }
+
+    /**
+     * @param array|null $totals
+     */
+    protected function setTotals(?array $totals)
+    {
+        $this->totals = $totals;
+    }
     
     /**
      * Returns rows.
@@ -116,6 +130,14 @@ class Result implements \ArrayAccess, \Iterator, \Countable
     public function getStatistic(): QueryStatistic
     {
         return $this->statistic;
+    }
+
+    /**
+     * @return array|null
+     */
+    public function getTotals(): ?array
+    {
+        return $this->totals;
     }
     
     /**
