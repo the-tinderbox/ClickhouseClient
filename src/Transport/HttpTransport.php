@@ -30,22 +30,34 @@ class HttpTransport implements TransportInterface
     protected $httpClient;
 
     /**
-     * Connection timeout.
+     * Array with two keys (read and write) with guzzle options for corresponding requests.
      *
-     * @var float
+     * [
+     *   'read' => [
+     *     'timeout' => 50,
+     *     'connect_timeout => 10,
+     *   ],
+     *   'write' => [
+     *     'debug' => true,
+     *     'timeout' => 100,
+     *   ],
+     * ]
+     *
+     * @var array
      */
-    protected $connectionTimeout = 5.0;
+    private $options;
 
     /**
      * HttpTransport constructor.
      *
      * @param Client $client
-     * @param float $connectionTimeout
+     * @param array $options
      */
-    public function __construct(Client $client = null, float $connectionTimeout = 5.0)
+    public function __construct(Client $client = null, array $options = [])
     {
         $this->setClient($client);
-        $this->connectionTimeout = $connectionTimeout;
+
+        $this->options = $options;
     }
 
     /**
@@ -135,10 +147,9 @@ class HttpTransport implements TransportInterface
                         $queryResult[$index] = true;
                     },
                     'rejected' => $this->parseReason($query),
-                    'options' => [
-                        'connect_timeout' => $this->connectionTimeout,
+                    'options' => array_merge([
                         'expect' => false
-                    ],
+                    ], $this->options['write'] ?? []),
                 ]
             );
 
@@ -222,10 +233,9 @@ class HttpTransport implements TransportInterface
 
                     $this->parseReason($query)($response);
                 },
-                'options' => [
-                    'connect_timeout' => $this->connectionTimeout,
+                'options' => array_merge([
                     'expect' => false
-                ],
+                ], $this->options['read'] ?? []),
             ]
         );
 
@@ -307,7 +317,7 @@ class HttpTransport implements TransportInterface
                 $response = $reason->getResponse();
 
                 if (is_null($response)) {
-                    throw TransportException::connectionError($query->getServer());
+                    throw TransportException::connectionError($query->getServer(), $reason->getMessage());
                 } else {
                     throw TransportException::serverReturnedError($reason, $query);
                 }

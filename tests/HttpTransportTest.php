@@ -333,7 +333,7 @@ class HttpTransportTest extends TestCase
 
     public function testConnectionError()
     {
-        $transport = new HttpTransport(null, 0.1);
+        $transport = new HttpTransport(null, ['read' => ['connect_timeout' => 0.1]]);
 
         $this->expectException(TransportException::class);
         $this->expectExceptionMessage('Can\'t connect to the server [KHGIUYhakljsfnk:8123]');
