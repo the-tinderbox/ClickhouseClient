@@ -1,10 +1,11 @@
 #include <iostream>
-#include <ext/stdio_filebuf.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <limits.h>
 #include <errno.h>
+#include <stdio.h>
+#include <string.h>
 
 # define ZERO_BYTE_TRANSFER_ERRNO 0
 
@@ -33,14 +34,14 @@ size_t safe_write (int fd, void const *buf, size_t count)
     }
 }
 
-size_t full_rw (int fd, const void *buf, size_t count)
+size_t writeToStdOut (const void *buf, size_t count)
 {
   size_t total = 0;
   const char *ptr = (const char *) buf;
 
   while (count > 0)
     {
-      size_t n_rw = safe_write (fd, ptr, count);
+      size_t n_rw = safe_write (1, ptr, count);
       if (n_rw == (size_t) -1)
         break;
       if (n_rw == 0)
@@ -74,6 +75,8 @@ int main(int argc, char const *argv[])
 
     if (!file) {
         std::cerr << "failed to open " << argv[1] << std::endl;
+
+        return EXIT_FAILURE;
     }
 
     int fileDescriptor = fileno(file);
@@ -81,12 +84,8 @@ int main(int argc, char const *argv[])
     //Notify the system that we will sequentially read the file on that file descriptor
     posix_fadvise(fileDescriptor, 0, 0, POSIX_FADV_SEQUENTIAL);
 
-    //Make c++ istream from file descriptor
-    __gnu_cxx::stdio_filebuf<char> filebuf(fileDescriptor, std::ios::in);
-
-    std::istream is(&filebuf);
-
-    std::string fileName;
+    char * fileName = NULL;
+    size_t len = 0;
 
     char *inbuf;
 
@@ -97,12 +96,19 @@ int main(int argc, char const *argv[])
     /*
         Main loop with fast buffered read of files though syscals and output to stdout.
     */
-    while(std::getline(is, fileName)) {
+    while(getline(&fileName, &len, file) != -1) {
 
-        int fileWithDataDescriptor = open(fileName.c_str(), O_RDONLY);
+        //remove \n character for opening file.
+        fileName[strcspn(fileName, "\n")] = 0;
 
-        if (!fileWithDataDescriptor) {
-            std::cerr << "failed to open " << fileName << std::endl;
+        int fileWithDataDescriptor = open(fileName, O_RDONLY);
+
+        if (fileWithDataDescriptor == -1) {
+
+            perror("fopen");
+            std::cerr << fileName << std::endl;
+            close(fileDescriptor);
+
             return EXIT_FAILURE;
         }
 
@@ -113,15 +119,15 @@ int main(int argc, char const *argv[])
 
         while(n_read = read(fileWithDataDescriptor, inbuf, insize))
         {
-            full_rw(1, inbuf, n_read);
+            writeToStdOut(inbuf, n_read);
         }
 
         free(inbuf);
         close(fileWithDataDescriptor);
     }
 
-    filebuf.close();
     close(fileDescriptor);
 
     return EXIT_SUCCESS;
 }
+
