@@ -101,7 +101,7 @@ int main(int argc, char const *argv[])
         //remove \n character for opening file.
         fileName[strcspn(fileName, "\n")] = 0;
 
-        int fileWithDataDescriptor = open(fileName, O_RDONLY);
+        int fileWithDataDescriptor = open(fileName, O_RDONLY|O_DIRECT);
 
         if (fileWithDataDescriptor == -1) {
 
