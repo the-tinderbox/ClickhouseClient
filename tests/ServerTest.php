@@ -17,7 +17,8 @@ class ServerTest extends TestCase
 
         $this->assertEquals('8123', $server->getPort(), 'Sets correct default HTTP port');
         $this->assertEquals('default', $server->getDatabase(), 'Sets correct default database');
-        $this->assertEquals('default', $server->getUsername(), 'Sets correct default username');
+        $this->assertEquals(null, $server->getUsername(), 'Sets correct default username');
+        $this->assertEquals(null, $server->getPassword(), 'Sets correct default password');
     }
 
     public function testGetters()
