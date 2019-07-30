@@ -19,7 +19,6 @@ class ServerTest extends TestCase
         $this->assertEquals('default', $server->getDatabase(), 'Sets correct default database');
         $this->assertEquals(null, $server->getUsername(), 'Sets correct default username');
         $this->assertEquals(null, $server->getPassword(), 'Sets correct default password');
-
     }
 
     public function testGetters()
