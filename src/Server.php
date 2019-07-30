@@ -56,7 +56,7 @@ class Server
      *
      * @param string                                          $host
      * @param string                                          $port
-     * @param string|null                                     $database
+     * @param string                                          $database
      * @param string|null                                     $username
      * @param string|null                                     $password
      * @param \Tinderbox\Clickhouse\Common\ServerOptions|null $options
@@ -65,7 +65,7 @@ class Server
         string $host,
         string $port = '8123',
         string $database = 'default',
-        string $username = 'default',
+        string $username = null,
         string $password = null,
         ServerOptions $options = null
     ) {
