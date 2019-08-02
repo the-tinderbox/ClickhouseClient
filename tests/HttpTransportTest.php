@@ -12,6 +12,7 @@ use Tinderbox\Clickhouse\Common\Format;
 use Tinderbox\Clickhouse\Common\MergedFiles;
 use Tinderbox\Clickhouse\Common\TempTable;
 use Tinderbox\Clickhouse\Exceptions\TransportException;
+use Tinderbox\Clickhouse\Support\ServerTrait;
 use Tinderbox\Clickhouse\Transport\HttpTransport;
 
 /**
@@ -19,6 +20,8 @@ use Tinderbox\Clickhouse\Transport\HttpTransport;
  */
 class HttpTransportTest extends TestCase
 {
+    use ServerTrait;
+
     protected function getMockedTransport(array $responses) : HttpTransport
     {
         $mock = new MockHandler($responses);
@@ -33,11 +36,6 @@ class HttpTransportTest extends TestCase
     protected function getQuery() : Query
     {
         return new Query($this->getServer(), 'select * from table');
-    }
-
-    protected function getServer() : Server
-    {
-        return new Server(CLICKHOUSE_SERVER_HOST, CLICKHOUSE_SERVER_PORT, 'default', 'default');
     }
 
     protected function getTransport() : HttpTransport
@@ -379,11 +377,10 @@ class HttpTransportTest extends TestCase
         $this->expectException(TransportException::class);
         $this->expectExceptionMessageRegExp('/Wrong password for user default/');
 
-        $transport->read([
-            new Query(new Server('127.0.0.1', 8123, 'default','default', 'pass'), 'select 1', [
-                new TempTable('name', new FileFromString('aaa'), ['string' => 'String'], Format::TSV)
-            ])
-        ]);
+        $server = $this->getServer('default', 'default', 'pass');
+        $file = new TempTable('name', new FileFromString('aaa'), ['string' => 'String'], Format::TSV);
+
+        $transport->read([new Query($server, 'select 1', [$file])]);
     }
 
     public function testConnectionWithPasswordOnWrite()
@@ -393,10 +390,10 @@ class HttpTransportTest extends TestCase
         $this->expectException(TransportException::class);
         $this->expectExceptionMessageRegExp('/Wrong password for user default/');
 
+        $server = $this->getServer('default', 'default', 'pass');
+
         $transport->write([
-            new Query(new Server('127.0.0.1', 8123, 'default','default', 'pass'), 'insert into table 1', [
-                new FileFromString('aaa')
-            ])
+            new Query($server, 'insert into table ', [new FileFromString('aaa')])
         ]);
     }
 

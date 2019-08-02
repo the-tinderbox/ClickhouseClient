@@ -12,6 +12,7 @@ use Tinderbox\Clickhouse\Interfaces\TransportInterface;
 use Tinderbox\Clickhouse\Query\Mapper\NamedMapper;
 use Tinderbox\Clickhouse\Query\QueryStatistic;
 use Tinderbox\Clickhouse\Query\Result;
+use Tinderbox\Clickhouse\Support\ServerTrait;
 
 /**
  * @covers \Tinderbox\Clickhouse\Client
@@ -20,9 +21,11 @@ use Tinderbox\Clickhouse\Query\Result;
  */
 class ClientTest extends TestCase
 {
+    use ServerTrait;
+
     public function testGetters()
     {
-        $server = new Server('127.0.0.1');
+        $server = $this->getServer();
         $serverProvider = new ServerProvider();
         $serverProvider->addServer($server);
         
@@ -37,7 +40,7 @@ class ClientTest extends TestCase
     
     public function testMappers()
     {
-        $server = new Server('127.0.0.1');
+        $server = $this->getServer();
         $serverProvider = new ServerProvider();
         $serverProvider->addServer($server);
     
@@ -50,7 +53,7 @@ class ClientTest extends TestCase
     
     public function testTransports()
     {
-        $server = new Server('127.0.0.1');
+        $server = $this->getServer();
         $serverProvider = new ServerProvider();
         $serverProvider->addServer($server);
     
@@ -214,7 +217,7 @@ class ClientTest extends TestCase
     protected function getClient(): Client
     {
         $serverProvider = new ServerProvider();
-        $serverProvider->addServer(new Server('127.0.0.1', '8123', 'default', 'default', ''));
+        $serverProvider->addServer($this->getServer());
         
         return new Client($serverProvider);
     }
