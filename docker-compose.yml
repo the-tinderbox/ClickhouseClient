@@ -1,0 +1,22 @@
+version: "3.6"
+
+services:
+  clickhouse:
+    image: "yandex/clickhouse-server:19.11.3.11"
+  composer:
+    image: "composer"
+    volumes:
+      - "./:/app"
+      - ${COMPOSER_HOME:-$HOME/.composer}:/tmp
+  phpunit:
+    image: "php"
+    depends_on:
+      - clickhouse
+    volumes:
+      - "./:/app"
+    working_dir: "/app"
+    entrypoint:
+      - "./vendor/bin/phpunit"
+    environment:
+      "CH_HOST": "clickhouse"
+      "CH_PORT": "8123"
