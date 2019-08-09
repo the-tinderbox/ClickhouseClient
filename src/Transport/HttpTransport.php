@@ -16,12 +16,15 @@ use Tinderbox\Clickhouse\Query;
 use Tinderbox\Clickhouse\Query\QueryStatistic;
 use Tinderbox\Clickhouse\Query\Result;
 use Tinderbox\Clickhouse\Server;
+use Tinderbox\Clickhouse\Common\Format;
 
 /**
  * Http transport to perform queries.
  */
 class HttpTransport implements TransportInterface
 {
+    const SUPPORTED_READ_FORMATS = [Format::JSON, Format::JSONCompact];
+
     /**
      * GuzzleClient.
      *
@@ -177,11 +180,22 @@ class HttpTransport implements TransportInterface
         return $result;
     }
 
-    public function read(array $queries, int $concurrency = 5) : array
+    /**
+     * @param array $queries
+     * @param int $concurrency
+     * @param string $format
+     * @return Result[]
+     * @throws \Throwable
+     */
+    public function read(array $queries, int $concurrency = 5, string $format = Format::JSON) : array
     {
         $openedStreams = [];
 
-        $requests = function ($queries) use(&$openedStreams) {
+        if (!in_array($format, self::SUPPORTED_READ_FORMATS)) {
+            throw TransportException::unsupportedFormat($format, self::SUPPORTED_READ_FORMATS);
+        }
+
+        $requests = function ($queries) use(&$openedStreams, $format) {
             foreach ($queries as $index => $query) {
                 /* @var Query $query */
 
@@ -191,8 +205,8 @@ class HttpTransport implements TransportInterface
 
                 $multipart = [
                     [
-                        'name' => 'query',
-                        'contents' => $query->getQuery().' FORMAT JSON'
+                        'name'     => 'query',
+                        'contents' => $query->getQuery().' FORMAT ' . $format
                     ]
                 ];
 
@@ -282,7 +296,7 @@ class HttpTransport implements TransportInterface
      *
      * @param \Tinderbox\Clickhouse\Common\TempTable $table
      *
-     * @return string
+     * @return array
      */
     protected function assembleTempTableStructure(TempTable $table)
     {
@@ -349,10 +363,26 @@ class HttpTransport implements TransportInterface
                 $result['rows_before_limit_at_least'] ?? null
             );
 
-            return new Result($query, $result['data'] ?? [], $statistic);
+            $meta = $this->assembleMeta($result);
+
+            return new Result($query, $result['data'] ?? [], $statistic, $meta);
         } catch (\Exception $e) {
             throw TransportException::malformedResponseFromServer($response);
         }
+    }
+
+    /**
+     * @param array $response
+     * @return Query\Meta
+     */
+    protected function assembleMeta(array $response): Query\Meta
+    {
+        $meta = new Query\Meta();
+        foreach ($response['meta'] as $row) {
+            $meta->push(new Query\MetaColumn($row['name'], $row['type']));
+        }
+
+        return $meta;
     }
 
     /**

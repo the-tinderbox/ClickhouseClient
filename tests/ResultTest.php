@@ -6,6 +6,8 @@ use PHPUnit\Framework\TestCase;
 use Tinderbox\Clickhouse\Exceptions\ResultException;
 use Tinderbox\Clickhouse\Query\QueryStatistic;
 use Tinderbox\Clickhouse\Query\Result;
+use Tinderbox\Clickhouse\Query\Meta;
+use Tinderbox\Clickhouse\Query\MetaColumn;
 
 /**
  * @covers \Tinderbox\Clickhouse\Query\Result
@@ -35,17 +37,21 @@ class ResultTest extends TestCase
         ];
         $query = new Query(new Server('localhost'), '');
         $statistic = new QueryStatistic(5, 1024, 0.122);
+        $meta = new Meta([new MetaColumn('test', 'String')]);
 
-        $result = new Result($query, $rows, $statistic);
+        $result = new Result($query, $rows, $statistic, $meta);
 
         $this->assertEquals($rows, $result->getRows(), 'Returns rows passed to constructor');
         $this->assertEquals($statistic, $result->getStatistic(), 'Returns statistic passed to constructor');
         $this->assertEquals($query, $result->getQuery(), 'Returns query passed to constructor');
+        $this->assertEquals($meta, $result->getMeta(), 'Returns meta passed to constructor');
 
         $this->assertEquals($rows, $result->rows, 'Returns rows passed to constructor via magic property');
         $this->assertEquals($statistic, $result->statistic, 'Returns statistic passed to constructor via magic property');
         $this->assertEquals($query, $result->query, 'Returns query passed to constructor via magic property');
-        
+        $this->assertEquals($meta, $result->meta, 'Returns meta passed to constructor via magic property');
+
+
         $e = ResultException::propertyNotExists('miss');
         $this->expectException(ResultException::class);
         $this->expectExceptionMessage($e->getMessage());
@@ -55,10 +61,11 @@ class ResultTest extends TestCase
 
     public function testResultCountable()
     {
+        $meta = new Meta();
         $query = new Query(new Server('localhost'), '');
         $statistic = new QueryStatistic(5, 1024, 0.122);
 
-        $result = new Result($query, ['', '', ''], $statistic);
+        $result = new Result($query, ['', '', ''], $statistic, $meta);
 
         $this->assertEquals(3, count($result), 'Returns correct rows count via Countable interface');
     }
@@ -84,8 +91,9 @@ class ResultTest extends TestCase
         ];
         $query = new Query(new Server('localhost'), '');
         $statistic = new QueryStatistic(5, 1024, 0.122);
+        $meta = new Meta();
 
-        $result = new Result($query, $rows, $statistic);
+        $result = new Result($query, $rows, $statistic, $meta);
 
         $e = ResultException::isReadonly();
         $this->expectException(ResultException::class);
@@ -115,8 +123,9 @@ class ResultTest extends TestCase
         ];
         $query = new Query(new Server('localhost'), '');
         $statistic = new QueryStatistic(5, 1024, 0.122);
+        $meta = new Meta();
 
-        $result = new Result($query, $rows, $statistic);
+        $result = new Result($query, $rows, $statistic, $meta);
         $this->assertTrue(isset($result[1]), 'Correctly determines that offset exists via ArrayAccess interface');
         $this->assertFalse(isset($result[10]), 'Correctly determines that offset does not exists via ArrayAccess interface');
         $this->assertEquals($rows[0], $result[0], 'Correctly returns offset via ArrayAccess interface');
@@ -143,8 +152,9 @@ class ResultTest extends TestCase
         ];
         $query = new Query(new Server('localhost'), '');
         $statistic = new QueryStatistic(5, 1024, 0.122);
+        $meta = new Meta();
         
-        $result = new Result($query, $rows, $statistic);
+        $result = new Result($query, $rows, $statistic, $meta);
 
         $e = ResultException::isReadonly();
         $this->expectException(ResultException::class);
@@ -176,8 +186,9 @@ class ResultTest extends TestCase
         ];
         $query = new Query(new Server('localhost'), '');
         $statistic = new QueryStatistic(5, 1024, 0.122);
+        $meta = new Meta();
 
-        $result = new Result($query, $rows, $statistic);
+        $result = new Result($query, $rows, $statistic, $meta);
 
         $prev = null;
 
