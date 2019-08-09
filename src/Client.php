@@ -273,7 +273,7 @@ class Client
     ): Result {
         $query = $this->createQuery($this->getServer(), $query, $bindings, $files, $settings);
         
-        $result = $this->getTransport()->read([$query], 1, strtoupper($format));
+        $result = $this->getTransport()->read([$query], 1, $format);
         
         return $result[0];
     }
