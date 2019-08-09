@@ -9,7 +9,9 @@ services:
       - "./:/app"
       - ${COMPOSER_HOME:-$HOME/.composer}:/tmp
   phpunit:
-    image: "php"
+    build:
+      context: .
+      dockerfile: Dockerfile
     depends_on:
       - clickhouse
     volumes:
