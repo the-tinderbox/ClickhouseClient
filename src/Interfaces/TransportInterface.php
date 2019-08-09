@@ -4,6 +4,7 @@ namespace Tinderbox\Clickhouse\Interfaces;
 
 use Tinderbox\Clickhouse\Query;
 use Tinderbox\Clickhouse\Query\Result;
+use Tinderbox\Clickhouse\Common\Format;
 
 /**
  * Interface describes transport.
@@ -25,10 +26,11 @@ interface TransportInterface
     /**
      * Executes queries which returns result of any select expression
      *
-     * @param array $queries
-     * @param int   $concurrency
+     * @param array  $queries
+     * @param int    $concurrency
+     * @param string $format
      *
      * @return Result[]
      */
-    public function read(array $queries, int $concurrency = 5): array;
+    public function read(array $queries, int $concurrency = 5, string $format = Format::JSON): array;
 }

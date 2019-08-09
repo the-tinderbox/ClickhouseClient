@@ -248,7 +248,7 @@ class Client
         
         return $server;
     }
-    
+
     /**
      * Performs select query and returns one result
      *
@@ -256,18 +256,24 @@ class Client
      *
      * $client->select('select * from table where column = ?', [1]);
      *
-     * @param string          $query
-     * @param array           $bindings
+     * @param string $query
+     * @param array $bindings
      * @param FileInterface[] $files
-     * @param array           $settings
+     * @param array $settings
+     * @param string $format
      *
      * @return \Tinderbox\Clickhouse\Query\Result
      */
-    public function readOne(string $query, array $bindings = [], array $files = [], array $settings = []): Result
-    {
+    public function readOne(
+        string $query,
+        array $bindings = [],
+        array $files = [],
+        array $settings = [],
+        string $format = Format::JSON
+    ): Result {
         $query = $this->createQuery($this->getServer(), $query, $bindings, $files, $settings);
         
-        $result = $this->getTransport()->read([$query], 1);
+        $result = $this->getTransport()->read([$query], 1, strtoupper($format));
         
         return $result[0];
     }

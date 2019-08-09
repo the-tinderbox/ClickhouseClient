@@ -33,4 +33,9 @@ class TransportException extends \Exception
     {
         return new static('Malformed response from server: '.$response);
     }
+
+    public static function unsupportedFormat(string $format, array $supported)
+    {
+        return new static(sprintf("Unsupported format: %s. Support only: %s", $format, implode(', ', $supported)));
+    }
 }

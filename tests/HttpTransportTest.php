@@ -47,6 +47,12 @@ class HttpTransportTest extends TestCase
     {
         $transport = $this->getMockedTransport([
             new Response(200, [], json_encode([
+                'meta'                       => [
+                    [
+                        'name' => '1',
+                        'type' => 'UInt32',
+                    ]
+                ],
                 'data'                       => [
                     [
                         '1' => 1,
@@ -79,6 +85,10 @@ class HttpTransportTest extends TestCase
             'elapsed'    => $result[0]->statistic->time,
         ], 'Returns correct statistic from server');
 
+        $this->assertCount(1, $result[0]->getMeta()->all());
+        $metaColumn = $result[0]->getMeta()->getForColumn('1');
+        $this->assertEquals(['1', 'UInt32'], [$metaColumn->getColumn(), $metaColumn->getType()], 'Parse meta correct');
+
         $this->assertEquals(1024, $result[0]->statistic->rowsBeforeLimitAtLeast, 'Returns correct rows_before_limit_at_least');
     }
 
@@ -86,6 +96,12 @@ class HttpTransportTest extends TestCase
     {
         $transport = $this->getMockedTransport([
             new Response(200, [], json_encode([
+                'meta'                       => [
+                    [
+                        'name' => '1',
+                        'type' => 'UInt32',
+                    ]
+                ],
                 'data'                       => [
                     [
                         '1' => 1,
@@ -100,6 +116,12 @@ class HttpTransportTest extends TestCase
             ])),
 
             new Response(200, [], json_encode([
+                'meta'                       => [
+                    [
+                        'name' => '1',
+                        'type' => 'Int32',
+                    ]
+                ],
                 'data'                       => [
                     [
                         '1' => 2,
@@ -132,6 +154,10 @@ class HttpTransportTest extends TestCase
             'elapsed'    => $result[0]->statistic->time,
         ], 'Returns correct statistic from server');
 
+        $this->assertCount(1, $result[0]->getMeta()->all());
+        $metaColumn = $result[0]->getMeta()->getForColumn('1');
+        $this->assertEquals(['1', 'UInt32'], [$metaColumn->getColumn(), $metaColumn->getType()], 'Parse meta correct');
+
         $this->assertEquals(1024, $result[0]->statistic->rowsBeforeLimitAtLeast, 'Returns correct rows_before_limit_at_least');
 
         $this->assertEquals([
@@ -149,6 +175,10 @@ class HttpTransportTest extends TestCase
             'bytes_read' => $result[1]->statistic->bytes,
             'elapsed'    => $result[1]->statistic->time,
         ], 'Returns correct statistic from server');
+
+        $this->assertCount(1, $result[1]->getMeta()->all());
+        $metaColumn = $result[1]->getMeta()->getForColumn('1');
+        $this->assertEquals(['1', 'Int32'], [$metaColumn->getColumn(), $metaColumn->getType()], 'Parse meta correct');
 
         $this->assertEquals(1025, $result[1]->statistic->rowsBeforeLimitAtLeast, 'Returns correct rows_before_limit_at_least');
     }
@@ -550,5 +580,45 @@ class HttpTransportTest extends TestCase
         $transport->write([
             new Query($this->getServer(), 'drop table if exists default.tdchc_test_table'),
         ]);
+    }
+
+    public function testReadUnsupportedFormat()
+    {
+        $this->expectException(TransportException::class);
+        $this->expectExceptionMessageRegExp('/Unsupported format/');
+
+        $transport = $this->getTransport();
+        $transport->read([
+            new Query($this->getServer(), 'SELECT * FROM test'),
+        ], 1, 'UNKNOWN');
+    }
+
+    public function testReadJsonCompact()
+    {
+        $fileContent = [];
+
+        for ($i = 0; $i < 100; $i++) {
+            $fileContent[] = [$i, ($i >= 50 ? 'string' : 'some')];
+        }
+
+        $file = new FileFromString(implode(PHP_EOL, array_map(function (array $data) {
+            return implode("\t", $data);
+        }, $fileContent)));
+        $table = new TempTable('name', $file, ['number' => 'UInt64', 'string' => 'String'], Format::TSV);
+
+        $transport = $this->getTransport();
+        $result = $transport->read([
+            new Query($this->getServer(), 'SELECT * FROM name', [$table]),
+        ], 1, Format::JSONCompact);
+
+        $result = $result[0];
+
+        $this->assertEquals($fileContent, $result->getRows());
+        $this->assertCount(2, $result->getMeta()->all());
+        $number = $result->getMeta()->getForColumn('number');
+        $this->assertEquals(['number', 'UInt64'], [$number->getColumn(), $number->getType()]);
+
+        $string = $result->getMeta()->getForColumn('string');
+        $this->assertEquals(['string', 'String'], [$string->getColumn(), $string->getType()]);
     }
 }

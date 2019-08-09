@@ -13,13 +13,14 @@ use Tinderbox\Clickhouse\Query;
  * @property Query          $query
  * @property array          $rows
  * @property QueryStatistic $statistic
+ * @property Meta           $meta
  */
 class Result implements \ArrayAccess, \Iterator, \Countable
 {
     /**
      * Query execution statistic.
      *
-     * @var \Tinderbox\Clickhouse\Query\QueryStatistic
+     * @var QueryStatistic
      */
     protected $statistic;
     
@@ -43,19 +44,26 @@ class Result implements \ArrayAccess, \Iterator, \Countable
      * @var int
      */
     protected $current = 0;
-    
+
+    /**
+     * @var Meta
+     */
+    protected $meta;
+
     /**
      * Result constructor.
      *
-     * @param Query                                      $query
-     * @param array                                      $rows
-     * @param \Tinderbox\Clickhouse\Query\QueryStatistic $statistic
+     * @param Query          $query
+     * @param array          $rows
+     * @param QueryStatistic $statistic
+     * @param Meta $meta
      */
-    public function __construct(Query $query, array $rows, QueryStatistic $statistic)
+    public function __construct(Query $query, array $rows, QueryStatistic $statistic, Meta $meta)
     {
         $this->setQuery($query);
         $this->setRows($rows);
         $this->setStatistic($statistic);
+        $this->setMeta($meta);
     }
     
     /**
@@ -198,5 +206,15 @@ class Result implements \ArrayAccess, \Iterator, \Countable
     public function count()
     {
         return count($this->rows);
+    }
+
+    public function setMeta(Meta $meta)
+    {
+        $this->meta = $meta;
+    }
+
+    public function getMeta(): Meta
+    {
+        return $this->meta;
     }
 }

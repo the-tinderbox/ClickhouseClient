@@ -13,6 +13,7 @@ use Tinderbox\Clickhouse\Query\Mapper\NamedMapper;
 use Tinderbox\Clickhouse\Query\QueryStatistic;
 use Tinderbox\Clickhouse\Query\Result;
 use Tinderbox\Clickhouse\Support\ServerTrait;
+use Tinderbox\Clickhouse\Query\Meta;
 
 /**
  * @covers \Tinderbox\Clickhouse\Client
@@ -59,7 +60,7 @@ class ClientTest extends TestCase
 
         $transport = $this->createMock(TransportInterface::class);
         $transport->method('read')->willReturn([
-            new Result(new Query($server, ''), [0, 1], new QueryStatistic(0, 0, 0, 0)),
+            new Result(new Query($server, ''), [0, 1], new QueryStatistic(0, 0, 0, 0), new Meta()),
         ]);
 
         $client = new Client($serverProvider, null, $transport);
@@ -229,6 +230,7 @@ class ClientTest extends TestCase
         $result = $client->readOne('select * from numbers(?, ?) order by number desc', [0, 10]);
 
         $this->assertEquals(10, count($result->rows), 'Correctly executes query using mapper');
+        $this->assertCount(1, $result->getMeta()->all());
     }
 
     public function testRead()
