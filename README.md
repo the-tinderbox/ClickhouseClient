@@ -289,8 +289,30 @@ $client->writeOne('DROP TABLE table');
 
 ## Testing
 
+Install dependencies (one time)
+
+``` bash
+$ composer install
+```
+
+Run tests
+
 ``` bash
 $ composer test
+```
+
+## Testing with Docker
+
+Install dependencies (one time)
+
+``` bash
+$ docker-compose run --rm composer install
+```
+
+Run tests
+
+``` bash
+$ docker-compose run --rm phpunit
 ```
 
 ## Roadmap
