@@ -1,8 +1,5 @@
 language: php
 
-php:
-  - '7.1'
-
 sudo: required
 
 services:
@@ -13,20 +10,18 @@ compiler:
   - g++
 
 before_install:
-  - composer require satooshi/php-coveralls
+  - docker-compose run --rm composer require satooshi/php-coveralls
 
 before_script:
-  - composer self-update
-  - composer install --prefer-source --dev
-  - docker run -p 9000:9000 -p 8123:8123 -d --name some-clickhouse-server --ulimit nofile=262144:262144 yandex/clickhouse-server
+  - docker-compose run --rm composer install --prefer-source --dev
   - cd utils/ccat
   - make && make install
   - cd ../../
 
-script: phpunit --coverage-clover ./tests/logs/clover.xml
+script: docker-compose run --rm phpunit --coverage-clover ./tests/logs/clover.xml
 
 after_script:
- - php vendor/bin/php-coveralls -v
+ - docker-compose run cli vendor/bin/php-coveralls -v
 
 notifications:
     on_success: never
