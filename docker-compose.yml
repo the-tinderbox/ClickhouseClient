@@ -4,19 +4,30 @@ services:
   clickhouse:
     image: "yandex/clickhouse-server:19.11.3.11"
   composer:
-    image: "composer"
+    build:
+      context: .
+      dockerfile: Dockerfile
+    entrypoint:
+      - "composer"
     volumes:
       - "./:/app"
       - ${COMPOSER_HOME:-$HOME/.composer}:/tmp
   phpunit:
-    image: "php"
+    build:
+      context: .
+      dockerfile: Dockerfile
     depends_on:
       - clickhouse
     volumes:
       - "./:/app"
-    working_dir: "/app"
     entrypoint:
       - "./vendor/bin/phpunit"
     environment:
       "CH_HOST": "clickhouse"
       "CH_PORT": "8123"
+  cli:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - "./:/app"
