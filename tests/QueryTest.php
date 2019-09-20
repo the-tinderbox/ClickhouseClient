@@ -15,10 +15,10 @@ class QueryTest extends TestCase
     {
         $server = new Server('127.0.0.1');
         $files = [
-            new File('file', Format::CSV)
+            new File('file', Format::CSV),
         ];
         $settings = [
-            'setting' => 'value'
+            'setting' => 'value',
         ];
 
         $query = new Query($server, 'select * from table', $files, $settings);

@@ -3,8 +3,6 @@
 namespace Tinderbox\Clickhouse;
 
 use PHPUnit\Framework\TestCase;
-use Tinderbox\Clickhouse\Common\File;
-use Tinderbox\Clickhouse\Common\Format;
 use Tinderbox\Clickhouse\Exceptions\ServerProviderException;
 
 /**

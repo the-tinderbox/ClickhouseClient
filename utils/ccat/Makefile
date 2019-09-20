@@ -1,12 +1,13 @@
 CC=g++
 
 INSTALLBINDIR := ../../bin
-EXECUTABLE := ccat
+OS_NAME := $(shell uname -s | tr A-Z a-z)
+EXECUTABLE := "ccat_$(OS_NAME)"
 
 all: ccat
 
 ccat: ccat.cpp
-	@echo "Compiling $<..."; $(CC) ccat.cpp -o ccat
+	@echo "Compiling $<..."; $(CC) ccat.cpp -o $(EXECUTABLE)
 
 clean:
 	rm -rf ../../bin/ccat

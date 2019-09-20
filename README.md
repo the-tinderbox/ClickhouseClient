@@ -72,45 +72,6 @@ By default client will use random server in given list of servers or in specifie
 $client->using('server-2')->select('select * from table');
 ```
 
-## Values mappers
-
-There are two ways to bind values into raw sql:
-
-1. Unnamed placeholders like `?` in query;
-2. Named placeholders like `:paramname` in query.
-
-To choose the right one, you can pass mapper to client constructor as second argument.
-
-```php
-$unnamedMapper = new Tinderbox\Clickhouse\Query\Mapper\UnnamedMapper();
-$namedMapper = new Tinderbox\Clickhouse\Query\Mapper\NamedMapper();
-
-$client = new Tinderbox\Clickhouse\Client($server, $unnamedMapper);
-$client = new Tinderbox\Clickhouse\Client($server, $namedMapper);
-```
-
-By default client uses `UnnamedMapper`.
-
-### Unnamed
-
-In case of unnamed placeholder, bindings array should be non-associative.
-
-```php
-$client->select('select * from table where column = ?', [1]);
-```
-
-### Named
-
-In case of named placeholder, bindings array should be associative where each key corresponds to placeholder in query.
-
-Key may contain `:` or not, but placeholder in query must have `:`.
-
-```php
-$client->select('select * from table where column = :column', [
-    'column' => 1
-]);
-```
-
 ## Select queries
 
 Any SELECT query will return instance of `Result`. This class implements interfaces `\ArrayAccess`, `\Countable` и `\Iterator`,
@@ -205,9 +166,9 @@ Unlike the `readOne` method, which returns` Result`, the `read` method returns a
 ```php
 
 list($clicks, $visits, $views) = $client->read([
-    ['query' => 'select * from clicks where date = ?', 'bindings' => ['2017-01-01']],
-    ['query' => 'select * from visits where date = ?', 'bindings' => ['2017-01-01']],
-    ['query' => 'select * from views where date = ?', 'bindings' => ['2017-01-01']],
+    ['query' => "select * from clicks where date = '2017-01-01'"],
+    ['query' => "select * from visits where date = '2017-01-01'"],
+    ['query' => "select * from views where date = '2017-01-01'"],
 ]);
 
 foreach ($clicks as $click) {
@@ -224,9 +185,9 @@ As with synchronous select request you can pass files to the server:
 ```php
 
 list($clicks, $visits, $views) = $client->read([
-    ['query' => 'select * from clicks where date = ? and userId in _users', 'bindings' => ['2017-01-01'], new TempTable('_users', 'users.csv', ['number' => 'UInt64'])],
-    ['query' => 'select * from visits where date = ?', 'bindings' => ['2017-01-01']],
-    ['query' => 'select * from views where date = ?', 'bindings' => ['2017-01-01']],
+    ['query' => "select * from clicks where date = '2017-01-01' and userId in _users", new TempTable('_users', 'users.csv', ['number' => 'UInt64'])],
+    ['query' => "select * from visits where date = '2017-01-01'"],
+    ['query' => "select * from views where date = '2017-01-01'"],
 ]);
 
 foreach ($clicks as $click) {
@@ -244,11 +205,11 @@ Insert queries always returns true or throws exceptions in case of error.
 Data can be written row by row or from local CSV or TSV files.
 
 ```php
-$client->writeOne('insert into table (date, column) values (?,?), (?,?)', ['2017-01-01', 1, '2017-01-02', 2]);
+$client->writeOne("insert into table (date, column) values ('2017-01-01',1), ('2017-01-02',2)");
 $client->write([
-    ['query' => 'insert into table (date, column) values (?,?), (?,?)', 'bindings' => ['2017-01-01', 1, '2017-01-02', 2]],
-    ['query' => 'insert into table (date, column) values (?,?), (?,?)', 'bindings' => ['2017-01-01', 1, '2017-01-02', 2]],
-    ['query' => 'insert into table (date, column) values (?,?), (?,?)', 'bindings' => ['2017-01-01', 1, '2017-01-02', 2]]
+    ['query' => "insert into table (date, column) values ('2017-01-01',1), ('2017-01-02',2)"],
+    ['query' => "insert into table (date, column) values ('2017-01-01',1), ('2017-01-02',2)"],
+    ['query' => "insert into table (date, column) values ('2017-01-01',1), ('2017-01-02',2)"]
 ]);
 
 $client->writeFiles('table', ['date', 'column'], [

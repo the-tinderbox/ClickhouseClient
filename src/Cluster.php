@@ -10,7 +10,7 @@ use Tinderbox\Clickhouse\Exceptions\ClusterException;
 class Cluster
 {
     /**
-     * Cluster name like in configuration file
+     * Cluster name like in configuration file.
      *
      * @var string
      */
@@ -27,7 +27,7 @@ class Cluster
      * Cluster constructor.
      *
      * @param string $name
-     * @param array $servers
+     * @param array  $servers
      *
      * @throws ClusterException
      */
@@ -117,7 +117,7 @@ class Cluster
     }
 
     /**
-     * Returns cluster name
+     * Returns cluster name.
      *
      * @return string
      */
