@@ -59,8 +59,8 @@ class HttpTransportTest extends TestCase
                     'bytes_read' => 1,
                     'elapsed'    => 0.100,
                 ],
-                'rows_before_limit_at_least' => 1024
-            ]))
+                'rows_before_limit_at_least' => 1024,
+            ])),
         ]);
 
         $result = $transport->read([$this->getQuery()]);
@@ -78,7 +78,7 @@ class HttpTransportTest extends TestCase
         ], [
             'rows_read'  => $result[0]->statistic->rows,
             'bytes_read' => $result[0]->statistic->bytes,
-            'elapsed'    => $result[0]->statistic->time
+            'elapsed'    => $result[0]->statistic->time,
         ], 'Returns correct statistic from server');
 
         $this->assertEquals(1024, $result[0]->statistic->rowsBeforeLimitAtLeast, 'Returns correct rows_before_limit_at_least');
@@ -98,7 +98,7 @@ class HttpTransportTest extends TestCase
                     'bytes_read' => 1,
                     'elapsed'    => 0.100,
                 ],
-                'rows_before_limit_at_least' => 1024
+                'rows_before_limit_at_least' => 1024,
             ])),
 
             new Response(200, [], json_encode([
@@ -112,8 +112,8 @@ class HttpTransportTest extends TestCase
                     'bytes_read' => 2,
                     'elapsed'    => 0.100,
                 ],
-                'rows_before_limit_at_least' => 1025
-            ]))
+                'rows_before_limit_at_least' => 1025,
+            ])),
         ]);
 
         $result = $transport->read([$this->getQuery(), $this->getQuery()]);
@@ -131,7 +131,7 @@ class HttpTransportTest extends TestCase
         ], [
             'rows_read'  => $result[0]->statistic->rows,
             'bytes_read' => $result[0]->statistic->bytes,
-            'elapsed'    => $result[0]->statistic->time
+            'elapsed'    => $result[0]->statistic->time,
         ], 'Returns correct statistic from server');
 
         $this->assertEquals(1024, $result[0]->statistic->rowsBeforeLimitAtLeast, 'Returns correct rows_before_limit_at_least');
@@ -149,7 +149,7 @@ class HttpTransportTest extends TestCase
         ], [
             'rows_read'  => $result[1]->statistic->rows,
             'bytes_read' => $result[1]->statistic->bytes,
-            'elapsed'    => $result[1]->statistic->time
+            'elapsed'    => $result[1]->statistic->time,
         ], 'Returns correct statistic from server');
 
         $this->assertEquals(1025, $result[1]->statistic->rowsBeforeLimitAtLeast, 'Returns correct rows_before_limit_at_least');
@@ -168,7 +168,7 @@ class HttpTransportTest extends TestCase
         $query = new Query($this->getServer(), 'select * from numbers(0, 10) where number in temp', [$table]);
         $result = $transport->read([$query]);
 
-        $this->assertEquals([1,2], array_column($result[0]->rows, 'number'));
+        $this->assertEquals([1, 2], array_column($result[0]->rows, 'number'));
 
         unlink($tableSource);
     }
@@ -186,7 +186,7 @@ class HttpTransportTest extends TestCase
         $query = new Query($this->getServer(), 'select number from temp', [$table]);
         $result = $transport->read([$query]);
 
-        $this->assertEquals([1,2], array_column($result[0]->rows, 'number'), 'Returns correct result when uses temp tables for read queries');
+        $this->assertEquals([1, 2], array_column($result[0]->rows, 'number'), 'Returns correct result when uses temp tables for read queries');
 
         unlink($tableSource);
     }
@@ -231,12 +231,12 @@ class HttpTransportTest extends TestCase
         $this->assertEquals([
             [
                 'number' => 1,
-                'string' => 'some'
+                'string' => 'some',
             ],
             [
                 'number' => 2,
-                'string' => 'string'
-            ]
+                'string' => 'string',
+            ],
         ], $result[0]->rows, 'Returns correct result from recently created table and filled with temp files');
 
         $handle = $table->open();
@@ -290,31 +290,31 @@ class HttpTransportTest extends TestCase
         $this->assertEquals([
             [
                 'number' => 1,
-                'string' => 'some'
+                'string' => 'some',
             ],
             [
                 'number' => 2,
-                'string' => 'string'
+                'string' => 'string',
             ],
             [
                 'number' => 3,
-                'string' => 'string'
+                'string' => 'string',
             ],
             [
                 'number' => 4,
-                'string' => 'some'
-            ]
+                'string' => 'some',
+            ],
         ], $result[0]->rows, 'Returns correct result from recently created table and filled with temp files');
 
         $this->assertEquals([
             [
                 'number' => 3,
-                'string' => 'string'
+                'string' => 'string',
             ],
             [
                 'number' => 4,
-                'string' => 'some'
-            ]
+                'string' => 'some',
+            ],
         ], $result[1]->rows, 'Returns correct result from recently created table and filled with temp files');
 
         $transport->write([
@@ -339,7 +339,7 @@ class HttpTransportTest extends TestCase
         $this->expectExceptionMessage('Can\'t connect to the server [KHGIUYhakljsfnk:8123]');
 
         $transport->read([
-            new Query(new Server('KHGIUYhakljsfnk'), '')
+            new Query(new Server('KHGIUYhakljsfnk'), ''),
         ]);
     }
 
@@ -353,7 +353,7 @@ class HttpTransportTest extends TestCase
         $this->expectExceptionMessage('Unknown exception');
 
         $transport->read([
-            new Query($this->getServer(), '')
+            new Query($this->getServer(), ''),
         ]);
     }
 
@@ -368,7 +368,7 @@ class HttpTransportTest extends TestCase
         $this->expectExceptionMessage($e->getMessage());
 
         $transport->read([
-            new Query($this->getServer(), '')
+            new Query($this->getServer(), ''),
         ]);
     }
 
@@ -380,9 +380,9 @@ class HttpTransportTest extends TestCase
         $this->expectExceptionMessageRegExp('/Wrong password for user default/');
 
         $transport->read([
-            new Query(new Server('127.0.0.1', 8123, 'default','default', 'pass'), 'select 1', [
-                new TempTable('name', new FileFromString('aaa'), ['string' => 'String'], Format::TSV)
-            ])
+            new Query(new Server('127.0.0.1', 8123, 'default', 'default', 'pass'), 'select 1', [
+                new TempTable('name', new FileFromString('aaa'), ['string' => 'String'], Format::TSV),
+            ]),
         ]);
     }
 
@@ -394,9 +394,9 @@ class HttpTransportTest extends TestCase
         $this->expectExceptionMessageRegExp('/Wrong password for user default/');
 
         $transport->write([
-            new Query(new Server('127.0.0.1', 8123, 'default','default', 'pass'), 'insert into table 1', [
-                new FileFromString('aaa')
-            ])
+            new Query(new Server('127.0.0.1', 8123, 'default', 'default', 'pass'), 'insert into table 1', [
+                new FileFromString('aaa'),
+            ]),
         ]);
     }
 

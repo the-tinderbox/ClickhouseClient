@@ -25,14 +25,14 @@ class TempTable implements FileInterface
     protected $structure = [];
 
     /**
-     * Format
+     * Format.
      *
      * @var string
      */
     protected $format;
 
     /**
-     * Source
+     * Source.
      *
      * @var string|FileInterface
      */
@@ -85,7 +85,7 @@ class TempTable implements FileInterface
     }
 
     /**
-     * Returns format
+     * Returns format.
      *
      * @return string
      */

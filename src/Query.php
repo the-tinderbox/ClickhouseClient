@@ -3,7 +3,7 @@
 namespace Tinderbox\Clickhouse;
 
 /**
- * Query instance
+ * Query instance.
  */
 class Query
 {
@@ -29,7 +29,7 @@ class Query
     protected $server;
 
     /**
-     * Query settings
+     * Query settings.
      *
      * @var array
      */

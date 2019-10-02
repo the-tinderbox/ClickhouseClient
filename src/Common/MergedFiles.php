@@ -11,7 +11,7 @@ class MergedFiles extends File implements FileInterface
 {
     protected function getCcatPath(): string
     {
-        return __DIR__ . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'bin' . DIRECTORY_SEPARATOR . 'ccat';
+        return __DIR__.DIRECTORY_SEPARATOR.'..'.DIRECTORY_SEPARATOR.'..'.DIRECTORY_SEPARATOR.'bin'.DIRECTORY_SEPARATOR.'ccat_'.strtolower(PHP_OS);
     }
 
     public function open(bool $gzip = true) : StreamInterface
@@ -19,10 +19,10 @@ class MergedFiles extends File implements FileInterface
         $descriptorspec = [
             0 => ['pipe', 'r'],
             1 => ['pipe', 'w'],
-            2 => ['pipe', 'w']
+            2 => ['pipe', 'w'],
         ];
 
-        $process = proc_open($this->getCcatPath() . ' ' . escapeshellarg($this->source), $descriptorspec, $pipes);
+        $process = proc_open($this->getCcatPath().' '.escapeshellarg($this->source), $descriptorspec, $pipes);
         $stream = $pipes[1];
 
         if ($gzip) {

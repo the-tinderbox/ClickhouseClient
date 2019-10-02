@@ -51,7 +51,7 @@ class HttpTransport implements TransportInterface
      * HttpTransport constructor.
      *
      * @param Client $client
-     * @param array $options
+     * @param array  $options
      */
     public function __construct(Client $client = null, array $options = [])
     {
@@ -68,7 +68,7 @@ class HttpTransport implements TransportInterface
     protected function getHeaders()
     {
         return [
-            'Accept-Encoding' => 'gzip',
+            'Accept-Encoding'  => 'gzip',
             'Content-Encoding' => 'gzip',
         ];
     }
@@ -94,15 +94,16 @@ class HttpTransport implements TransportInterface
     {
         return new Client();
     }
-    
+
     /**
      * Executes write queries.
      *
      * @param array $queries
      * @param int   $concurrency
      *
-     * @return array
      * @throws \Throwable
+     *
+     * @return array
      */
     public function write(array $queries, int $concurrency = 5) : array
     {
@@ -110,14 +111,14 @@ class HttpTransport implements TransportInterface
         $openedStreams = [];
 
         foreach ($queries as $query) {
-            $requests = function(Query $query) use(&$openedStreams) {
+            $requests = function (Query $query) use (&$openedStreams) {
                 if (!empty($query->getFiles())) {
                     foreach ($query->getFiles() as $file) {
                         /* @var FileInterface $file */
                         $headers = $this->getHeaders();
 
                         $uri = $this->buildRequestUri($query->getServer(), [
-                            'query' => $query->getQuery()
+                            'query' => $query->getQuery(),
                         ], $query->getSettings());
 
                         $stream = $file->open();
@@ -143,12 +144,12 @@ class HttpTransport implements TransportInterface
             $pool = new Pool(
                 $this->httpClient, $requests($query), [
                     'concurrency' => $concurrency,
-                    'fulfilled' => function ($response, $index) use (&$queryResult, $query) {
+                    'fulfilled'   => function ($response, $index) use (&$queryResult, $query) {
                         $queryResult[$index] = true;
                     },
                     'rejected' => $this->parseReason($query),
-                    'options' => array_merge([
-                        'expect' => false
+                    'options'  => array_merge([
+                        'expect' => false,
                     ], $this->options['write'] ?? []),
                 ]
             );
@@ -181,7 +182,7 @@ class HttpTransport implements TransportInterface
     {
         $openedStreams = [];
 
-        $requests = function ($queries) use(&$openedStreams) {
+        $requests = function ($queries) use (&$openedStreams) {
             foreach ($queries as $index => $query) {
                 /* @var Query $query */
 
@@ -191,9 +192,9 @@ class HttpTransport implements TransportInterface
 
                 $multipart = [
                     [
-                        'name' => 'query',
-                        'contents' => $query->getQuery().' FORMAT JSON'
-                    ]
+                        'name'     => 'query',
+                        'contents' => $query->getQuery().' FORMAT JSON',
+                    ],
                 ];
 
                 foreach ($query->getFiles() as $file) {
@@ -225,7 +226,7 @@ class HttpTransport implements TransportInterface
         $pool = new Pool(
             $this->httpClient, $requests($queries), [
                 'concurrency' => $concurrency,
-                'fulfilled' => function ($response, $index) use (&$result, $queries) {
+                'fulfilled'   => function ($response, $index) use (&$result, $queries) {
                     $result[$index] = $this->assembleResult($queries[$index], $response);
                 },
                 'rejected' => function ($response, $index) use ($queries) {
@@ -234,7 +235,7 @@ class HttpTransport implements TransportInterface
                     $this->parseReason($query)($response);
                 },
                 'options' => array_merge([
-                    'expect' => false
+                    'expect' => false,
                 ], $this->options['read'] ?? []),
             ]
         );
@@ -272,8 +273,8 @@ class HttpTransport implements TransportInterface
         list($structure, $withColumns) = $this->assembleTempTableStructure($table);
 
         return [
-            $table->getName() . '_' . ($withColumns ? 'structure' : 'types') => $structure,
-            $table->getName() . '_format' => $table->getFormat(),
+            $table->getName().'_'.($withColumns ? 'structure' : 'types') => $structure,
+            $table->getName().'_format'                                  => $table->getFormat(),
         ];
     }
 
@@ -296,7 +297,7 @@ class HttpTransport implements TransportInterface
                 $withColumns = false;
                 $preparedStructure[] = $type;
             } else {
-                $preparedStructure[] = $column . ' ' . $type;
+                $preparedStructure[] = $column.' '.$type;
             }
         }
 
@@ -330,7 +331,7 @@ class HttpTransport implements TransportInterface
     /**
      * Assembles Result instance from server response.
      *
-     * @param Query $query
+     * @param Query                               $query
      * @param \Psr\Http\Message\ResponseInterface $response
      *
      * @return \Tinderbox\Clickhouse\Query\Result
@@ -366,7 +367,7 @@ class HttpTransport implements TransportInterface
      */
     protected function buildRequestUri(Server $server, array $query = [], array $settings = []): string
     {
-        $uri = $server->getOptions()->getProtocol() . '://' . $server->getHost() . ':' . $server->getPort();
+        $uri = $server->getOptions()->getProtocol().'://'.$server->getHost().':'.$server->getPort();
 
         if (!is_null($server->getDatabase())) {
             $query['database'] = $server->getDatabase();
@@ -382,6 +383,6 @@ class HttpTransport implements TransportInterface
 
         $query = array_merge($query, $settings);
 
-        return $uri . '?' . http_build_query($query);
+        return $uri.'?'.http_build_query($query);
     }
 }

@@ -40,7 +40,7 @@ class QueryStatistic
     protected $time;
 
     /**
-     * Rows before limit at least
+     * Rows before limit at least.
      *
      * @var null|int
      */
@@ -93,7 +93,7 @@ class QueryStatistic
     }
 
     /**
-     * Returns rows before limit at least
+     * Returns rows before limit at least.
      *
      * @return int|null
      */

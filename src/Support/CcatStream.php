@@ -7,7 +7,6 @@ use Psr\Http\Message\StreamInterface;
 
 class CcatStream extends NoSeekStream
 {
-
     protected $process;
 
     /**
@@ -25,6 +24,5 @@ class CcatStream extends NoSeekStream
 
     public function getSize()
     {
-        return null;
     }
 }

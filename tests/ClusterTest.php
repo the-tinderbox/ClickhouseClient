@@ -53,16 +53,16 @@ class ClusterTest extends TestCase
     public function testServerFromArray()
     {
         $server = [
-            'host' => '127.0.0.2',
-            'port' => '123',
+            'host'     => '127.0.0.2',
+            'port'     => '123',
             'database' => 'not_default',
             'username' => 'user',
             'password' => 'secret',
-            'options' => (new ServerOptions())->setProtocol('https')
+            'options'  => (new ServerOptions())->setProtocol('https'),
         ];
 
         $cluster = new Cluster('test_cluster', [
-            $server
+            $server,
         ]);
 
         $createdServer = $cluster->getServerByHostname('127.0.0.2');

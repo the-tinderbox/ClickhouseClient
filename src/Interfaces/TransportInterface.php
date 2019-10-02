@@ -23,7 +23,7 @@ interface TransportInterface
     public function write(array $queries, int $concurrency = 5): array;
 
     /**
-     * Executes queries which returns result of any select expression
+     * Executes queries which returns result of any select expression.
      *
      * @param array $queries
      * @param int   $concurrency

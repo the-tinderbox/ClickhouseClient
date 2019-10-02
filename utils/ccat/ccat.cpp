@@ -82,7 +82,9 @@ int main(int argc, char const *argv[])
     int fileDescriptor = fileno(file);
 
     //Notify the system that we will sequentially read the file on that file descriptor
+    #ifdef POSIX_FADV_SEQUENTIAL
     posix_fadvise(fileDescriptor, 0, 0, POSIX_FADV_SEQUENTIAL);
+    #endif
 
     char * fileName = NULL;
     size_t len = 0;
@@ -112,10 +114,12 @@ int main(int argc, char const *argv[])
             return EXIT_FAILURE;
         }
 
+        #ifdef POSIX_FADV_SEQUENTIAL
         //Notify the system that we will sequentially read the file on that file descriptor
         posix_fadvise(fileWithDataDescriptor, 0, 0, POSIX_FADV_SEQUENTIAL);
+        #endif
 
-        inbuf = (char*) aligned_alloc(pageSize, insize + pageSize - 1);
+        inbuf = (char*) malloc(insize + pageSize - 1);
 
         while(n_read = read(fileWithDataDescriptor, inbuf, insize))
         {

@@ -4,11 +4,8 @@ namespace Tinderbox\Clickhouse;
 
 use Tinderbox\Clickhouse\Common\File;
 use Tinderbox\Clickhouse\Common\Format;
-use Tinderbox\Clickhouse\Common\TempTable;
 use Tinderbox\Clickhouse\Interfaces\FileInterface;
-use Tinderbox\Clickhouse\Interfaces\QueryMapperInterface;
 use Tinderbox\Clickhouse\Interfaces\TransportInterface;
-use Tinderbox\Clickhouse\Query\Mapper\UnnamedMapper;
 use Tinderbox\Clickhouse\Query\Result;
 use Tinderbox\Clickhouse\Transport\HttpTransport;
 
@@ -23,52 +20,42 @@ class Client
      * @var TransportInterface
      */
     protected $transport;
-    
+
     /**
-     * Values Mapper to raw  sql query.
-     *
-     * @var \Tinderbox\Clickhouse\Interfaces\QueryMapperInterface
-     */
-    protected $mapper;
-    
-    /**
-     * Server provider
+     * Server provider.
      *
      * @var ServerProvider
      */
     protected $serverProvider;
-    
+
     /**
-     * Cluster name
+     * Cluster name.
      *
      * @var string
      */
     protected $clusterName;
-    
+
     /**
-     * Server hostname
+     * Server hostname.
      *
      * @var string
      */
     protected $serverHostname;
-    
+
     /**
      * Client constructor.
      *
-     * @param \Tinderbox\Clickhouse\ServerProvider                       $serverProvider
-     * @param \Tinderbox\Clickhouse\Interfaces\QueryMapperInterface|null $mapper
-     * @param \Tinderbox\Clickhouse\Interfaces\TransportInterface|null   $transport
+     * @param \Tinderbox\Clickhouse\ServerProvider                     $serverProvider
+     * @param \Tinderbox\Clickhouse\Interfaces\TransportInterface|null $transport
      */
     public function __construct(
         ServerProvider $serverProvider,
-        QueryMapperInterface $mapper = null,
         TransportInterface $transport = null
     ) {
         $this->serverProvider = $serverProvider;
         $this->setTransport($transport);
-        $this->setMapper($mapper);
     }
-    
+
     /**
      * Creates default http transport.
      *
@@ -78,17 +65,7 @@ class Client
     {
         return new HttpTransport();
     }
-    
-    /**
-     * Returns values Mapper.
-     *
-     * @return \Tinderbox\Clickhouse\Interfaces\QueryMapperInterface
-     */
-    protected function getMapper(): QueryMapperInterface
-    {
-        return $this->mapper;
-    }
-    
+
     /**
      * Sets transport.
      *
@@ -102,37 +79,7 @@ class Client
             $this->transport = $transport;
         }
     }
-    
-    /**
-     * Sets Mapper.
-     *
-     * @param \Tinderbox\Clickhouse\Interfaces\QueryMapperInterface $mapper
-     *
-     * @return \Tinderbox\Clickhouse\Client
-     */
-    protected function setMapper(QueryMapperInterface $mapper = null): self
-    {
-        if (is_null($mapper)) {
-            return $this->setDefaultMapper();
-        }
-        
-        $this->mapper = $mapper;
-        
-        return $this;
-    }
-    
-    /**
-     * Sets default mapper.
-     *
-     * @return Client
-     */
-    protected function setDefaultMapper(): self
-    {
-        $this->mapper = new UnnamedMapper();
-        
-        return $this;
-    }
-    
+
     /**
      * Returns transport.
      *
@@ -142,9 +89,9 @@ class Client
     {
         return $this->transport;
     }
-    
+
     /**
-     * Client will use servers from specified cluster
+     * Client will use servers from specified cluster.
      *
      * @param string|null $cluster
      *
@@ -154,12 +101,12 @@ class Client
     {
         $this->clusterName = $cluster;
         $this->serverHostname = null;
-        
+
         return $this;
     }
-    
+
     /**
-     * Returns current cluster name
+     * Returns current cluster name.
      *
      * @return null|string
      */
@@ -167,9 +114,9 @@ class Client
     {
         return $this->clusterName;
     }
-    
+
     /**
-     * Client will use specified server
+     * Client will use specified server.
      *
      * @param string $serverHostname
      *
@@ -178,12 +125,12 @@ class Client
     public function using(string $serverHostname)
     {
         $this->serverHostname = $serverHostname;
-        
+
         return $this;
     }
-    
+
     /**
-     * Client will return random server on each query
+     * Client will return random server on each query.
      *
      * @return $this
      */
@@ -196,12 +143,12 @@ class Client
                 return $this->serverProvider->getRandomServer();
             }
         };
-        
+
         return $this;
     }
-    
+
     /**
-     * Returns true if cluster selected
+     * Returns true if cluster selected.
      *
      * @return bool
      */
@@ -209,9 +156,9 @@ class Client
     {
         return !is_null($this->getClusterName());
     }
-    
+
     /**
-     * Returns server to perform request
+     * Returns server to perform request.
      *
      * @return Server
      */
@@ -245,33 +192,32 @@ class Client
                 }
             }
         }
-        
+
         return $server;
     }
-    
+
     /**
-     * Performs select query and returns one result
+     * Performs select query and returns one result.
      *
      * Example:
      *
      * $client->select('select * from table where column = ?', [1]);
      *
      * @param string          $query
-     * @param array           $bindings
      * @param FileInterface[] $files
      * @param array           $settings
      *
      * @return \Tinderbox\Clickhouse\Query\Result
      */
-    public function readOne(string $query, array $bindings = [], array $files = [], array $settings = []): Result
+    public function readOne(string $query, array $files = [], array $settings = []): Result
     {
-        $query = $this->createQuery($this->getServer(), $query, $bindings, $files, $settings);
-        
+        $query = $this->createQuery($this->getServer(), $query, $files, $settings);
+
         $result = $this->getTransport()->read([$query], 1);
-        
+
         return $result[0];
     }
-    
+
     /**
      * Performs batch of select queries.
      *
@@ -287,31 +233,30 @@ class Client
                 $queries[$i] = $this->guessQuery($query);
             }
         }
-        
+
         return $this->getTransport()->read($queries, $concurrency);
     }
-    
+
     /**
      * Performs insert or simple statement query.
      *
      * @param string $query
-     * @param array  $bindings
      * @param array  $files
      * @param array  $settings
      *
      * @return bool
      */
-    public function writeOne(string $query, array $bindings = [], array $files = [], array $settings = []): bool
+    public function writeOne(string $query, array $files = [], array $settings = []): bool
     {
         if (!$query instanceof Query) {
-            $query = $this->createQuery($this->getServer(), $query, $bindings, $files, $settings);
+            $query = $this->createQuery($this->getServer(), $query, $files, $settings);
         }
-        
+
         $result = $this->getTransport()->write([$query], 1);
-        
+
         return $result[0][0];
     }
-    
+
     /**
      * Performs batch of insert or simple statement queries.
      *
@@ -327,10 +272,10 @@ class Client
                 $queries[$i] = $this->guessQuery($query);
             }
         }
-        
+
         return $this->getTransport()->write($queries, $concurrency);
     }
-    
+
     /**
      * Performs async insert queries using local csv or tsv files.
      *
@@ -352,24 +297,23 @@ class Client
         int $concurrency = 5
     ) {
         $sql = 'INSERT INTO '.$table.' ('.implode(', ', $columns).') FORMAT '.strtoupper($format);
-        
+
         foreach ($files as $i => $file) {
             if (!$file instanceof FileInterface) {
                 $files[$i] = new File($file);
             }
         }
-        
-        $query = $this->createQuery($this->getServer(), $sql, [], $files, $settings);
-        
+
+        $query = $this->createQuery($this->getServer(), $sql, $files, $settings);
+
         return $this->getTransport()->write([$query], $concurrency);
     }
-    
+
     /**
      * Creates query instance from specified arguments.
      *
      * @param \Tinderbox\Clickhouse\Server $server
      * @param string                       $sql
-     * @param array                        $bindings
      * @param array                        $files
      * @param array                        $settings
      *
@@ -378,15 +322,12 @@ class Client
     protected function createQuery(
         Server $server,
         string $sql,
-        array $bindings = [],
         array $files = [],
         array $settings = []
     ): Query {
-        $preparedSql = $this->prepareSql($sql, $bindings);
-        
-        return new Query($server, $preparedSql, $files, $settings);
+        return new Query($server, $sql, $files, $settings);
     }
-    
+
     /**
      * Parses query array and returns query instance.
      *
@@ -398,23 +339,9 @@ class Client
     {
         $server = $query['server'] ?? $this->getServer();
         $sql = $query['query'];
-        $bindings = $query['bindings'] ?? [];
         $tables = $query['files'] ?? [];
         $settings = $query['settings'] ?? [];
-        
-        return $this->createQuery($server, $sql, $bindings, $tables, $settings);
-    }
-    
-    /**
-     * Prepares query to execution.
-     *
-     * @param string $query
-     * @param array  $bindings
-     *
-     * @return string
-     */
-    protected function prepareSql(string $query, array $bindings)
-    {
-        return $this->getMapper()->bind($query, $bindings);
+
+        return $this->createQuery($server, $sql, $tables, $settings);
     }
 }

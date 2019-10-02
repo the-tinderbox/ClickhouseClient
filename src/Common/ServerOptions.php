@@ -7,7 +7,6 @@ namespace Tinderbox\Clickhouse\Common;
  */
 class ServerOptions
 {
-
     /**
      * Protocol.
      *

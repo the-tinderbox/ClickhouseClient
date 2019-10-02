@@ -5,33 +5,33 @@ namespace Tinderbox\Clickhouse;
 use Tinderbox\Clickhouse\Exceptions\ServerProviderException;
 
 /**
- * Provides server from cluster, or just standalone server to perform queries
+ * Provides server from cluster, or just standalone server to perform queries.
  */
 class ServerProvider
 {
     /**
-     * Clusters
+     * Clusters.
      *
      * @var Cluster[]
      */
     protected $clusters = [];
 
     /**
-     * Servers
+     * Servers.
      *
      * @var Server[]
      */
     protected $servers = [];
 
     /**
-     * Current server to perform queries
+     * Current server to perform queries.
      *
      * @var Server
      */
     protected $currentServer;
 
     /**
-     * Current cluster to select server
+     * Current cluster to select server.
      *
      * @var Cluster
      */

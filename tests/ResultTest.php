@@ -45,7 +45,7 @@ class ResultTest extends TestCase
         $this->assertEquals($rows, $result->rows, 'Returns rows passed to constructor via magic property');
         $this->assertEquals($statistic, $result->statistic, 'Returns statistic passed to constructor via magic property');
         $this->assertEquals($query, $result->query, 'Returns query passed to constructor via magic property');
-        
+
         $e = ResultException::propertyNotExists('miss');
         $this->expectException(ResultException::class);
         $this->expectExceptionMessage($e->getMessage());
@@ -143,7 +143,7 @@ class ResultTest extends TestCase
         ];
         $query = new Query(new Server('localhost'), '');
         $statistic = new QueryStatistic(5, 1024, 0.122);
-        
+
         $result = new Result($query, $rows, $statistic);
 
         $e = ResultException::isReadonly();
