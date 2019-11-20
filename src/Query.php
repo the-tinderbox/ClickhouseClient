@@ -3,7 +3,6 @@
 namespace Tinderbox\Clickhouse;
 
 use Tinderbox\Clickhouse\Common\Format;
-use Tinderbox\Clickhouse\Server;
 
 /**
  * Query instance
@@ -56,6 +55,10 @@ class Query
      */
     public function __construct(Server $server, string $query, array $files = [], array $settings = [], string $format = Format::JSON)
     {
+        if (stripos($query, 'format') === false) {
+            $query .= " FORMAT {$format}";
+        }
+
         $this->server = $server;
         $this->query = $query;
         $this->files = $files;

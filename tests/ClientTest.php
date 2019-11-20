@@ -47,7 +47,7 @@ class ClientTest extends TestCase
 
         $client = new Client($serverProvider, new NamedMapper());
 
-        $result = $client->readOne('select number from numbers(:min, :max)', ['min' => 0, 'max' => 10], [], [], Format::TSV);
+        $result = $client->readOne('select number from numbers(:min, :max)', ['min' => 0, 'max' => 10]);
 
         $this->assertEquals(10, count($result->rows), 'Correctly changes mapper');
     }
@@ -242,12 +242,11 @@ class ClientTest extends TestCase
                 [
                     'query'    => 'select * from numbers(?, ?) order by number desc',
                     'bindings' => [0, 10],
-                    'format'   => Format::TSV,
                 ],
-                new Query($client->getServer(), 'select * from numbers(0, 20) order by number desc', [], [], Format::TSV),
+                new Query($client->getServer(), 'select * from numbers(0, 20) order by number desc'),
                 new Query($client->getServer(), 'select * from numbers(0, 20) where number in tab order by number desc', [
                     new TempTable('tab', new FileFromString('1'.PHP_EOL.'2'.PHP_EOL), ['number' => 'UInt64'], Format::TSV),
-                ], [], Format::TSV),
+                ]),
             ]
         );
 
@@ -269,7 +268,7 @@ class ClientTest extends TestCase
             new FileFromString('1'.PHP_EOL.'2'.PHP_EOL),
         ]);
 
-        $result = $client->readOne('select * from default.tdchc_test_table', [], [], [], Format::TSV);
+        $result = $client->readOne('select * from default.tdchc_test_table');
 
         $this->assertEquals(2, count($result->rows), 'Correctly writes data');
     }
@@ -289,7 +288,7 @@ class ClientTest extends TestCase
             new FileFromString('5'.PHP_EOL.'6'.PHP_EOL),
         ], Format::TSV);
 
-        $result = $client->readOne('select * from default.tdchc_test_table', [], [], [], Format::TSV);
+        $result = $client->readOne('select * from default.tdchc_test_table');
 
         $this->assertEquals(6, count($result->rows), 'Correctly writes data');
     }
