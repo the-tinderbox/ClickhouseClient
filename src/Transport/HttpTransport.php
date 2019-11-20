@@ -5,8 +5,10 @@ namespace Tinderbox\Clickhouse\Transport;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Pool;
+use GuzzleHttp\Psr7\BufferStream;
 use GuzzleHttp\Psr7\MultipartStream;
 use GuzzleHttp\Psr7\Request;
+use GuzzleHttp\Psr7\Stream;
 use Psr\Http\Message\ResponseInterface;
 use Tinderbox\Clickhouse\Common\TempTable;
 use Tinderbox\Clickhouse\Exceptions\TransportException;
@@ -23,7 +25,7 @@ use Tinderbox\Clickhouse\Common\Format;
  */
 class HttpTransport implements TransportInterface
 {
-    const SUPPORTED_READ_FORMATS = [Format::JSON, Format::JSONCompact];
+    const SUPPORTED_READ_FORMATS = [Format::JSON, Format::JSONCompact, Format::TSV, Format::CSV];
 
     /**
      * GuzzleClient.
@@ -183,19 +185,20 @@ class HttpTransport implements TransportInterface
     /**
      * @param array $queries
      * @param int $concurrency
-     * @param string $format
      * @return Result[]
      * @throws \Throwable
      */
-    public function read(array $queries, int $concurrency = 5, string $format = Format::JSON) : array
+    public function read(array $queries, int $concurrency = 5) : array
     {
-        $openedStreams = [];
-
-        if (!in_array($format, self::SUPPORTED_READ_FORMATS)) {
-            throw TransportException::unsupportedFormat($format, self::SUPPORTED_READ_FORMATS);
+        foreach ($queries as $query) {
+            if (!in_array($query->getFormat(), self::SUPPORTED_READ_FORMATS)) {
+                throw TransportException::unsupportedFormat($query->getFormat(), self::SUPPORTED_READ_FORMATS);
+            }
         }
 
-        $requests = function ($queries) use(&$openedStreams, $format) {
+        $openedStreams = [];
+
+        $requests = function ($queries) use(&$openedStreams) {
             foreach ($queries as $index => $query) {
                 /* @var Query $query */
 
@@ -206,7 +209,7 @@ class HttpTransport implements TransportInterface
                 $multipart = [
                     [
                         'name'     => 'query',
-                        'contents' => $query->getQuery().' FORMAT ' . $format
+                        'contents' => $query->getQuery(),
                     ]
                 ];
 
@@ -351,24 +354,76 @@ class HttpTransport implements TransportInterface
      */
     protected function assembleResult(Query $query, ResponseInterface $response): Result
     {
-        $response = $response->getBody()->getContents();
+        $result = [];
+
+        /** @var Stream $stream */
+        $stream = $response->getBody();
 
         try {
-            $result = \GuzzleHttp\json_decode($response, true);
+            switch ($query->getFormat()) {
+                case Format::JSON:
+                case Format::JSONCompact:
+                    $result = \GuzzleHttp\json_decode($stream->getContents(), true);
 
-            $statistic = new QueryStatistic(
-                $result['statistics']['rows_read'] ?? 0,
-                $result['statistics']['bytes_read'] ?? 0,
-                $result['statistics']['elapsed'] ?? 0,
-                $result['rows_before_limit_at_least'] ?? null
-            );
+                    $statistic = new QueryStatistic(
+                        $result['statistics']['rows_read'] ?? 0,
+                        $result['statistics']['bytes_read'] ?? 0,
+                        $result['statistics']['elapsed'] ?? 0,
+                        $result['rows_before_limit_at_least'] ?? null
+                    );
 
-            $meta = $this->assembleMeta($result);
+                    $meta = $this->assembleMeta($result);
+                    break;
+                case Format::CSV:
+                    while (!$stream->eof()) {
+                        $data = \GuzzleHttp\Psr7\readline($stream);
+                        if (!empty($data)) {
+                            $result['data'][] = str_getcsv($data);
+                        }
+                    }
+
+                    $stats = \GuzzleHttp\json_decode($response->getHeader('X-ClickHouse-Summary')[0], true);
+
+                    $statistic = new QueryStatistic($stats['read_rows'], $stats['read_bytes'], 0, null);
+                    $meta      = new Query\Meta();
+                    break;
+                case Format::TSV:
+                    while (!$stream->eof()) {
+                        $data = \GuzzleHttp\Psr7\readline($stream);
+                        if (!empty($data)) {
+                            $result['data'][] = str_getcsv($data, "\t");
+                        }
+                    }
+
+                    $stats = \GuzzleHttp\json_decode($response->getHeader('X-ClickHouse-Summary')[0], true);
+
+                    $statistic = new QueryStatistic($stats['read_rows'], $stats['read_bytes'], 0, null);
+                    $meta      = new Query\Meta();
+                    break;
+            }
 
             return new Result($query, $result['data'] ?? [], $statistic, $meta);
         } catch (\Exception $e) {
-            throw TransportException::malformedResponseFromServer($response);
+            $stream->rewind();
+
+            throw TransportException::malformedResponseFromServer($stream->getContents());
         }
+    }
+
+    /**
+     * @param resource $source
+     * @return resource
+     */
+    public static function copyStreamToMemory($source)
+    {
+        $memory = fopen('php://memory', 'rw');
+
+        stream_copy_to_stream($source, $memory);
+
+        rewind($memory);
+        rewind($source);
+
+        return $memory;
     }
 
     /**

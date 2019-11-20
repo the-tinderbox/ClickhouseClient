@@ -271,9 +271,9 @@ class Client
         array $settings = [],
         string $format = Format::JSON
     ): Result {
-        $query = $this->createQuery($this->getServer(), $query, $bindings, $files, $settings);
+        $query = $this->createQuery($this->getServer(), $query, $bindings, $files, $settings, $format);
         
-        $result = $this->getTransport()->read([$query], 1, $format);
+        $result = $this->getTransport()->read([$query], 1);
         
         return $result[0];
     }
@@ -376,6 +376,7 @@ class Client
      * @param \Tinderbox\Clickhouse\Server $server
      * @param string                       $sql
      * @param array                        $bindings
+     * @param string                       $format
      * @param array                        $files
      * @param array                        $settings
      *
@@ -386,11 +387,12 @@ class Client
         string $sql,
         array $bindings = [],
         array $files = [],
-        array $settings = []
+        array $settings = [],
+        string $format = Format::JSON
     ): Query {
         $preparedSql = $this->prepareSql($sql, $bindings);
         
-        return new Query($server, $preparedSql, $files, $settings);
+        return new Query($server, $preparedSql, $files, $settings, $format);
     }
     
     /**
@@ -407,8 +409,9 @@ class Client
         $bindings = $query['bindings'] ?? [];
         $tables = $query['files'] ?? [];
         $settings = $query['settings'] ?? [];
+        $format   = $query['format'] ?? Format::JSON;
         
-        return $this->createQuery($server, $sql, $bindings, $tables, $settings);
+        return $this->createQuery($server, $sql, $bindings, $tables, $settings, $format);
     }
     
     /**

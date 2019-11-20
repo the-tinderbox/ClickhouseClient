@@ -193,7 +193,7 @@ class HttpTransportTest extends TestCase
 
         $table = new TempTable('temp', $tableSource, ['UInt64'], Format::TSV);
 
-        $query = new Query($this->getServer(), 'select * from numbers(0, 10) where number in temp', [$table]);
+        $query = new Query($this->getServer(), 'select * from numbers(0, 10) where number in temp FORMAT JSON', [$table]);
         $result = $transport->read([$query]);
 
         $this->assertEquals([1, 2], array_column($result[0]->rows, 'number'));
@@ -211,7 +211,7 @@ class HttpTransportTest extends TestCase
 
         $table = new TempTable('temp', $tableSource, ['number' => 'UInt64'], Format::TSV);
 
-        $query = new Query($this->getServer(), 'select number from temp', [$table]);
+        $query = new Query($this->getServer(), 'select number from temp FORMAT JSON', [$table]);
         $result = $transport->read([$query]);
 
         $this->assertEquals([1, 2], array_column($result[0]->rows, 'number'), 'Returns correct result when uses temp tables for read queries');
@@ -253,7 +253,7 @@ class HttpTransportTest extends TestCase
 
         $this->assertTrue($result[0][0], 'Returns true on write queries');
 
-        $query = new Query($this->getServer(), 'select * from default.tdchc_test_table order by number');
+        $query = new Query($this->getServer(), 'select * from default.tdchc_test_table order by number FORMAT JSON');
         $result = $transport->read([$query]);
 
         $this->assertEquals([
@@ -311,8 +311,8 @@ class HttpTransportTest extends TestCase
         $this->assertTrue($result[0][0] && $result[0][1] && $result[1][0], 'Returns true on multiple write queries with multiple files');
 
         $result = $transport->read([
-            new Query($this->getServer(), 'select * from default.tdchc_test_table order by number'),
-            new Query($this->getServer(), 'select * from default.tdchc_test_table_2 order by number '),
+            new Query($this->getServer(), 'select * from default.tdchc_test_table order by number FORMAT JSON'),
+            new Query($this->getServer(), 'select * from default.tdchc_test_table_2 order by number FORMAT JSON'),
         ]);
 
         $this->assertEquals([
@@ -455,7 +455,7 @@ class HttpTransportTest extends TestCase
         ]);
 
         $result = $transport->read([
-            new Query($this->getServer(), 'select count() from default.tdchc_test_table'),
+            new Query($this->getServer(), 'select count() from default.tdchc_test_table FORMAT JSON'),
         ]);
 
         $this->assertEquals(100, $result[0]->rows[0]['count()'], 'File content may be used in insert statements');
@@ -496,7 +496,7 @@ class HttpTransportTest extends TestCase
         ]);
 
         $result = $transport->read([
-            new Query($this->getServer(), 'select count() from default.tdchc_test_table'),
+            new Query($this->getServer(), 'select count() from default.tdchc_test_table FORMAT JSON'),
         ]);
 
         $this->assertEquals(100, $result[0]->rows[0]['count()'], 'File content may be used in insert statements');
@@ -534,13 +534,13 @@ class HttpTransportTest extends TestCase
         ]);
 
         $result = $transport->read([
-            new Query($this->getServer(), 'select string, count() from default.tdchc_test_table group by string'),
+            new Query($this->getServer(), 'select string, count() from default.tdchc_test_table group by string FORMAT JSON'),
         ]);
 
         $this->assertTrue($result[0]->rows[0]['count()'] == 50 && $result[0]->rows[1]['count()'] == 50, 'File content may be used in insert statements');
 
         $result = $transport->read([
-            new Query($this->getServer(), 'select string, count() from name group by string', [$file]),
+            new Query($this->getServer(), 'select string, count() from name group by string FORMAT JSON', [$file]),
         ]);
 
         $this->assertTrue($result[0]->rows[0]['count()'] == 50 && $result[0]->rows[1]['count()'] == 50, 'File content may be used in read statements');
@@ -570,8 +570,8 @@ class HttpTransportTest extends TestCase
         ]);
 
         $result = $transport->read([
-            new Query($this->getServer(), 'select string, count() from default.tdchc_test_table group by string'),
-            new Query($this->getServer(), 'select string, count() from name group by string', [$table]),
+            new Query($this->getServer(), 'select string, count() from default.tdchc_test_table group by string FORMAT JSON'),
+            new Query($this->getServer(), 'select string, count() from name group by string FORMAT JSON', [$table]),
         ]);
 
         $this->assertTrue($result[0]->rows[0]['count()'] == 50 && $result[0]->rows[1]['count()'] == 50, 'File content may be used in insert statements');
@@ -589,8 +589,8 @@ class HttpTransportTest extends TestCase
 
         $transport = $this->getTransport();
         $transport->read([
-            new Query($this->getServer(), 'SELECT * FROM test'),
-        ], 1, 'UNKNOWN');
+            new Query($this->getServer(), 'SELECT * FROM test', [], [], 'UNKNOWN'),
+        ], 1);
     }
 
     public function testReadJsonCompact()
@@ -608,8 +608,8 @@ class HttpTransportTest extends TestCase
 
         $transport = $this->getTransport();
         $result = $transport->read([
-            new Query($this->getServer(), 'SELECT * FROM name', [$table]),
-        ], 1, Format::JSONCompact);
+            new Query($this->getServer(), 'SELECT * FROM name FORMAT JSONCompact', [$table], [], Format::JSONCompact),
+        ], 1);
 
         $result = $result[0];
 

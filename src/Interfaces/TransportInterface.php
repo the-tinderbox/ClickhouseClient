@@ -28,9 +28,8 @@ interface TransportInterface
      *
      * @param array  $queries
      * @param int    $concurrency
-     * @param string $format
      *
      * @return Result[]
      */
-    public function read(array $queries, int $concurrency = 5, string $format = Format::JSON): array;
+    public function read(array $queries, int $concurrency = 5): array;
 }

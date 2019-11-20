@@ -2,6 +2,9 @@
 
 namespace Tinderbox\Clickhouse;
 
+use Tinderbox\Clickhouse\Common\Format;
+use Tinderbox\Clickhouse\Server;
+
 /**
  * Query instance
  */
@@ -36,19 +39,28 @@ class Query
     protected $settings = [];
 
     /**
+     * Response format
+     *
+     * @var string
+     */
+    protected $format = Format::JSON;
+
+    /**
      * Query constructor.
      *
-     * @param \Tinderbox\Clickhouse\Server $server
-     * @param string                       $query
-     * @param array                        $files
-     * @param array                        $settings
+     * @param Server $server
+     * @param string $query
+     * @param array  $files
+     * @param array  $settings
+     * @param string $format
      */
-    public function __construct(Server $server, string $query, array $files = [], array $settings = [])
+    public function __construct(Server $server, string $query, array $files = [], array $settings = [], string $format = Format::JSON)
     {
         $this->server = $server;
         $this->query = $query;
         $this->files = $files;
         $this->settings = $settings;
+        $this->format = $format;
     }
 
     /**
@@ -89,5 +101,15 @@ class Query
     public function getSettings(): array
     {
         return $this->settings;
+    }
+
+    /**
+     * Returns format
+     *
+     * @return string
+     */
+    public function getFormat(): string
+    {
+        return $this->format;
     }
 }
