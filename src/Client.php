@@ -260,7 +260,7 @@ class Client
      * @param array $bindings
      * @param FileInterface[] $files
      * @param array $settings
-     * @param string $format
+     * @param ?string $format
      *
      * @return \Tinderbox\Clickhouse\Query\Result
      */
@@ -269,7 +269,7 @@ class Client
         array $bindings = [],
         array $files = [],
         array $settings = [],
-        string $format = Format::JSON
+        ?string $format = Format::JSON
     ): Result {
         $query = $this->createQuery($this->getServer(), $query, $bindings, $files, $settings, $format);
         
@@ -388,7 +388,7 @@ class Client
         array $bindings = [],
         array $files = [],
         array $settings = [],
-        string $format = Format::JSON
+        ?string $format = Format::JSON
     ): Query {
         $preparedSql = $this->prepareSql($sql, $bindings);
         

@@ -53,8 +53,12 @@ class Query
      * @param array  $settings
      * @param string $format
      */
-    public function __construct(Server $server, string $query, array $files = [], array $settings = [], string $format = Format::JSON)
+    public function __construct(Server $server, string $query, array $files = [], array $settings = [], ?string $format = Format::JSON)
     {
+        if (empty($format)) {
+            $format = Format::TSV;
+        }
+
         if (stripos($query, 'format') === false) {
             $query .= " FORMAT {$format}";
         }
