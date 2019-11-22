@@ -382,7 +382,16 @@ class HttpTransport implements TransportInterface
                         }
                     }
 
-                    $stats = \GuzzleHttp\json_decode($response->getHeader('X-ClickHouse-Summary')[0], true);
+                    $summary = $response->getHeader('X-ClickHouse-Summary');
+
+                    if (!empty($summary)) {
+                        $stats = \GuzzleHttp\json_decode($summary[0], true);
+                    } else {
+                        $stats = [
+                            'read_rows'  => 0,
+                            'read_bytes' => 0,
+                        ];
+                    }
 
                     $statistic = new QueryStatistic($stats['read_rows'], $stats['read_bytes'], 0, null);
                     $meta      = new Query\Meta();
@@ -395,7 +404,16 @@ class HttpTransport implements TransportInterface
                         }
                     }
 
-                    $stats = \GuzzleHttp\json_decode($response->getHeader('X-ClickHouse-Summary')[0], true);
+                    $summary = $response->getHeader('X-ClickHouse-Summary');
+
+                    if (!empty($summary)) {
+                        $stats = \GuzzleHttp\json_decode($summary[0], true);
+                    } else {
+                        $stats = [
+                            'read_rows'  => 0,
+                            'read_bytes' => 0,
+                        ];
+                    }
 
                     $statistic = new QueryStatistic($stats['read_rows'], $stats['read_bytes'], 0, null);
                     $meta      = new Query\Meta();
