@@ -59,6 +59,12 @@ class Query
             $format = Format::JSON;
         }
 
+        if ($format === Format::TSV) {
+            //clickhouse doesnt send enclosure symbols for tsv https://clickhouse.yandex/docs/en/interfaces/formats/#tabseparated
+            //php doesnt support parse csv without enclosure
+            $format = Format::TSVRaw;
+        }
+
         if (stripos($query, 'format') === false) {
             $query .= " FORMAT {$format}";
         }

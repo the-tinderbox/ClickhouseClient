@@ -14,6 +14,7 @@ use Tinderbox\Clickhouse\Common\TempTable;
 use Tinderbox\Clickhouse\Exceptions\TransportException;
 use Tinderbox\Clickhouse\Support\ServerTrait;
 use Tinderbox\Clickhouse\Transport\HttpTransport;
+use Tinderbox\Clickhouse\Common\CSVFileFromArray;
 
 /**
  * @covers \Tinderbox\Clickhouse\Transport\HttpTransport
@@ -620,5 +621,56 @@ class HttpTransportTest extends TestCase
 
         $string = $result->getMeta()->getForColumn('string');
         $this->assertEquals(['string', 'String'], [$string->getColumn(), $string->getType()]);
+    }
+
+    public function testCsvFormat()
+    {
+        $transport = $this->getTransport();
+
+        $data = [
+            [10, 'test'],
+            [-20, '{"param1":"value1","href":"https://site.com?id=10&param=Foo \"Bar\""}'],
+        ];
+
+        $tempTable = new TempTable('test', new CSVFileFromArray($data, null, '^'), ['number' => 'Int64', 'string' => 'String']);
+
+        $result = $transport->read([new Query($this->getServer(), 'SELECT * FROM test', [$tempTable], [], Format::CSV)]);
+
+        $this->assertEquals($data, $result[0]->getRows());
+        $this->isJson()->evaluate($result[0]->getRows()[1][1]);
+    }
+
+    public function testTsvFormat()
+    {
+        $transport = $this->getTransport();
+
+        $data = [
+            [10, 'test \''],
+            [-20, '{"param1":"value1","href":"https://site.com?id=10&param=Foo \"Bar\""}'],
+        ];
+
+        $tempTable = new TempTable('test', new CSVFileFromArray($data, null, '^'), ['number' => 'Int64', 'string' => 'String']);
+
+        $result = $transport->read([new Query($this->getServer(), 'SELECT * FROM test', [$tempTable], [], Format::TSV)]);
+
+        $this->assertEquals($data, $result[0]->getRows());
+        $this->isJson()->evaluate($result[0]->getRows()[1][1]);
+    }
+
+    public function testTsvRawFormat()
+    {
+        $transport = $this->getTransport();
+
+        $data = [
+            [10, 'test \''],
+            [-20, '{"param1":"value1","href":"https://site.com?id=10&param=Foo \"Bar\""}'],
+        ];
+
+        $tempTable = new TempTable('test', new CSVFileFromArray($data, null, '^'), ['number' => 'Int64', 'string' => 'String']);
+
+        $result = $transport->read([new Query($this->getServer(), 'SELECT * FROM test', [$tempTable], [], Format::TSVRaw)]);
+
+        $this->assertEquals($data, $result[0]->getRows());
+        $this->isJson()->evaluate($result[0]->getRows()[1][1]);
     }
 }

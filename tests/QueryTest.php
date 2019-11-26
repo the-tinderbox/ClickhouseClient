@@ -24,7 +24,7 @@ class QueryTest extends TestCase
         $query = new Query($server, 'select * from table', $files, $settings);
 
         $this->assertEquals($server, $query->getServer(), 'Returns correct server passed to constructor');
-        $this->assertEquals('select * from table', $query->getQuery(), 'Returns correct query passed to constructor');
+        $this->assertEquals('select * from table FORMAT JSON', $query->getQuery(), 'Returns correct query passed to constructor');
         $this->assertEquals($files, $query->getFiles(), 'Returns correct files passed to constructor');
         $this->assertEquals($settings, $query->getSettings(), 'Returns correct settings passed to constructor');
     }

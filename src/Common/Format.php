@@ -15,6 +15,11 @@ abstract class Format
     const TSV = 'TSV';
 
     /**
+     * TSV format.
+     */
+    const TSVRaw = 'TSVRaw';
+
+    /**
      * JSON format.
      */
     const JSON = 'JSON';

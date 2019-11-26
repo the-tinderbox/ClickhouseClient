@@ -25,7 +25,7 @@ use GuzzleHttp\RequestOptions;
  */
 class HttpTransport implements TransportInterface
 {
-    const SUPPORTED_READ_FORMATS = [Format::JSON, Format::JSONCompact, Format::TSV, Format::CSV];
+    const SUPPORTED_READ_FORMATS = [Format::JSON, Format::JSONCompact, Format::TSV, Format::CSV, Format::TSVRaw];
 
     /**
      * GuzzleClient.
@@ -369,16 +369,18 @@ class HttpTransport implements TransportInterface
      */
     protected function assembleResult(Query $query, ResponseInterface $response, $resource): Result
     {
-        $result = [];
+        $rows = [];
 
         /** @var Stream $stream */
         $stream = $response->getBody();
+        $stream->rewind();
 
         try {
             switch ($query->getFormat()) {
                 case Format::JSON:
                 case Format::JSONCompact:
                     $result = \GuzzleHttp\json_decode($stream->getContents(), true);
+                    $rows = $result['data'];
 
                     $statistic = new QueryStatistic(
                         $result['statistics']['rows_read'] ?? 0,
@@ -390,27 +392,20 @@ class HttpTransport implements TransportInterface
                     $meta = $this->assembleMeta($result);
                     break;
                 case Format::CSV:
-                    while ($row = fgetcsv($resource)) {
-                        $result['data'][] = $row;
-                    }
-
-                    $summary = $response->getHeader('X-ClickHouse-Summary');
-
-                    if (!empty($summary)) {
-                        $stats = \GuzzleHttp\json_decode($summary[0], true);
-                    } else {
-                        $stats = [
-                            'read_rows'  => 0,
-                            'read_bytes' => 0,
-                        ];
-                    }
-
-                    $statistic = new QueryStatistic($stats['read_rows'], $stats['read_bytes'], 0, null);
-                    $meta      = new Query\Meta();
-                    break;
                 case Format::TSV:
-                    while ($row = fgetcsv($resource, 0, "\t")) {
-                        $result['data'][] = $row;
+                case Format::TSVRaw:
+                    if ($query->getFormat() === Format::CSV) {
+                        $delimiter = ',';
+                        $enclosure = '"';
+                        $escape = '"';
+                    } else {
+                        $delimiter = "\t";
+                        $enclosure = '"';
+                        $escape = "\\";
+                    }
+
+                    while ($row = fgetcsv($resource, 0, $delimiter, $enclosure, $escape)) {
+                        $rows[] = $row;
                     }
 
                     $summary = $response->getHeader('X-ClickHouse-Summary');
@@ -427,9 +422,11 @@ class HttpTransport implements TransportInterface
                     $statistic = new QueryStatistic($stats['read_rows'], $stats['read_bytes'], 0, null);
                     $meta      = new Query\Meta();
                     break;
+                default:
+                    throw new \Exception('Unsupported format: ' . $query->getFormat());
             }
 
-            return new Result($query, $result['data'] ?? [], $statistic, $meta);
+            return new Result($query, $rows, $statistic, $meta);
         } catch (\Exception $e) {
             $stream->rewind();
 
