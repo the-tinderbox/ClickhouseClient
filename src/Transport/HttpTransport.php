@@ -5,7 +5,6 @@ namespace Tinderbox\Clickhouse\Transport;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Pool;
-use GuzzleHttp\Psr7\BufferStream;
 use GuzzleHttp\Psr7\MultipartStream;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Stream;
@@ -19,6 +18,7 @@ use Tinderbox\Clickhouse\Query\QueryStatistic;
 use Tinderbox\Clickhouse\Query\Result;
 use Tinderbox\Clickhouse\Server;
 use Tinderbox\Clickhouse\Common\Format;
+use GuzzleHttp\RequestOptions;
 
 /**
  * Http transport to perform queries.
@@ -99,7 +99,7 @@ class HttpTransport implements TransportInterface
     {
         return new Client();
     }
-    
+
     /**
      * Executes write queries.
      *
@@ -197,8 +197,9 @@ class HttpTransport implements TransportInterface
         }
 
         $openedStreams = [];
+        $resources = [];
 
-        $requests = function ($queries) use(&$openedStreams) {
+        $requests = function ($queries) use(&$openedStreams, &$resources) {
             foreach ($queries as $index => $query) {
                 /* @var Query $query */
 
@@ -206,34 +207,46 @@ class HttpTransport implements TransportInterface
                     'wait_end_of_query' => 1,
                 ];
 
-                $multipart = [
-                    [
-                        'name'     => 'query',
-                        'contents' => $query->getQuery(),
-                    ]
-                ];
-
-                foreach ($query->getFiles() as $file) {
-                    /* @var TempTable $file */
-                    $tableQueryParams = $this->getTempTableQueryParams($file);
-
-                    $stream = $file->open(false);
-                    $openedStreams[] = $stream;
-
-                    $multipart[] = [
-                        'name'     => $file->getName(),
-                        'contents' => $stream,
-                        'filename' => $file->getName(),
+                if ($query->getFiles()) {
+                    $multipart = [
+                        [
+                            'name'     => 'query',
+                            'contents' => $query->getQuery(),
+                        ]
                     ];
 
-                    $params = array_merge($tableQueryParams, $params);
-                }
+                    foreach ($query->getFiles() as $file) {
+                        /* @var TempTable $file */
+                        $tableQueryParams = $this->getTempTableQueryParams($file);
 
-                $body = new MultipartStream($multipart);
+                        $stream = $file->open(false);
+                        $openedStreams[] = $stream;
+
+                        $multipart[] = [
+                            'name'     => $file->getName(),
+                            'contents' => $stream,
+                            'filename' => $file->getName(),
+                        ];
+
+                        $params = array_merge($tableQueryParams, $params);
+                    }
+
+                    $body = new MultipartStream($multipart);
+                } else {
+                    $body = $query->getQuery();
+                }
 
                 $uri = $this->buildRequestUri($query->getServer(), $params, $query->getSettings());
 
-                yield $index => new Request('POST', $uri, [], $body);
+                $resources[$index] = fopen('php://temp', 'r+');
+                $client = $this->httpClient;
+
+                yield $index => static function () use ($client, $uri, $resources, $body, $index) {
+                     return $client->postAsync($uri, [
+                        RequestOptions::SINK => $resources[$index],
+                        RequestOptions::BODY => $body
+                    ]);
+                };
             }
         };
 
@@ -242,8 +255,8 @@ class HttpTransport implements TransportInterface
         $pool = new Pool(
             $this->httpClient, $requests($queries), [
                 'concurrency' => $concurrency,
-                'fulfilled' => function ($response, $index) use (&$result, $queries) {
-                    $result[$index] = $this->assembleResult($queries[$index], $response);
+                'fulfilled' => function (ResponseInterface $response, $index) use (&$result, $queries, &$resources) {
+                    $result[$index] = $this->assembleResult($queries[$index], $response, $resources[$index]);
                 },
                 'rejected' => function ($response, $index) use ($queries) {
                     $query = $queries[$index];
@@ -350,9 +363,11 @@ class HttpTransport implements TransportInterface
      * @param Query $query
      * @param \Psr\Http\Message\ResponseInterface $response
      *
+     * @param $resource
      * @return \Tinderbox\Clickhouse\Query\Result
+     * @throws TransportException
      */
-    protected function assembleResult(Query $query, ResponseInterface $response): Result
+    protected function assembleResult(Query $query, ResponseInterface $response, $resource): Result
     {
         $result = [];
 
@@ -375,11 +390,8 @@ class HttpTransport implements TransportInterface
                     $meta = $this->assembleMeta($result);
                     break;
                 case Format::CSV:
-                    while (!$stream->eof()) {
-                        $data = \GuzzleHttp\Psr7\readline($stream);
-                        if (!empty($data)) {
-                            $result['data'][] = str_getcsv($data);
-                        }
+                    while ($row = fgetcsv($resource)) {
+                        $result['data'][] = $row;
                     }
 
                     $summary = $response->getHeader('X-ClickHouse-Summary');
@@ -397,11 +409,8 @@ class HttpTransport implements TransportInterface
                     $meta      = new Query\Meta();
                     break;
                 case Format::TSV:
-                    while (!$stream->eof()) {
-                        $data = \GuzzleHttp\Psr7\readline($stream);
-                        if (!empty($data)) {
-                            $result['data'][] = str_getcsv($data, "\t");
-                        }
+                    while ($row = fgetcsv($resource, 0, "\t")) {
+                        $result['data'][] = $row;
                     }
 
                     $summary = $response->getHeader('X-ClickHouse-Summary');
@@ -426,22 +435,6 @@ class HttpTransport implements TransportInterface
 
             throw TransportException::malformedResponseFromServer($stream->getContents());
         }
-    }
-
-    /**
-     * @param resource $source
-     * @return resource
-     */
-    public static function copyStreamToMemory($source)
-    {
-        $memory = fopen('php://memory', 'rw');
-
-        stream_copy_to_stream($source, $memory);
-
-        rewind($memory);
-        rewind($source);
-
-        return $memory;
     }
 
     /**

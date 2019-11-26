@@ -56,7 +56,7 @@ class Query
     public function __construct(Server $server, string $query, array $files = [], array $settings = [], ?string $format = Format::JSON)
     {
         if (empty($format)) {
-            $format = Format::TSV;
+            $format = Format::JSON;
         }
 
         if (stripos($query, 'format') === false) {
