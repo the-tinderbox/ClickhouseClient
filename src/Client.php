@@ -357,7 +357,11 @@ class Client
         array $settings = [],
         int $concurrency = 5
     ) {
-        $sql = 'INSERT INTO '.$table.' ('.implode(', ', $columns).') FORMAT '.strtoupper($format);
+        $enclosureColumns = array_map(function (string $column) {
+            return "`{$column}`";
+        }, $columns);
+
+        $sql = 'INSERT INTO '.$table.' ('.implode(', ', $enclosureColumns).') FORMAT '.strtoupper($format);
         
         foreach ($files as $i => $file) {
             if (!$file instanceof FileInterface) {
