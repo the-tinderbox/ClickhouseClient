@@ -30,7 +30,7 @@ class HttpTransport implements TransportInterface
     protected $httpClient;
 
     /**
-     * Array with two keys (read and write) with guzzle options for corresponding requests.
+     * Array with three keys (read, write and deflate) with guzzle options for corresponding requests.
      *
      * [
      *   'read' => [
@@ -41,6 +41,7 @@ class HttpTransport implements TransportInterface
      *     'debug' => true,
      *     'timeout' => 100,
      *   ],
+     *   'deflate' => true
      * ]
      *
      * @var array
@@ -61,16 +62,31 @@ class HttpTransport implements TransportInterface
     }
 
     /**
+     * Returns flag to enable / disable queries and data compression
+     *
+     * @return bool
+     */
+    protected function isDeflateEnabled(): bool
+    {
+        return $this->options['deflate'] ?? true;
+    }
+
+    /**
      * Returns default headers for requests.
      *
      * @return array
      */
     protected function getHeaders()
     {
-        return [
+        $headers = [
             'Accept-Encoding'  => 'gzip',
-            'Content-Encoding' => 'gzip',
         ];
+
+        if ($this->isDeflateEnabled()) {
+            $headers['Content-Encoding'] = 'gzip';
+        }
+
+        return $headers;
     }
 
     /**
@@ -121,7 +137,7 @@ class HttpTransport implements TransportInterface
                             'query' => $query->getQuery(),
                         ], $query->getSettings());
 
-                        $stream = $file->open();
+                        $stream = $file->open($this->isDeflateEnabled());
                         $openedStreams[] = $stream;
 
                         $request = new Request('POST', $uri, $headers, $stream);
@@ -133,7 +149,8 @@ class HttpTransport implements TransportInterface
 
                     $uri = $this->buildRequestUri($query->getServer(), [], $query->getSettings());
 
-                    $request = new Request('POST', $uri, $headers, gzencode($query->getQuery()));
+                    $sql = $this->isDeflateEnabled() ? gzencode($query->getQuery()) : $query->getQuery();
+                    $request = new Request('POST', $uri, $headers, $sql);
 
                     yield $request;
                 }
