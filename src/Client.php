@@ -148,6 +148,20 @@ class Client
     }
 
     /**
+     * Client will use proxy server as server for queries.
+     *
+     * @return $this
+     */
+    public function usingProxyServer()
+    {
+        $this->serverHostname = function () {
+            return $this->serverProvider->getRandomProxyServer();
+        };
+        
+        return $this;
+    }
+
+    /**
      * Returns true if cluster selected.
      *
      * @return bool

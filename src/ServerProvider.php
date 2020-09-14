@@ -24,6 +24,13 @@ class ServerProvider
     protected $servers = [];
 
     /**
+     * Proxy servers.
+     *
+     * @var Server[]
+     */
+    protected $proxyServers = [];
+
+    /**
      * Current server to perform queries.
      *
      * @var Server
@@ -63,6 +70,24 @@ class ServerProvider
         return $this;
     }
 
+    public function addProxyServer(Server $server)
+    {
+        $serverHostname = $server->getHost();
+
+        if (isset($this->proxyServers[$serverHostname])) {
+            throw ServerProviderException::serverHostnameDuplicate($serverHostname);
+        }
+
+        $this->proxyServers[$serverHostname] = $server;
+
+        return $this;
+    }
+
+    public function getRandomProxyServer(): Server
+    {
+        return $this->getProxyServer(array_rand($this->proxyServers, 1));
+    }
+
     public function getRandomServer(): Server
     {
         return $this->getServer(array_rand($this->servers, 1));
@@ -90,6 +115,17 @@ class ServerProvider
         }
 
         return $this->servers[$serverHostname];
+    }
+
+    public function getProxyServer(string $serverHostname): Server
+    {
+        if (!isset($this->proxyServers[$serverHostname])) {
+            throw ServerProviderException::serverHostnameNotFound($serverHostname);
+        }
+
+        $proxyServer = $this->proxyServers[$serverHostname];
+
+        return $proxyServer;
     }
 
     public function getCluster(string $cluster) : Cluster
