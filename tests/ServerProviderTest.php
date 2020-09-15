@@ -107,4 +107,47 @@ class ServerProviderTest extends TestCase
 
         $provider->getServer('127.0.0.1');
     }
+
+    public function testProxyServers()
+    {
+        $proxyServers = [
+            new Server('127.0.0.1', 9090),
+            new Server('127.0.0.2', 9090),
+        ];
+
+        $provider = new ServerProvider();
+        $provider->addProxyServer($proxyServers[0]);
+        $provider->addProxyServer($proxyServers[1]);
+
+        $this->assertEquals($proxyServers[0], $provider->getProxyServer('127.0.0.1'), 'Correctly adds proxy server and returns it by hostname');
+
+        $server = $provider->getRandomProxyServer();
+        $this->assertTrue(
+            in_array($server->getHost(), ['127.0.0.1', '127.0.0.2'], true),
+            'Correctly adds proxy server and returns it by hostname'
+        );
+    }
+
+    public function testProxyServerDuplicate()
+    {
+        $server = new Server('127.0.0.1');
+
+        $provider = new ServerProvider();
+        $provider->addProxyServer($server);
+
+        $this->expectException(ServerProviderException::class);
+        $this->expectExceptionMessage('Proxy server with hostname [127.0.0.1] already provided');
+
+        $provider->addProxyServer($server);
+    }
+
+    public function testProxyServerNotFound()
+    {
+        $provider = new ServerProvider();
+
+        $this->expectException(ServerProviderException::class);
+        $this->expectExceptionMessage('Can not find proxy server with hostname [127.0.0.1]');
+
+        $provider->getProxyServer('127.0.0.1');
+    }
 }

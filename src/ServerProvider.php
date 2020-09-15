@@ -75,7 +75,7 @@ class ServerProvider
         $serverHostname = $server->getHost();
 
         if (isset($this->proxyServers[$serverHostname])) {
-            throw ServerProviderException::serverHostnameDuplicate($serverHostname);
+            throw ServerProviderException::proxyServerHostnameDuplicate($serverHostname);
         }
 
         $this->proxyServers[$serverHostname] = $server;
@@ -120,7 +120,7 @@ class ServerProvider
     public function getProxyServer(string $serverHostname): Server
     {
         if (!isset($this->proxyServers[$serverHostname])) {
-            throw ServerProviderException::serverHostnameNotFound($serverHostname);
+            throw ServerProviderException::proxyServerHostnameNotFound($serverHostname);
         }
 
         $proxyServer = $this->proxyServers[$serverHostname];

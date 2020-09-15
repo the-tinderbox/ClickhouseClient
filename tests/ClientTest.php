@@ -152,6 +152,23 @@ class ClientTest extends TestCase
         $client->using('127.0.0.0')->getServer();
     }
 
+    public function testProxies()
+    {
+        $server1 = new Server('127.0.0.1', 8123);
+        $proxy = new Server('127.0.0.2', 9090);
+
+        $serverProvider = new ServerProvider();
+        $serverProvider->addServer($server1)->addProxyServer($proxy);
+
+        $client = new Client($serverProvider);
+        $client->usingProxyServer();
+
+        $server = $client->getServer();
+
+        $this->assertEquals('127.0.0.2', $server->getHost());
+        $this->assertEquals(9090, $server->getPort());
+    }
+
     public function testClusterAndServersTogether()
     {
         $cluster = new Cluster(

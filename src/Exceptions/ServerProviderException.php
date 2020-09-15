@@ -26,4 +26,14 @@ class ServerProviderException extends \Exception
     {
         return new static('Can not find server with hostname ['.$hostname.']');
     }
+
+    public static function proxyServerHostnameDuplicate($hostname)
+    {
+        return new static('Proxy server with hostname ['.$hostname.'] already provided');
+    }
+
+    public static function proxyServerHostnameNotFound($hostname)
+    {
+        return new static('Can not find proxy server with hostname ['.$hostname.']');
+    }
 }
