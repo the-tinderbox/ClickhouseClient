@@ -87,4 +87,70 @@ class ClusterTest extends TestCase
 
         new Cluster('test_cluster', $servers);
     }
+
+    public function testServersWithTags()
+    {
+        $server = [
+            'host'     => '127.0.0.1',
+            'port'     => 8123,
+            'database' => 'default',
+            'username' => 'default',
+            'password' => '',
+            'options'  => (new ServerOptions())->addTag('tag'),
+        ];
+
+        $cluster = new Cluster('test', [
+            $server,
+        ]);
+
+        $createdServer = $cluster->getServerByTag('tag', '127.0.0.1');
+
+        $this->assertEquals($server['host'], $createdServer->getHost());
+        $this->assertEquals($server['port'], $createdServer->getPort());
+        $this->assertEquals($server['database'], $createdServer->getDatabase());
+        $this->assertEquals($server['username'], $createdServer->getUsername());
+        $this->assertEquals($server['password'], $createdServer->getPassword());
+        $this->assertEquals($server['options'], $createdServer->getOptions());
+    }
+
+    public function testServerTagNotFound()
+    {
+        $cluster = new Cluster('test', []);
+
+        $this->expectException(ClusterException::class);
+        $this->expectExceptionMessage('There are no servers with tag [tag] in cluster');
+
+        $cluster->getServersByTag('tag');
+        $cluster->getServerByTag('tag', '127.0.0.1');
+    }
+
+    public function testServerNotFoundByTag()
+    {
+        $serverWithTag = [
+            'host'     => '127.0.0.1',
+            'port'     => 8123,
+            'database' => 'default',
+            'username' => 'default',
+            'password' => '',
+            'options'  => (new ServerOptions())->addTag('tag'),
+        ];
+
+        $serverWithoutTag = [
+            'host'     => '127.0.0.2',
+            'port'     => 8123,
+            'database' => 'default',
+            'username' => 'default',
+            'password' => '',
+        ];
+
+        $cluster = new Cluster('test', [
+            $serverWithTag,
+            $serverWithoutTag
+        ]);
+
+        $this->expectException(ClusterException::class);
+        $this->expectExceptionMessage('Server with hostname [127.0.0.2] and tag [tag] is not found in cluster');
+
+        $cluster->getServerByTag('tag', '127.0.0.2');
+    }
 }

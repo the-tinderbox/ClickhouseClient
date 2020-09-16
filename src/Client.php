@@ -148,14 +148,20 @@ class Client
     }
 
     /**
-     * Client will use proxy server as server for queries.
+     * Client will use server with tag as server for queries.
+     *
+     * @var string $group
      *
      * @return $this
      */
-    public function usingProxyServer()
+    public function usingServerWithTag(string $tag)
     {
-        $this->serverHostname = function () {
-            return $this->serverProvider->getRandomProxyServer();
+        $this->serverHostname = function () use ($tag) {
+            if ($this->isOnCluster()) {
+                return $this->serverProvider->getRandomServerFromClusterByTag($this->getClusterName(), $tag);
+            } else {
+                return $this->serverProvider->getRandomServerWithTag($tag);
+            }
         };
 
         return $this;

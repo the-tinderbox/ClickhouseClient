@@ -72,21 +72,27 @@ By default client will use random server in given list of servers or in specifie
 $client->using('server-2')->select('select * from table');
 ```
 
-## Proxy servers
+## Server tags
 
 ```php
-$firstProxyServer = new Tinderbox\Clickhouse\Server('127.0.0.1', '9090', null, 'user', 'pass');
-$secondProxyServer = new Tinderbox\Clickhouse\Server('127.0.0.2', '9090', null, 'user', 'pass');
+$firstServerOptionsWithTag = (new \Tinderbox\Clickhouse\Common\ServerOptions())->setTag('tag');
+$secondServerOptionsWithAnotherTag = (new \Tinderbox\Clickhouse\Common\ServerOptions())->setTag('another-tag');
 
-$serverProvider = (new Tinderbox\Clickhouse\ServerProvider())->addProxyServer($firstProxyServer)->addProxyServer($secondProxyServer);
+$server = new Tinderbox\Clickhouse\Server('127.0.0.1', '8123', 'default', 'user', 'pass', $firstServerOptionsWithTag);
+
+$cluster = new Tinderbox\Clickhouse\Cluster('cluster', [
+    new Tinderbox\Clickhouse\Server('127.0.0.2', '8123', 'default', 'user', 'pass', $secondServerOptionsWithAnotherTag)
+]);
+
+$serverProvider = (new Tinderbox\Clickhouse\ServerProvider())->addServer($server)->addCluster($cluster);
 
 $client = (new Tinderbox\Clickhouse\Client($serverProvider));
 ```
 
-To use proxy server, you should call ```usingProxyServer``` function before execute any query.
+To use server with tag, you should call ```usingServerFromGroup``` function before execute any query.
 
 ```php
-$client->usingProxyServer();
+$client->usingServerFromGroup('tag');
 ```
 
 ## Select queries

@@ -16,7 +16,6 @@ before_install:
   - composer require satooshi/php-coveralls
 
 before_script:
-  - vendor/bin/phpunit --version
   - composer self-update
   - composer install --prefer-source --dev
   - docker run -p 9000:9000 -p 8123:8123 -d --name some-clickhouse-server --ulimit nofile=262144:262144 yandex/clickhouse-server

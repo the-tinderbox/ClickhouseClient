@@ -19,7 +19,8 @@
   },
   "require": {
     "php": "~7.1",
-    "guzzlehttp/guzzle": "~6.0"
+    "guzzlehttp/guzzle": "~6.0",
+    "satooshi/php-coveralls": "^2.2"
   },
   "bin": [
     "bin/ccat_linux",

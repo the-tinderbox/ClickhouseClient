@@ -3,6 +3,8 @@
 namespace Tinderbox\Clickhouse;
 
 use PHPUnit\Framework\TestCase;
+use Tinderbox\Clickhouse\Common\ServerOptions;
+use Tinderbox\Clickhouse\Exceptions\ClusterException;
 use Tinderbox\Clickhouse\Exceptions\ServerProviderException;
 
 /**
@@ -108,46 +110,80 @@ class ServerProviderTest extends TestCase
         $provider->getServer('127.0.0.1');
     }
 
-    public function testProxyServers()
+    public function testServersWithTags()
     {
-        $proxyServers = [
-            new Server('127.0.0.1', 9090),
-            new Server('127.0.0.2', 9090),
+        $serverOptionsWithTag = (new ServerOptions())->addTag('tag');
+
+        $serverWithTag = new Server('127.0.0.1', 8123, 'default', 'default', '', $serverOptionsWithTag);
+        $serverWithoutTag = new Server('127.0.0.2', 8123);
+
+        $provider = new ServerProvider();
+        $provider->addServer($serverWithTag);
+        $provider->addServer($serverWithoutTag);
+
+        $server = $provider->getRandomServerWithTag('tag');
+        $this->assertEquals($server->getHost(), $serverWithTag->getHost(), 'Correctly adds server with tag and returns it');
+    }
+
+    public function testServerTagNotFound()
+    {
+        $provider = new ServerProvider();
+
+        $this->expectException(ServerProviderException::class);
+        $this->expectExceptionMessage('Can not find servers with tag [tag]');
+
+        $provider->getServerWithTag('tag', '127.0.0.1');
+    }
+
+    public function testServerWithTagNotFound()
+    {
+        $serverOptionsWithTag = (new ServerOptions())->addTag('tag');
+        $serverWithTag = new Server('127.0.0.1', 8123, 'default', 'default', '', $serverOptionsWithTag);
+        $serverWithoutTag = new Server('127.0.0.2', 8123);
+
+        $provider = new ServerProvider();
+        $provider->addServer($serverWithTag);
+        $provider->addServer($serverWithoutTag);
+
+        $this->expectException(ServerProviderException::class);
+        $this->expectExceptionMessage('Can not find servers with hostname [127.0.0.2] and tag [tag]');
+
+        $provider->getServerWithTag('tag', '127.0.0.2');
+    }
+
+    public function testClustersWithServersWithTag()
+    {
+        $serverOptionsWithTag = (new ServerOptions())->addTag('tag');
+
+        $serverWithTag = new Server('127.0.0.1', 8123, 'default', 'default', '', $serverOptionsWithTag);
+        $serverWithoutTag = new Server('127.0.0.2');
+
+        $servers = [
+            $serverWithTag,
+            $serverWithoutTag,
         ];
 
+        $cluster = new Cluster('test', $servers);
+
         $provider = new ServerProvider();
-        $provider->addProxyServer($proxyServers[0]);
-        $provider->addProxyServer($proxyServers[1]);
+        $provider->addCluster($cluster);
 
-        $this->assertEquals($proxyServers[0], $provider->getProxyServer('127.0.0.1'), 'Correctly adds proxy server and returns it by hostname');
-
-        $server = $provider->getRandomProxyServer();
-        $this->assertTrue(
-            in_array($server->getHost(), ['127.0.0.1', '127.0.0.2'], true),
-            'Correctly adds proxy server and returns it by hostname'
-        );
+        $this->assertEquals($serverWithTag, $provider->getRandomServerFromClusterByTag('test', 'tag'), 'Correctly returns server from cluster by tag');
     }
 
-    public function testProxyServerDuplicate()
+    public function testServerTagNotFoundInCluster()
     {
-        $server = new Server('127.0.0.1');
+        $servers = [
+            new Server('127.0.0.1'),
+        ];
+        $cluster = new Cluster('test', $servers);
 
         $provider = new ServerProvider();
-        $provider->addProxyServer($server);
+        $provider->addCluster($cluster);
 
-        $this->expectException(ServerProviderException::class);
-        $this->expectExceptionMessage('Proxy server with hostname [127.0.0.1] already provided');
+        $this->expectException(ClusterException::class);
+        $this->expectExceptionMessage('There are no servers with tag [tag] in cluster');
 
-        $provider->addProxyServer($server);
-    }
-
-    public function testProxyServerNotFound()
-    {
-        $provider = new ServerProvider();
-
-        $this->expectException(ServerProviderException::class);
-        $this->expectExceptionMessage('Can not find proxy server with hostname [127.0.0.1]');
-
-        $provider->getProxyServer('127.0.0.1');
+        $provider->getRandomServerFromClusterByTag('test', 'tag');
     }
 }

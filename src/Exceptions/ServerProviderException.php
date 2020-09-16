@@ -27,13 +27,13 @@ class ServerProviderException extends \Exception
         return new static('Can not find server with hostname ['.$hostname.']');
     }
 
-    public static function proxyServerHostnameDuplicate($hostname)
+    public static function serverTagNotFound($tag)
     {
-        return new static('Proxy server with hostname ['.$hostname.'] already provided');
+        return new static('Can not find servers with tag ['.$tag.']');
     }
 
-    public static function proxyServerHostnameNotFound($hostname)
+    public static function serverHostnameNotFoundForTag($tag, $hostname)
     {
-        return new static('Can not find proxy server with hostname ['.$hostname.']');
+        return new static('Can not find servers with hostname ['.$hostname.'] and tag ['.$tag.']');
     }
 }

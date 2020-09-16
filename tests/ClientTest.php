@@ -5,6 +5,7 @@ namespace Tinderbox\Clickhouse;
 use PHPUnit\Framework\TestCase;
 use Tinderbox\Clickhouse\Common\FileFromString;
 use Tinderbox\Clickhouse\Common\Format;
+use Tinderbox\Clickhouse\Common\ServerOptions;
 use Tinderbox\Clickhouse\Common\TempTable;
 use Tinderbox\Clickhouse\Exceptions\ClusterException;
 use Tinderbox\Clickhouse\Exceptions\ServerProviderException;
@@ -154,21 +155,23 @@ class ClientTest extends TestCase
         $client->using('127.0.0.0')->getServer();
     }
 
-    public function testProxies()
+    public function testServersWithTags()
     {
-        $server1 = new Server('127.0.0.1', 8123);
-        $proxy = new Server('127.0.0.2', 9090);
+        $serverOptionsWithTag = (new ServerOptions())->addTag('tag');
+
+        $serverWithTag = (new Server('127.0.0.1', 8123))->setOptions($serverOptionsWithTag);
+        $serverWithoutTag = new Server('127.0.0.2', 8123);
 
         $serverProvider = new ServerProvider();
-        $serverProvider->addServer($server1)->addProxyServer($proxy);
+        $serverProvider->addServer($serverWithTag)->addServer($serverWithoutTag);
 
         $client = new Client($serverProvider);
-        $client->usingProxyServer();
+        $client->usingServerWithTag('tag');
 
         $server = $client->getServer();
 
-        $this->assertEquals('127.0.0.2', $server->getHost());
-        $this->assertEquals(9090, $server->getPort());
+        $this->assertEquals('127.0.0.1', $server->getHost());
+        $this->assertEquals(8123, $server->getPort());
     }
 
     public function testClusterAndServersTogether()

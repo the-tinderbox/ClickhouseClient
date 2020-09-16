@@ -24,11 +24,11 @@ class ServerProvider
     protected $servers = [];
 
     /**
-     * Proxy servers.
+     * Servers by tags.
      *
-     * @var Server[]
+     * @var Server[][]
      */
-    protected $proxyServers = [];
+    protected $serversByTags = [];
 
     /**
      * Current server to perform queries.
@@ -67,30 +67,27 @@ class ServerProvider
 
         $this->servers[$serverHostname] = $server;
 
-        return $this;
-    }
+        $serverTags = $server->getOptions()->getTags();
 
-    public function addProxyServer(Server $server)
-    {
-        $serverHostname = $server->getHost();
-
-        if (isset($this->proxyServers[$serverHostname])) {
-            throw ServerProviderException::proxyServerHostnameDuplicate($serverHostname);
+        foreach ($serverTags as $serverTag) {
+            $this->serversByTags[$serverTag][$serverHostname] = $server;
         }
 
-        $this->proxyServers[$serverHostname] = $server;
-
         return $this;
-    }
-
-    public function getRandomProxyServer(): Server
-    {
-        return $this->getProxyServer(array_rand($this->proxyServers, 1));
     }
 
     public function getRandomServer(): Server
     {
         return $this->getServer(array_rand($this->servers, 1));
+    }
+
+    public function getRandomServerWithTag(string $tag): Server
+    {
+        if (!isset($this->serversByTags[$tag])) {
+            throw ServerProviderException::serverTagNotFound($tag);
+        }
+
+        return $this->getServerWithTag($tag, array_rand($this->serversByTags[$tag], 1));
     }
 
     public function getRandomServerFromCluster(string $cluster): Server
@@ -99,6 +96,15 @@ class ServerProvider
         $randomServerIndex = array_rand($cluster->getServers(), 1);
 
         return $cluster->getServerByHostname($randomServerIndex);
+    }
+
+    public function getRandomServerFromClusterByTag(string $cluster, string $tag): Server
+    {
+        $cluster = $this->getCluster($cluster);
+
+        $randomServerIndex = array_rand($cluster->getServersByTag($tag), 1);
+
+        return $cluster->getServerByTag($tag, $randomServerIndex);
     }
 
     public function getServerFromCluster(string $cluster, string $serverHostname)
@@ -117,15 +123,17 @@ class ServerProvider
         return $this->servers[$serverHostname];
     }
 
-    public function getProxyServer(string $serverHostname): Server
+    public function getServerWithTag(string $tag, string $serverHostname): Server
     {
-        if (!isset($this->proxyServers[$serverHostname])) {
-            throw ServerProviderException::proxyServerHostnameNotFound($serverHostname);
+        if (!isset($this->serversByTags[$tag])) {
+            throw ServerProviderException::serverTagNotFound($tag);
         }
 
-        $proxyServer = $this->proxyServers[$serverHostname];
+        if (!isset($this->serversByTags[$tag][$serverHostname])) {
+            throw ServerProviderException::serverHostnameNotFoundForTag($tag, $serverHostname);
+        }
 
-        return $proxyServer;
+        return $this->serversByTags[$tag][$serverHostname];
     }
 
     public function getCluster(string $cluster): Cluster
