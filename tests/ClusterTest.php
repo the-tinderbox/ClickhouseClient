@@ -125,6 +125,15 @@ class ClusterTest extends TestCase
         $this->expectExceptionMessage('There are no servers with tag [tag] in cluster');
 
         $cluster->getServersByTag('tag');
+    }
+
+    public function testServerTagNotFoundWhileGettingServer()
+    {
+        $cluster = new Cluster('test', []);
+
+        $this->expectException(ClusterException::class);
+        $this->expectExceptionMessage('There are no servers with tag [tag] in cluster');
+
         $cluster->getServerByTag('tag', '127.0.0.1');
     }
 
