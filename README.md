@@ -72,6 +72,22 @@ By default client will use random server in given list of servers or in specifie
 $client->using('server-2')->select('select * from table');
 ```
 
+## Proxy servers
+
+```php
+$proxyServer = new Tinderbox\Clickhouse\Server('127.0.0.1', '9090', null, 'user', 'pass');
+
+$serverProvider = (new Tinderbox\Clickhouse\ServerProvider())->addProxyServer($proxyServer);
+
+$client = (new Tinderbox\Clickhouse\Client($serverProvider));
+```
+
+To use proxy server you should call ```usingProxyServer``` function before execute any query.
+
+```php
+$client->usingProxyServer();
+```
+
 ## Select queries
 
 Any SELECT query will return instance of `Result`. This class implements interfaces `\ArrayAccess`, `\Countable` и `\Iterator`,
