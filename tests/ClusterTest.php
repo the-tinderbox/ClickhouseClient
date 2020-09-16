@@ -145,7 +145,7 @@ class ClusterTest extends TestCase
 
         $cluster = new Cluster('test', [
             $serverWithTag,
-            $serverWithoutTag
+            $serverWithoutTag,
         ]);
 
         $this->expectException(ClusterException::class);

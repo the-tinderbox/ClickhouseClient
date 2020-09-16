@@ -150,7 +150,7 @@ class Client
     /**
      * Client will use server with tag as server for queries.
      *
-     * @var string $group
+     * @var string $tag
      *
      * @return $this
      */
