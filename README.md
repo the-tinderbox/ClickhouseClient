@@ -75,9 +75,10 @@ $client->using('server-2')->select('select * from table');
 ## Proxy servers
 
 ```php
-$proxyServer = new Tinderbox\Clickhouse\Server('127.0.0.1', '9090', null, 'user', 'pass');
+$firstProxyServer = new Tinderbox\Clickhouse\Server('127.0.0.1', '9090', null, 'user', 'pass');
+$secondProxyServer = new Tinderbox\Clickhouse\Server('127.0.0.2', '9090', null, 'user', 'pass');
 
-$serverProvider = (new Tinderbox\Clickhouse\ServerProvider())->addProxyServer($proxyServer);
+$serverProvider = (new Tinderbox\Clickhouse\ServerProvider())->addProxyServer($firstProxyServer)->addProxyServer($secondProxyServer);
 
 $client = (new Tinderbox\Clickhouse\Client($serverProvider));
 ```
