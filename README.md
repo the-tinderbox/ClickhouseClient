@@ -83,7 +83,7 @@ $serverProvider = (new Tinderbox\Clickhouse\ServerProvider())->addProxyServer($f
 $client = (new Tinderbox\Clickhouse\Client($serverProvider));
 ```
 
-To use proxy server you should call ```usingProxyServer``` function before execute any query.
+To use proxy server, you should call ```usingProxyServer``` function before execute any query.
 
 ```php
 $client->usingProxyServer();
