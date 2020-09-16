@@ -55,7 +55,8 @@ class ClientTest extends TestCase
     public function testClusters()
     {
         $cluster = new Cluster(
-            'test', [
+            'test',
+            [
                 new Server('127.0.0.1'),
                 new Server('127.0.0.2'),
                 new Server('127.0.0.3'),
@@ -63,7 +64,8 @@ class ClientTest extends TestCase
         );
 
         $cluster2 = new Cluster(
-            'test2', [
+            'test2',
+            [
                 new Server('127.0.0.4'),
                 new Server('127.0.0.5'),
                 new Server('127.0.0.6'),
@@ -172,7 +174,8 @@ class ClientTest extends TestCase
     public function testClusterAndServersTogether()
     {
         $cluster = new Cluster(
-            'test', [
+            'test',
+            [
                 new Server('127.0.0.1'),
                 new Server('127.0.0.2'),
                 new Server('127.0.0.3'),

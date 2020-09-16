@@ -157,7 +157,7 @@ class Client
         $this->serverHostname = function () {
             return $this->serverProvider->getRandomProxyServer();
         };
-        
+
         return $this;
     }
 

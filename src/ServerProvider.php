@@ -128,7 +128,7 @@ class ServerProvider
         return $proxyServer;
     }
 
-    public function getCluster(string $cluster) : Cluster
+    public function getCluster(string $cluster): Cluster
     {
         if (!isset($this->clusters[$cluster])) {
             throw ServerProviderException::clusterNotFound($cluster);

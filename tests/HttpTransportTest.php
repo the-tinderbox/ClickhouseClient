@@ -19,7 +19,7 @@ use Tinderbox\Clickhouse\Transport\HttpTransport;
  */
 class HttpTransportTest extends TestCase
 {
-    protected function getMockedTransport(array $responses) : HttpTransport
+    protected function getMockedTransport(array $responses): HttpTransport
     {
         $mock = new MockHandler($responses);
 
@@ -30,17 +30,17 @@ class HttpTransportTest extends TestCase
         ]));
     }
 
-    protected function getQuery() : Query
+    protected function getQuery(): Query
     {
         return new Query($this->getServer(), 'select * from table');
     }
 
-    protected function getServer() : Server
+    protected function getServer(): Server
     {
         return new Server(CLICKHOUSE_SERVER_HOST, CLICKHOUSE_SERVER_PORT, 'default', 'default');
     }
 
-    protected function getTransport() : HttpTransport
+    protected function getTransport(): HttpTransport
     {
         return new HttpTransport();
     }
