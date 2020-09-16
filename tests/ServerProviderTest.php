@@ -133,6 +133,7 @@ class ServerProviderTest extends TestCase
         $this->expectExceptionMessage('Can not find servers with tag [tag]');
 
         $provider->getServerWithTag('tag', '127.0.0.1');
+        $provider->getRandomServerWithTag('tag');
     }
 
     public function testServerWithTagNotFound()

@@ -174,6 +174,33 @@ class ClientTest extends TestCase
         $this->assertEquals(8123, $server->getPort());
     }
 
+    public function testServersWithTagsOnCluster()
+    {
+        $serverOptionsWithTag = (new ServerOptions())->addTag('tag');
+
+        $serverWithTag = (new Server('127.0.0.1', 8123))->setOptions($serverOptionsWithTag);
+        $serverWithoutTag = new Server('127.0.0.2', 8123);
+
+        $cluster = new Cluster(
+            'test',
+            [
+                $serverWithTag,
+                $serverWithoutTag,
+            ]
+        );
+
+        $serverProvider = new ServerProvider();
+        $serverProvider->addCluster($cluster);
+
+        $client = new Client($serverProvider);
+        $client->onCluster('test')->usingServerWithTag('tag');
+
+        $server = $client->getServer();
+
+        $this->assertEquals('127.0.0.1', $server->getHost());
+        $this->assertEquals(8123, $server->getPort());
+    }
+
     public function testClusterAndServersTogether()
     {
         $cluster = new Cluster(

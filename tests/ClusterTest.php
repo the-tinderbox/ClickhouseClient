@@ -111,6 +111,15 @@ class ClusterTest extends TestCase
         $this->assertEquals($server['username'], $createdServer->getUsername());
         $this->assertEquals($server['password'], $createdServer->getPassword());
         $this->assertEquals($server['options'], $createdServer->getOptions());
+
+        $createdServer = $cluster->getServersByTag('tag');
+
+        $this->assertEquals($server['host'], $createdServer->getHost());
+        $this->assertEquals($server['port'], $createdServer->getPort());
+        $this->assertEquals($server['database'], $createdServer->getDatabase());
+        $this->assertEquals($server['username'], $createdServer->getUsername());
+        $this->assertEquals($server['password'], $createdServer->getPassword());
+        $this->assertEquals($server['options'], $createdServer->getOptions());
     }
 
     public function testServerTagNotFound()
