@@ -89,10 +89,10 @@ $serverProvider = (new Tinderbox\Clickhouse\ServerProvider())->addServer($server
 $client = (new Tinderbox\Clickhouse\Client($serverProvider));
 ```
 
-To use server with tag, you should call ```usingServerFromGroup``` function before execute any query.
+To use server with tag, you should call ```usingServerWithTag``` function before execute any query.
 
 ```php
-$client->usingServerFromGroup('tag');
+$client->usingServerWithTag('tag');
 ```
 
 ## Select queries
