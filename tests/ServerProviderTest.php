@@ -135,32 +135,6 @@ class ServerProviderTest extends TestCase
         $provider->getRandomServerWithTag('tag');
     }
 
-    public function testServerTagNotFoundWhileGettingServer()
-    {
-        $provider = new ServerProvider();
-
-        $this->expectException(ServerProviderException::class);
-        $this->expectExceptionMessage('Can not find servers with tag [tag]');
-
-        $provider->getServerWithTag('tag', '127.0.0.1');
-    }
-
-    public function testServerWithTagNotFound()
-    {
-        $serverOptionsWithTag = (new ServerOptions())->addTag('tag');
-        $serverWithTag = new Server('127.0.0.1', 8123, 'default', 'default', '', $serverOptionsWithTag);
-        $serverWithoutTag = new Server('127.0.0.2', 8123);
-
-        $provider = new ServerProvider();
-        $provider->addServer($serverWithTag);
-        $provider->addServer($serverWithoutTag);
-
-        $this->expectException(ServerProviderException::class);
-        $this->expectExceptionMessage('Can not find servers with hostname [127.0.0.2] and tag [tag]');
-
-        $provider->getServerWithTag('tag', '127.0.0.2');
-    }
-
     public function testClustersWithServersWithTag()
     {
         $serverOptionsWithTag = (new ServerOptions())->addTag('tag');

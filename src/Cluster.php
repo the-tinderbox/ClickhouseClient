@@ -97,7 +97,7 @@ class Cluster
         $serverTags = $server->getOptions()->getTags();
 
         foreach ($serverTags as $serverTag) {
-            $this->serversByTags[$serverTag][$hostname] = $server;
+            $this->serversByTags[$serverTag][$hostname] = true;
         }
     }
 
@@ -145,29 +145,6 @@ class Cluster
         }
 
         return $this->servers[$hostname];
-    }
-
-    /**
-     * Returns server by specified hostname and specified tag.
-     *
-     * @param string $tag
-     * @param string $hostname
-     *
-     * @throws \Tinderbox\Clickhouse\Exceptions\ClusterException
-     *
-     * @return \Tinderbox\Clickhouse\Server
-     */
-    public function getServerByTag(string $tag, string $hostname): Server
-    {
-        if (!isset($this->serversByTags[$tag])) {
-            throw ClusterException::tagNotFound($tag);
-        }
-
-        if (!isset($this->serversByTags[$tag][$hostname])) {
-            throw ClusterException::serverNotFoundByTag($tag, $hostname);
-        }
-
-        return $this->serversByTags[$tag][$hostname];
     }
 
     /**

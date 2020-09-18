@@ -70,7 +70,7 @@ class ServerProvider
         $serverTags = $server->getOptions()->getTags();
 
         foreach ($serverTags as $serverTag) {
-            $this->serversByTags[$serverTag][$serverHostname] = $server;
+            $this->serversByTags[$serverTag][$serverHostname] = true;
         }
 
         return $this;
@@ -87,7 +87,7 @@ class ServerProvider
             throw ServerProviderException::serverTagNotFound($tag);
         }
 
-        return $this->getServerWithTag($tag, array_rand($this->serversByTags[$tag], 1));
+        return $this->getServer(array_rand($this->serversByTags[$tag], 1));
     }
 
     public function getRandomServerFromCluster(string $cluster): Server
@@ -104,7 +104,7 @@ class ServerProvider
 
         $randomServerIndex = array_rand($cluster->getServersByTag($tag), 1);
 
-        return $cluster->getServerByTag($tag, $randomServerIndex);
+        return $cluster->getServerByHostname($randomServerIndex);
     }
 
     public function getServerFromCluster(string $cluster, string $serverHostname)
@@ -121,19 +121,6 @@ class ServerProvider
         }
 
         return $this->servers[$serverHostname];
-    }
-
-    public function getServerWithTag(string $tag, string $serverHostname): Server
-    {
-        if (!isset($this->serversByTags[$tag])) {
-            throw ServerProviderException::serverTagNotFound($tag);
-        }
-
-        if (!isset($this->serversByTags[$tag][$serverHostname])) {
-            throw ServerProviderException::serverHostnameNotFoundForTag($tag, $serverHostname);
-        }
-
-        return $this->serversByTags[$tag][$serverHostname];
     }
 
     public function getCluster(string $cluster): Cluster
