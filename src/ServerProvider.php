@@ -93,18 +93,18 @@ class ServerProvider
     public function getRandomServerFromCluster(string $cluster): Server
     {
         $cluster = $this->getCluster($cluster);
-        $randomServerIndex = array_rand($cluster->getServers(), 1);
+        $randomServerHostname = array_rand($cluster->getServers(), 1);
 
-        return $cluster->getServerByHostname($randomServerIndex);
+        return $cluster->getServerByHostname($randomServerHostname);
     }
 
     public function getRandomServerFromClusterByTag(string $cluster, string $tag): Server
     {
         $cluster = $this->getCluster($cluster);
 
-        $randomServerIndex = array_rand($cluster->getServersByTag($tag), 1);
+        $randomServerHostname = array_rand($cluster->getServersByTag($tag), 1);
 
-        return $cluster->getServerByHostname($randomServerIndex);
+        return $cluster->getServerByHostname($randomServerHostname);
     }
 
     public function getServerFromCluster(string $cluster, string $serverHostname)
