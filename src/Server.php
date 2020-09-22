@@ -64,9 +64,9 @@ class Server
     public function __construct(
         string $host,
         string $port = '8123',
-        string $database = 'default',
-        string $username = null,
-        string $password = null,
+        ?string $database = 'default',
+        ?string $username = null,
+        ?string $password = null,
         ServerOptions $options = null
     ) {
         $this->setHost($host);

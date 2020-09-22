@@ -24,6 +24,13 @@ class Cluster
     protected $servers = [];
 
     /**
+     * Servers in cluster by tags.
+     *
+     * @var \Tinderbox\Clickhouse\Server[][]
+     */
+    protected $serversByTags = [];
+
+    /**
      * Cluster constructor.
      *
      * @param string $name
@@ -86,6 +93,12 @@ class Cluster
         }
 
         $this->servers[$hostname] = $server;
+
+        $serverTags = $server->getOptions()->getTags();
+
+        foreach ($serverTags as $serverTag) {
+            $this->serversByTags[$serverTag][$hostname] = true;
+        }
     }
 
     /**
@@ -96,6 +109,24 @@ class Cluster
     public function getServers(): array
     {
         return $this->servers;
+    }
+
+    /**
+     * Returns servers in cluster by tag.
+     *
+     * @param string $tag
+     *
+     * @throws ClusterException
+     *
+     * @return \Tinderbox\Clickhouse\Server[]
+     */
+    public function getServersByTag(string $tag): array
+    {
+        if (!isset($this->serversByTags[$tag])) {
+            throw ClusterException::tagNotFound($tag);
+        }
+
+        return $this->serversByTags[$tag];
     }
 
     /**
@@ -121,7 +152,7 @@ class Cluster
      *
      * @return string
      */
-    public function getName() : string
+    public function getName(): string
     {
         return $this->name;
     }

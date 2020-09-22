@@ -21,4 +21,14 @@ class ClusterException extends \Exception
     {
         return new static('Server with hostname ['.$hostname.'] is not found in cluster');
     }
+
+    public static function tagNotFound($tag)
+    {
+        return new static('There are no servers with tag ['.$tag.'] in cluster');
+    }
+
+    public static function serverNotFoundByTag($tag, $hostname)
+    {
+        return new static('Server with hostname ['.$hostname.'] and tag ['.$tag.'] is not found in cluster');
+    }
 }

@@ -62,7 +62,7 @@ class HttpTransport implements TransportInterface
     }
 
     /**
-     * Returns flag to enable / disable queries and data compression
+     * Returns flag to enable / disable queries and data compression.
      *
      * @return bool
      */
@@ -121,7 +121,7 @@ class HttpTransport implements TransportInterface
      *
      * @return array
      */
-    public function write(array $queries, int $concurrency = 5) : array
+    public function write(array $queries, int $concurrency = 5): array
     {
         $result = [];
         $openedStreams = [];
@@ -159,9 +159,11 @@ class HttpTransport implements TransportInterface
             $queryResult = [];
 
             $pool = new Pool(
-                $this->httpClient, $requests($query), [
+                $this->httpClient,
+                $requests($query),
+                [
                     'concurrency' => $concurrency,
-                    'fulfilled'   => function ($response, $index) use (&$queryResult, $query) {
+                    'fulfilled'   => function ($response, $index) use (&$queryResult) {
                         $queryResult[$index] = true;
                     },
                     'rejected' => $this->parseReason($query),
@@ -195,7 +197,7 @@ class HttpTransport implements TransportInterface
         return $result;
     }
 
-    public function read(array $queries, int $concurrency = 5) : array
+    public function read(array $queries, int $concurrency = 5): array
     {
         $openedStreams = [];
 
@@ -241,7 +243,9 @@ class HttpTransport implements TransportInterface
         $result = [];
 
         $pool = new Pool(
-            $this->httpClient, $requests($queries), [
+            $this->httpClient,
+            $requests($queries),
+            [
                 'concurrency' => $concurrency,
                 'fulfilled'   => function ($response, $index) use (&$result, $queries) {
                     $result[$index] = $this->assembleResult($queries[$index], $response);

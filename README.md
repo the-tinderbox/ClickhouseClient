@@ -72,6 +72,29 @@ By default client will use random server in given list of servers or in specifie
 $client->using('server-2')->select('select * from table');
 ```
 
+## Server tags
+
+```php
+$firstServerOptionsWithTag = (new \Tinderbox\Clickhouse\Common\ServerOptions())->setTag('tag');
+$secondServerOptionsWithAnotherTag = (new \Tinderbox\Clickhouse\Common\ServerOptions())->setTag('another-tag');
+
+$server = new Tinderbox\Clickhouse\Server('127.0.0.1', '8123', 'default', 'user', 'pass', $firstServerOptionsWithTag);
+
+$cluster = new Tinderbox\Clickhouse\Cluster('cluster', [
+    new Tinderbox\Clickhouse\Server('127.0.0.2', '8123', 'default', 'user', 'pass', $secondServerOptionsWithAnotherTag)
+]);
+
+$serverProvider = (new Tinderbox\Clickhouse\ServerProvider())->addServer($server)->addCluster($cluster);
+
+$client = (new Tinderbox\Clickhouse\Client($serverProvider));
+```
+
+To use server with tag, you should call ```usingServerWithTag``` function before execute any query.
+
+```php
+$client->usingServerWithTag('tag');
+```
+
 ## Select queries
 
 Any SELECT query will return instance of `Result`. This class implements interfaces `\ArrayAccess`, `\Countable` и `\Iterator`,

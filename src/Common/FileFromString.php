@@ -8,7 +8,7 @@ use Tinderbox\Clickhouse\Interfaces\FileInterface;
 
 class FileFromString extends AbstractFile implements FileInterface
 {
-    public function open(bool $gzip = true) : StreamInterface
+    public function open(bool $gzip = true): StreamInterface
     {
         $handle = fopen('php://memory', 'r+');
         fwrite($handle, $this->source);

@@ -19,7 +19,7 @@ use Tinderbox\Clickhouse\Transport\HttpTransport;
  */
 class HttpTransportTest extends TestCase
 {
-    protected function getMockedTransport(array $responses) : HttpTransport
+    protected function getMockedTransport(array $responses): HttpTransport
     {
         $mock = new MockHandler($responses);
 
@@ -30,17 +30,17 @@ class HttpTransportTest extends TestCase
         ]));
     }
 
-    protected function getQuery() : Query
+    protected function getQuery(): Query
     {
         return new Query($this->getServer(), 'select * from table');
     }
 
-    protected function getServer() : Server
+    protected function getServer(): Server
     {
         return new Server(CLICKHOUSE_SERVER_HOST, CLICKHOUSE_SERVER_PORT, 'default', 'default');
     }
 
-    protected function getTransport() : HttpTransport
+    protected function getTransport(): HttpTransport
     {
         return new HttpTransport();
     }
@@ -377,7 +377,7 @@ class HttpTransportTest extends TestCase
         $transport = $this->getTransport();
 
         $this->expectException(TransportException::class);
-        $this->expectExceptionMessageRegExp('/Wrong password for user default/');
+        $this->expectExceptionMessageRegExp('/Authentication failed: password is incorrect/');
 
         $transport->read([
             new Query(new Server('127.0.0.1', 8123, 'default', 'default', 'pass'), 'select 1', [
@@ -391,7 +391,7 @@ class HttpTransportTest extends TestCase
         $transport = $this->getTransport();
 
         $this->expectException(TransportException::class);
-        $this->expectExceptionMessageRegExp('/Wrong password for user default/');
+        $this->expectExceptionMessageRegExp('/Authentication failed: password is incorrect/');
 
         $transport->write([
             new Query(new Server('127.0.0.1', 8123, 'default', 'default', 'pass'), 'insert into table 1', [

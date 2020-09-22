@@ -6,5 +6,5 @@ use Psr\Http\Message\StreamInterface;
 
 interface FileInterface
 {
-    public function open(bool $gzip = true) : StreamInterface;
+    public function open(bool $gzip = true): StreamInterface;
 }

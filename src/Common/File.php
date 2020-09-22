@@ -8,7 +8,7 @@ use Tinderbox\Clickhouse\Interfaces\FileInterface;
 
 class File extends AbstractFile implements FileInterface
 {
-    public function open(bool $gzip = true) : StreamInterface
+    public function open(bool $gzip = true): StreamInterface
     {
         $handle = fopen($this->getSource(), 'r');
 
