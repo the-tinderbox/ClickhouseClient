@@ -19,17 +19,17 @@
   },
   "require": {
     "php": "~7.1",
-    "guzzlehttp/guzzle": "~6.0|~7.0",
-    "satooshi/php-coveralls": "^2.2"
+    "guzzlehttp/guzzle": "~6.0|~7.0"
   },
   "bin": [
     "bin/ccat_linux",
     "bin/ccat_darwin"
   ],
   "require-dev": {
-    "mockery/mockery": "^0.9.9",
-    "phpunit/php-code-coverage": "^6.0",
-    "phpunit/phpunit": "~7.0"
+    "mockery/mockery": "^1.4",
+    "phpunit/phpunit": "~7.0",
+    "php-coveralls/php-coveralls": "^2.2",
+    "phpunit/phpcov": "^2.0"
   },
   "scripts": {
     "test": "phpunit --coverage-text --colors=never"

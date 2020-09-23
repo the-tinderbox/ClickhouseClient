@@ -12,9 +12,6 @@ compiler:
   - clang
   - g++
 
-before_install:
-  - composer require satooshi/php-coveralls
-
 before_script:
   - composer self-update
   - composer install --prefer-source --dev
