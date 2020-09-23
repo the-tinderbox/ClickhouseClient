@@ -14,7 +14,7 @@ class MergedFiles extends File implements FileInterface
         return __DIR__.DIRECTORY_SEPARATOR.'..'.DIRECTORY_SEPARATOR.'..'.DIRECTORY_SEPARATOR.'bin'.DIRECTORY_SEPARATOR.'ccat_'.strtolower(PHP_OS);
     }
 
-    public function open(bool $gzip = true) : StreamInterface
+    public function open(bool $gzip = true): StreamInterface
     {
         $descriptorspec = [
             0 => ['pipe', 'r'],

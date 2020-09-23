@@ -94,7 +94,7 @@ class TempTable implements FileInterface
         return $this->format;
     }
 
-    public function open(bool $gzip = true) : StreamInterface
+    public function open(bool $gzip = true): StreamInterface
     {
         return $this->source->open($gzip);
     }

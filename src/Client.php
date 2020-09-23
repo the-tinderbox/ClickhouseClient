@@ -148,6 +148,26 @@ class Client
     }
 
     /**
+     * Client will use server with tag as server for queries.
+     *
+     * @var string
+     *
+     * @return $this
+     */
+    public function usingServerWithTag(string $tag)
+    {
+        $this->serverHostname = function () use ($tag) {
+            if ($this->isOnCluster()) {
+                return $this->serverProvider->getRandomServerFromClusterByTag($this->getClusterName(), $tag);
+            } else {
+                return $this->serverProvider->getRandomServerWithTag($tag);
+            }
+        };
+
+        return $this;
+    }
+
+    /**
      * Returns true if cluster selected.
      *
      * @return bool

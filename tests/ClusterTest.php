@@ -87,4 +87,34 @@ class ClusterTest extends TestCase
 
         new Cluster('test_cluster', $servers);
     }
+
+    public function testServersWithTags()
+    {
+        $server = [
+            'host'     => '127.0.0.1',
+            'port'     => 8123,
+            'database' => 'default',
+            'username' => 'default',
+            'password' => '',
+            'options'  => (new ServerOptions())->addTag('tag'),
+        ];
+
+        $cluster = new Cluster('test', [
+            $server,
+        ]);
+
+        $servers = $cluster->getServersByTag('tag');
+
+        $this->assertEquals(array_keys($servers)[0], $server['host']);
+    }
+
+    public function testServerTagNotFound()
+    {
+        $cluster = new Cluster('test', []);
+
+        $this->expectException(ClusterException::class);
+        $this->expectExceptionMessage('There are no servers with tag [tag] in cluster');
+
+        $cluster->getServersByTag('tag');
+    }
 }

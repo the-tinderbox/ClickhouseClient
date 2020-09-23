@@ -24,6 +24,13 @@ class ServerProvider
     protected $servers = [];
 
     /**
+     * Servers by tags.
+     *
+     * @var Server[][]
+     */
+    protected $serversByTags = [];
+
+    /**
      * Current server to perform queries.
      *
      * @var Server
@@ -60,6 +67,12 @@ class ServerProvider
 
         $this->servers[$serverHostname] = $server;
 
+        $serverTags = $server->getOptions()->getTags();
+
+        foreach ($serverTags as $serverTag) {
+            $this->serversByTags[$serverTag][$serverHostname] = true;
+        }
+
         return $this;
     }
 
@@ -68,12 +81,30 @@ class ServerProvider
         return $this->getServer(array_rand($this->servers, 1));
     }
 
+    public function getRandomServerWithTag(string $tag): Server
+    {
+        if (!isset($this->serversByTags[$tag])) {
+            throw ServerProviderException::serverTagNotFound($tag);
+        }
+
+        return $this->getServer(array_rand($this->serversByTags[$tag], 1));
+    }
+
     public function getRandomServerFromCluster(string $cluster): Server
     {
         $cluster = $this->getCluster($cluster);
-        $randomServerIndex = array_rand($cluster->getServers(), 1);
+        $randomServerHostname = array_rand($cluster->getServers(), 1);
 
-        return $cluster->getServerByHostname($randomServerIndex);
+        return $cluster->getServerByHostname($randomServerHostname);
+    }
+
+    public function getRandomServerFromClusterByTag(string $cluster, string $tag): Server
+    {
+        $cluster = $this->getCluster($cluster);
+
+        $randomServerHostname = array_rand($cluster->getServersByTag($tag), 1);
+
+        return $cluster->getServerByHostname($randomServerHostname);
     }
 
     public function getServerFromCluster(string $cluster, string $serverHostname)
@@ -92,7 +123,7 @@ class ServerProvider
         return $this->servers[$serverHostname];
     }
 
-    public function getCluster(string $cluster) : Cluster
+    public function getCluster(string $cluster): Cluster
     {
         if (!isset($this->clusters[$cluster])) {
             throw ServerProviderException::clusterNotFound($cluster);

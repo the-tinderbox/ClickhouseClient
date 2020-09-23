@@ -14,7 +14,7 @@ use Tinderbox\Clickhouse\Exceptions\QueryStatisticException;
  * @property int   $rows
  * @property int   $bytes
  * @property float $time
- * @property int $rowsBeforeLimitAtLeast
+ * @property int   $rowsBeforeLimitAtLeast
  */
 class QueryStatistic
 {
