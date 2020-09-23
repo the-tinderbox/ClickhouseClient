@@ -377,7 +377,12 @@ class HttpTransportTest extends TestCase
         $transport = $this->getTransport();
 
         $this->expectException(TransportException::class);
-        $this->expectExceptionMessageRegExp('/Authentication failed: password is incorrect/');
+        $regularExpression = '/Authentication failed: password is incorrect/';
+        if (method_exists($this, 'expectExceptionMessageRegExp')) {
+            $this->expectExceptionMessageRegExp($regularExpression);
+        } else {
+            $this->expectErrorMessageMatches($regularExpression);
+        }
 
         $transport->read([
             new Query(new Server('127.0.0.1', 8123, 'default', 'default', 'pass'), 'select 1', [
@@ -391,7 +396,12 @@ class HttpTransportTest extends TestCase
         $transport = $this->getTransport();
 
         $this->expectException(TransportException::class);
-        $this->expectExceptionMessageRegExp('/Authentication failed: password is incorrect/');
+        $regularExpression = '/Authentication failed: password is incorrect/';
+        if (method_exists($this, 'expectExceptionMessageRegExp')) {
+            $this->expectExceptionMessageRegExp($regularExpression);
+        } else {
+            $this->expectErrorMessageMatches($regularExpression);
+        }
 
         $transport->write([
             new Query(new Server('127.0.0.1', 8123, 'default', 'default', 'pass'), 'insert into table 1', [
