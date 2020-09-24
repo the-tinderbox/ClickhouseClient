@@ -20,7 +20,7 @@
         </whitelist>
     </filter>
     <logging>
-        <log type="coverage-html" target="coverage" charset="UTF-8"/>
+        <log type="coverage-html" target="coverage"/>
     </logging>
     <php>
         <const name="CLICKHOUSE_SERVER_HOST" value="127.0.0.1"/>

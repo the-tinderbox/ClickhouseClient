@@ -2,6 +2,9 @@ language: php
 
 php:
   - '7.1'
+  - '7.2'
+  - '7.3'
+  - '7.4'
 
 sudo: required
 
@@ -11,9 +14,6 @@ services:
 compiler:
   - clang
   - g++
-
-before_install:
-  - composer require satooshi/php-coveralls
 
 before_script:
   - composer self-update
