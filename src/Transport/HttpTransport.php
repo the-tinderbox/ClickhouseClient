@@ -212,7 +212,8 @@ class HttpTransport implements TransportInterface
                 $multipart = [
                     [
                         'name'     => 'query',
-                        'contents' => $query->getQuery().' FORMAT JSON',
+                        'contents' => $query->getQuery() . (strpos($query->getQuery(), ' FORMAT ') === FALSE ? ' FORMAT JSON' : ''),
+
                     ],
                 ];
 
