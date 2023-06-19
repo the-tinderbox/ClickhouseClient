@@ -99,7 +99,7 @@ class Result implements \ArrayAccess, \Iterator, \Countable
     }
 
     /**
-     * Returns query.iterator
+     * Returns query.
      *
      * @return Query
      */
