@@ -16,6 +16,7 @@ use Tinderbox\Clickhouse\Query\Result;
 
 /**
  * @covers \Tinderbox\Clickhouse\Client
+ *
  * @use ClientException
  * @use ClusterException
  */

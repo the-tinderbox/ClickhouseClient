@@ -28,7 +28,6 @@ class Query
          */
         protected array $settings = []
     ) {
-
     }
 
     /**
