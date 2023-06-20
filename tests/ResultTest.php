@@ -9,6 +9,7 @@ use Tinderbox\Clickhouse\Query\Result;
 
 /**
  * @covers \Tinderbox\Clickhouse\Query\Result
+ *
  * @use QueryStatistic
  * @use ResultException
  */

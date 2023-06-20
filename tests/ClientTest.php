@@ -120,7 +120,7 @@ class ClientTest extends TestCase
         $server = $client->getServer();
 
         //while ($server === $client->getServer()) {
-            /* Randomize while get non used server */
+        /* Randomize while get non used server */
         //}
 
         $this->assertTrue(true, 'Correctly randomizes cluster servers on each call');
@@ -161,7 +161,7 @@ class ClientTest extends TestCase
         $server = $client->getServer();
 
         //while ($server === $client->getServer()) {
-            /* Randomize while get non used server */
+        /* Randomize while get non used server */
         //}
 
         $this->assertTrue(true, 'Correctly randomizes cluster servers on each call');

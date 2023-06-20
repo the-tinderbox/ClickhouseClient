@@ -191,6 +191,7 @@ class Client
      * $client->select('select * from table where column = ?', [1]);
      *
      * @param FileInterface[] $files
+     *
      * @throws ServerProviderException
      * @throws ClusterException
      */
@@ -207,7 +208,9 @@ class Client
      * Performs batch of select queries.
      *
      * @param int $concurrency Max concurrency requests
+     *
      * @throws ServerProviderException
+     * @throws ClusterException
      */
     public function read(array $queries, int $concurrency = 5): array
     {
@@ -255,6 +258,7 @@ class Client
      * Performs async insert queries using local csv or tsv files.
      *
      * @param int $concurrency Max concurrency requests
+     *
      * @throws ServerProviderException
      * @throws ClusterException
      */

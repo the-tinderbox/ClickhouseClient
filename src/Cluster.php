@@ -34,8 +34,7 @@ class Cluster
          */
         protected string $name,
         array $servers
-    )
-    {
+    ) {
         $this->addServers($servers);
     }
 
@@ -74,7 +73,7 @@ class Cluster
     /**
      * Pushes one server to cluster.
      *
-     * @throws \Tinderbox\Clickhouse\Exceptions\ClusterException
+     * @throws ClusterException
      */
     public function addServer(string $hostname, Server $server): void
     {

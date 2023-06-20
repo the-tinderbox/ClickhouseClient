@@ -7,6 +7,7 @@ use Tinderbox\Clickhouse\Common\ServerOptions;
 
 /**
  * @covers \Tinderbox\Clickhouse\Server
+ *
  * @use ServerOptions
  */
 class ServerTest extends TestCase

@@ -12,7 +12,8 @@ class CcatStream implements StreamInterface
     public function __construct(
         private StreamInterface $stream,
         protected mixed $process
-    ) {}
+    ) {
+    }
 
     public function seek($offset, $whence = SEEK_SET): void
     {
@@ -24,7 +25,8 @@ class CcatStream implements StreamInterface
         return false;
     }
 
-    public function getSize(): ?int {
+    public function getSize(): ?int
+    {
         return null;
     }
 }

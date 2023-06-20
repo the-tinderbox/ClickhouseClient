@@ -27,7 +27,9 @@ class Query
          * Query settings.
          */
         protected array $settings = []
-    ) {}
+    ) {
+
+    }
 
     /**
      * Returns SQL query.

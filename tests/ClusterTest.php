@@ -8,6 +8,7 @@ use Tinderbox\Clickhouse\Exceptions\ClusterException;
 
 /**
  * @covers \Tinderbox\Clickhouse\Cluster
+ *
  * @use ClusterException
  * @use ServerOptions
  */
