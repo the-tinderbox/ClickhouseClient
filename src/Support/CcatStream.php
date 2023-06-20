@@ -2,27 +2,29 @@
 
 namespace Tinderbox\Clickhouse\Support;
 
-use GuzzleHttp\Psr7\NoSeekStream;
+use GuzzleHttp\Psr7\StreamDecoratorTrait;
 use Psr\Http\Message\StreamInterface;
 
-class CcatStream extends NoSeekStream
+class CcatStream implements StreamInterface
 {
-    protected $process;
+    use StreamDecoratorTrait;
 
-    /**
-     * CcatStream constructor.
-     *
-     * @param \Psr\Http\Message\StreamInterface $stream
-     * @param                                   $process
-     */
-    public function __construct(StreamInterface $stream, $process)
+    public function __construct(
+        private StreamInterface $stream,
+        protected mixed $process
+    ) {}
+
+    public function seek($offset, $whence = SEEK_SET): void
     {
-        parent::__construct($stream);
-
-        $this->process = $process;
+        throw new \RuntimeException('Cannot seek a NoSeekStream');
     }
 
-    public function getSize()
+    public function isSeekable(): bool
     {
+        return false;
+    }
+
+    public function getSize(): ?int {
+        return null;
     }
 }

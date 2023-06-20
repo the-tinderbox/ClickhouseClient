@@ -9,8 +9,8 @@ use Tinderbox\Clickhouse\Query\Result;
 
 /**
  * @covers \Tinderbox\Clickhouse\Query\Result
- * @use \Tinderbox\Clickhouse\Query\QueryStatistic
- * @use \Tinderbox\Clickhouse\Exceptions\ResultException
+ * @use QueryStatistic
+ * @use ResultException
  */
 class ResultTest extends TestCase
 {
@@ -60,7 +60,7 @@ class ResultTest extends TestCase
 
         $result = new Result($query, ['', '', ''], $statistic);
 
-        $this->assertEquals(3, count($result), 'Returns correct rows count via Countable interface');
+        $this->assertCount(3, $result, 'Returns correct rows count via Countable interface');
     }
 
     public function testResultArrayAccessSet()

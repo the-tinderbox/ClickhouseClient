@@ -6,6 +6,7 @@ use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Psr7\Response;
 use PHPUnit\Framework\TestCase;
+use Throwable;
 use Tinderbox\Clickhouse\Common\File;
 use Tinderbox\Clickhouse\Common\FileFromString;
 use Tinderbox\Clickhouse\Common\Format;
@@ -45,6 +46,9 @@ class HttpTransportTest extends TestCase
         return new HttpTransport();
     }
 
+    /**
+     * @throws Throwable
+     */
     public function testRead()
     {
         $transport = $this->getMockedTransport([
@@ -84,6 +88,9 @@ class HttpTransportTest extends TestCase
         $this->assertEquals(1024, $result[0]->statistic->rowsBeforeLimitAtLeast, 'Returns correct rows_before_limit_at_least');
     }
 
+    /**
+     * @throws Throwable
+     */
     public function testReadMultipleRequests()
     {
         $transport = $this->getMockedTransport([
@@ -155,6 +162,9 @@ class HttpTransportTest extends TestCase
         $this->assertEquals(1025, $result[1]->statistic->rowsBeforeLimitAtLeast, 'Returns correct rows_before_limit_at_least');
     }
 
+    /**
+     * @throws Throwable
+     */
     public function testReadWithTablesUnstructured()
     {
         $transport = $this->getTransport();
@@ -173,6 +183,9 @@ class HttpTransportTest extends TestCase
         unlink($tableSource);
     }
 
+    /**
+     * @throws Throwable
+     */
     public function testReadWithTablesStructured()
     {
         $transport = $this->getTransport();
@@ -191,6 +204,9 @@ class HttpTransportTest extends TestCase
         unlink($tableSource);
     }
 
+    /**
+     * @throws Throwable
+     */
     public function testReadWithTablesReject()
     {
         $transport = $this->getTransport();
@@ -202,6 +218,9 @@ class HttpTransportTest extends TestCase
         $transport->read([$query]);
     }
 
+    /**
+     * @throws Throwable
+     */
     public function testWrite()
     {
         $transport = $this->getTransport();
@@ -252,6 +271,9 @@ class HttpTransportTest extends TestCase
         unlink($tableSource);
     }
 
+    /**
+     * @throws Throwable
+     */
     public function testWriteMultipleFilesPerOneQuery()
     {
         $transport = $this->getTransport();
@@ -331,6 +353,9 @@ class HttpTransportTest extends TestCase
         return tempnam(sys_get_temp_dir(), 'tbchc_');
     }
 
+    /**
+     * @throws Throwable
+     */
     public function testConnectionError()
     {
         $transport = new HttpTransport(null, ['read' => ['connect_timeout' => 0.1]]);
@@ -343,6 +368,9 @@ class HttpTransportTest extends TestCase
         ]);
     }
 
+    /**
+     * @throws Throwable
+     */
     public function testUnknownReason()
     {
         $transport = $this->getMockedTransport([
@@ -357,6 +385,9 @@ class HttpTransportTest extends TestCase
         ]);
     }
 
+    /**
+     * @throws Throwable
+     */
     public function testHttpTransportMalformedResponse()
     {
         $transport = $this->getMockedTransport([
@@ -372,17 +403,16 @@ class HttpTransportTest extends TestCase
         ]);
     }
 
+    /**
+     * @throws Throwable
+     */
     public function testConnectionWithPassword()
     {
         $transport = $this->getTransport();
 
         $this->expectException(TransportException::class);
         $regularExpression = '/Authentication failed: password is incorrect/';
-        if (method_exists($this, 'expectExceptionMessageRegExp')) {
-            $this->expectExceptionMessageRegExp($regularExpression);
-        } else {
-            $this->expectErrorMessageMatches($regularExpression);
-        }
+        $this->expectExceptionMessageMatches($regularExpression);
 
         $transport->read([
             new Query(new Server('127.0.0.1', 8123, 'default', 'default', 'pass'), 'select 1', [
@@ -391,17 +421,16 @@ class HttpTransportTest extends TestCase
         ]);
     }
 
+    /**
+     * @throws Throwable
+     */
     public function testConnectionWithPasswordOnWrite()
     {
         $transport = $this->getTransport();
 
         $this->expectException(TransportException::class);
         $regularExpression = '/Authentication failed: password is incorrect/';
-        if (method_exists($this, 'expectExceptionMessageRegExp')) {
-            $this->expectExceptionMessageRegExp($regularExpression);
-        } else {
-            $this->expectErrorMessageMatches($regularExpression);
-        }
+        $this->expectExceptionMessageMatches($regularExpression);
 
         $transport->write([
             new Query(new Server('127.0.0.1', 8123, 'default', 'default', 'pass'), 'insert into table 1', [
@@ -410,6 +439,9 @@ class HttpTransportTest extends TestCase
         ]);
     }
 
+    /**
+     * @throws Throwable
+     */
     public function testFileInsert()
     {
         $fileName = tempnam(sys_get_temp_dir(), 'tbchc_');
@@ -448,6 +480,9 @@ class HttpTransportTest extends TestCase
         ]);
     }
 
+    /**
+     * @throws Throwable
+     */
     public function testMergedFilesInsert()
     {
         $ccatFileName = tempnam(sys_get_temp_dir(), 'tbchc_');
@@ -489,6 +524,9 @@ class HttpTransportTest extends TestCase
         ]);
     }
 
+    /**
+     * @throws Throwable
+     */
     public function testTempTableReadAndWrite()
     {
         $fileName = tempnam(sys_get_temp_dir(), 'tbchc_');
@@ -533,6 +571,9 @@ class HttpTransportTest extends TestCase
         ]);
     }
 
+    /**
+     * @throws Throwable
+     */
     public function testFileFromStringReadAndWrite()
     {
         $fileContent = [];

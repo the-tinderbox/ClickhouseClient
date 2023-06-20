@@ -9,47 +9,31 @@ use Tinderbox\Clickhouse\Query;
  * Query result.
  *
  * Container for request results and statistic
- *
- * @property Query          $query
- * @property array          $rows
- * @property QueryStatistic $statistic
  */
 class Result implements \ArrayAccess, \Iterator, \Countable
 {
     /**
      * Query execution statistic.
-     *
-     * @var \Tinderbox\Clickhouse\Query\QueryStatistic
      */
-    protected $statistic;
+    protected QueryStatistic $statistic;
 
     /**
      * Result of query execution.
-     *
-     * @var array
      */
-    protected $rows;
+    protected array $rows;
 
     /**
      * Query which was executed to get this result.
-     *
-     * @var Query
      */
-    protected $query;
+    protected Query $query;
 
     /**
      * Current index for Iterator interface.
-     *
-     * @var int
      */
-    protected $current = 0;
+    protected int $current = 0;
 
     /**
      * Result constructor.
-     *
-     * @param Query                                      $query
-     * @param array                                      $rows
-     * @param \Tinderbox\Clickhouse\Query\QueryStatistic $statistic
      */
     public function __construct(Query $query, array $rows, QueryStatistic $statistic)
     {
@@ -60,30 +44,24 @@ class Result implements \ArrayAccess, \Iterator, \Countable
 
     /**
      * Sets query.
-     *
-     * @param Query $query
      */
-    protected function setQuery(Query $query)
+    protected function setQuery(Query $query): void
     {
         $this->query = $query;
     }
 
     /**
      * Sets statistic.
-     *
-     * @param \Tinderbox\Clickhouse\Query\QueryStatistic $statistic
      */
-    protected function setStatistic(QueryStatistic $statistic)
+    protected function setStatistic(QueryStatistic $statistic): void
     {
         $this->statistic = $statistic;
     }
 
     /**
      * Sets rows.
-     *
-     * @param array $rows
      */
-    protected function setRows(array $rows)
+    protected function setRows(array $rows): void
     {
         $this->rows = $rows;
     }
@@ -110,8 +88,6 @@ class Result implements \ArrayAccess, \Iterator, \Countable
 
     /**
      * Returns statistic.
-     *
-     * @return \Tinderbox\Clickhouse\Query\QueryStatistic
      */
     public function getStatistic(): QueryStatistic
     {
@@ -121,13 +97,9 @@ class Result implements \ArrayAccess, \Iterator, \Countable
     /**
      * Getter to simplify access to rows and statistic.
      *
-     * @param string $name
-     *
-     * @throws \Tinderbox\Clickhouse\Exceptions\ResultException
-     *
-     * @return mixed
+     * @throws ResultException
      */
-    public function __get($name)
+    public function __get(string $name): mixed
     {
         $method = 'get'.ucfirst($name);
 
@@ -137,10 +109,6 @@ class Result implements \ArrayAccess, \Iterator, \Countable
 
         throw ResultException::propertyNotExists($name);
     }
-
-    /*
-     * ArrayAccess
-     */
 
     public function offsetExists($offset): bool
     {
@@ -152,19 +120,21 @@ class Result implements \ArrayAccess, \Iterator, \Countable
         return $this->rows[$offset];
     }
 
+    /**
+     * @throws ResultException
+     */
     public function offsetSet($offset, $value): void
     {
         throw ResultException::isReadonly();
     }
 
+    /**
+     * @throws ResultException
+     */
     public function offsetUnset($offset): void
     {
         throw ResultException::isReadonly();
     }
-
-    /*
-     * Iterator
-     */
 
     public function current(): mixed
     {
@@ -176,7 +146,7 @@ class Result implements \ArrayAccess, \Iterator, \Countable
         $this->current++;
     }
 
-    public function key(): void
+    public function key(): mixed
     {
         return $this->current;
     }
@@ -190,10 +160,6 @@ class Result implements \ArrayAccess, \Iterator, \Countable
     {
         $this->current = 0;
     }
-
-    /*
-     * Countable
-     */
 
     public function count(): int
     {

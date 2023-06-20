@@ -8,11 +8,14 @@ use Tinderbox\Clickhouse\Exceptions\ClusterException;
 
 /**
  * @covers \Tinderbox\Clickhouse\Cluster
- * @use \Tinderbox\Clickhouse\Exceptions\ClusterException
- * @use \Tinderbox\Clickhouse\Common\ServerOptions
+ * @use ClusterException
+ * @use ServerOptions
  */
 class ClusterTest extends TestCase
 {
+    /**
+     * @throws ClusterException
+     */
     public function testGetters()
     {
         $servers = [
@@ -27,13 +30,16 @@ class ClusterTest extends TestCase
         $this->assertEquals($servers[1], $cluster->getServers()[$servers[1]->getHost()], 'Return correct cluster structure');
 
         $this->assertEquals($servers[0], $cluster->getServerByHostname('127.0.0.1'), 'Return correct server by hostname');
-        $this->assertEquals($servers[1], $cluster->getServerByHostname('127.0.0.2', 'Return correct server by hostname'));
+        $this->assertEquals($servers[1], $cluster->getServerByHostname('127.0.0.2'), 'Return correct server by hostname');
 
         $this->expectException(ClusterException::class);
         $this->expectExceptionMessage('Server with hostname [unknown_hostname] is not found in cluster');
         $cluster->getServerByHostname('unknown_hostname');
     }
 
+    /**
+     * @throws ClusterException
+     */
     public function testServersWithAliases()
     {
         $servers = [
@@ -47,9 +53,12 @@ class ClusterTest extends TestCase
         $this->assertEquals($servers['aliased'], $cluster->getServers()['aliased'], 'Return correct cluster structure');
 
         $this->assertEquals($servers[0], $cluster->getServerByHostname('127.0.0.1'), 'Return correct server by hostname');
-        $this->assertEquals($servers['aliased'], $cluster->getServerByHostname('aliased', 'Return correct server by hostname'));
+        $this->assertEquals($servers['aliased'], $cluster->getServerByHostname('aliased'), 'Return correct server by hostname');
     }
 
+    /**
+     * @throws ClusterException
+     */
     public function testServerFromArray()
     {
         $server = [
@@ -88,6 +97,9 @@ class ClusterTest extends TestCase
         new Cluster('test_cluster', $servers);
     }
 
+    /**
+     * @throws ClusterException
+     */
     public function testServersWithTags()
     {
         $server = [
@@ -108,6 +120,9 @@ class ClusterTest extends TestCase
         $this->assertEquals(array_keys($servers)[0], $server['host']);
     }
 
+    /**
+     * @throws ClusterException
+     */
     public function testServerTagNotFound()
     {
         $cluster = new Cluster('test', []);

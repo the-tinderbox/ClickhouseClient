@@ -8,53 +8,29 @@ namespace Tinderbox\Clickhouse;
 class Query
 {
     /**
-     * SQL Query.
-     *
-     * @var string
-     */
-    protected $query;
-
-    /**
-     * Files attached to query.
-     *
-     * @var array
-     */
-    protected $files = [];
-
-    /**
-     * Server to process query.
-     *
-     * @var \Tinderbox\Clickhouse\Server
-     */
-    protected $server;
-
-    /**
-     * Query settings.
-     *
-     * @var array
-     */
-    protected $settings = [];
-
-    /**
      * Query constructor.
-     *
-     * @param \Tinderbox\Clickhouse\Server $server
-     * @param string                       $query
-     * @param array                        $files
-     * @param array                        $settings
      */
-    public function __construct(Server $server, string $query, array $files = [], array $settings = [])
-    {
-        $this->server = $server;
-        $this->query = $query;
-        $this->files = $files;
-        $this->settings = $settings;
-    }
+    public function __construct(
+        /**
+         * Server to process query.
+         */
+        protected Server $server,
+        /**
+         * SQL Query.
+         */
+        protected string $query,
+        /**
+         * Files attached to query.
+         */
+        protected array $files = [],
+        /**
+         * Query settings.
+         */
+        protected array $settings = []
+    ) {}
 
     /**
      * Returns SQL query.
-     *
-     * @return string
      */
     public function getQuery(): string
     {
@@ -63,8 +39,6 @@ class Query
 
     /**
      * Returns files attached to query.
-     *
-     * @return array
      */
     public function getFiles(): array
     {
@@ -73,8 +47,6 @@ class Query
 
     /**
      * Returns server to process query.
-     *
-     * @return \Tinderbox\Clickhouse\Server
      */
     public function getServer(): Server
     {
@@ -83,8 +55,6 @@ class Query
 
     /**
      * Returns settings.
-     *
-     * @return array
      */
     public function getSettings(): array
     {

@@ -2,6 +2,7 @@
 
 namespace Tinderbox\Clickhouse;
 
+use Tinderbox\Clickhouse\Exceptions\ClusterException;
 use Tinderbox\Clickhouse\Exceptions\ServerProviderException;
 
 /**
@@ -14,37 +15,40 @@ class ServerProvider
      *
      * @var Cluster[]
      */
-    protected $clusters = [];
+    protected array $clusters = [];
 
     /**
      * Servers.
      *
      * @var Server[]
      */
-    protected $servers = [];
+    protected array $servers = [];
 
     /**
      * Servers by tags.
      *
      * @var Server[][]
      */
-    protected $serversByTags = [];
+    protected array $serversByTags = [];
 
     /**
      * Current server to perform queries.
      *
      * @var Server
      */
-    protected $currentServer;
+    protected Server $currentServer;
 
     /**
      * Current cluster to select server.
      *
      * @var Cluster
      */
-    protected $currentCluster;
+    protected Cluster $currentCluster;
 
-    public function addCluster(Cluster $cluster)
+    /**
+     * @throws ServerProviderException
+     */
+    public function addCluster(Cluster $cluster): self
     {
         $clusterName = $cluster->getName();
 
@@ -57,7 +61,10 @@ class ServerProvider
         return $this;
     }
 
-    public function addServer(Server $server)
+    /**
+     * @throws ServerProviderException
+     */
+    public function addServer(Server $server): self
     {
         $serverHostname = $server->getHost();
 
@@ -76,11 +83,17 @@ class ServerProvider
         return $this;
     }
 
+    /**
+     * @throws ServerProviderException
+     */
     public function getRandomServer(): Server
     {
-        return $this->getServer(array_rand($this->servers, 1));
+        return $this->getServer(array_rand($this->servers));
     }
 
+    /**
+     * @throws ServerProviderException
+     */
     public function getRandomServerWithTag(string $tag): Server
     {
         if (!isset($this->serversByTags[$tag])) {
@@ -90,30 +103,45 @@ class ServerProvider
         return $this->getServer(array_rand($this->serversByTags[$tag], 1));
     }
 
+    /**
+     * @throws ServerProviderException
+     * @throws ClusterException
+     */
     public function getRandomServerFromCluster(string $cluster): Server
     {
         $cluster = $this->getCluster($cluster);
-        $randomServerHostname = array_rand($cluster->getServers(), 1);
+        $randomServerHostname = array_rand($cluster->getServers());
 
         return $cluster->getServerByHostname($randomServerHostname);
     }
 
+    /**
+     * @throws ServerProviderException
+     * @throws ClusterException
+     */
     public function getRandomServerFromClusterByTag(string $cluster, string $tag): Server
     {
         $cluster = $this->getCluster($cluster);
 
-        $randomServerHostname = array_rand($cluster->getServersByTag($tag), 1);
+        $randomServerHostname = array_rand($cluster->getServersByTag($tag));
 
         return $cluster->getServerByHostname($randomServerHostname);
     }
 
-    public function getServerFromCluster(string $cluster, string $serverHostname)
+    /**
+     * @throws ServerProviderException
+     * @throws ClusterException
+     */
+    public function getServerFromCluster(string $cluster, string $serverHostname): Server
     {
         $cluster = $this->getCluster($cluster);
 
         return $cluster->getServerByHostname($serverHostname);
     }
 
+    /**
+     * @throws ServerProviderException
+     */
     public function getServer(string $serverHostname): Server
     {
         if (!isset($this->servers[$serverHostname])) {
@@ -123,6 +151,9 @@ class ServerProvider
         return $this->servers[$serverHostname];
     }
 
+    /**
+     * @throws ServerProviderException
+     */
     public function getCluster(string $cluster): Cluster
     {
         if (!isset($this->clusters[$cluster])) {

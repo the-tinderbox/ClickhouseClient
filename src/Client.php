@@ -4,6 +4,8 @@ namespace Tinderbox\Clickhouse;
 
 use Tinderbox\Clickhouse\Common\File;
 use Tinderbox\Clickhouse\Common\Format;
+use Tinderbox\Clickhouse\Exceptions\ClusterException;
+use Tinderbox\Clickhouse\Exceptions\ServerProviderException;
 use Tinderbox\Clickhouse\Interfaces\FileInterface;
 use Tinderbox\Clickhouse\Interfaces\TransportInterface;
 use Tinderbox\Clickhouse\Query\Result;
@@ -15,63 +17,45 @@ use Tinderbox\Clickhouse\Transport\HttpTransport;
 class Client
 {
     /**
-     * Http transport which provides http requests to server.
-     *
-     * @var TransportInterface
-     */
-    protected $transport;
-
-    /**
-     * Server provider.
-     *
-     * @var ServerProvider
-     */
-    protected $serverProvider;
-
-    /**
      * Cluster name.
-     *
-     * @var string
      */
-    protected $clusterName;
+    protected ?string $clusterName = null;
+
+    /**
+     *  Http transport which provides http requests to server.
+     */
+    protected ?TransportInterface $transport = null;
 
     /**
      * Server hostname.
-     *
-     * @var string
      */
-    protected $serverHostname;
+    protected null|string|\Closure $serverHostname = null;
 
     /**
      * Client constructor.
-     *
-     * @param \Tinderbox\Clickhouse\ServerProvider                     $serverProvider
-     * @param \Tinderbox\Clickhouse\Interfaces\TransportInterface|null $transport
      */
     public function __construct(
-        ServerProvider $serverProvider,
-        TransportInterface $transport = null
+        /**
+         * Server Provider.
+         */
+        protected ServerProvider $serverProvider,
+        ?TransportInterface $transport = null
     ) {
-        $this->serverProvider = $serverProvider;
         $this->setTransport($transport);
     }
 
     /**
      * Creates default http transport.
-     *
-     * @return HttpTransport
      */
-    protected function createTransport()
+    protected function createTransport(): HttpTransport
     {
         return new HttpTransport();
     }
 
     /**
      * Sets transport.
-     *
-     * @param \Tinderbox\Clickhouse\Interfaces\TransportInterface|null $transport
      */
-    protected function setTransport(TransportInterface $transport = null)
+    protected function setTransport(?TransportInterface $transport = null): void
     {
         if (is_null($transport)) {
             $this->transport = $this->createTransport();
@@ -82,8 +66,6 @@ class Client
 
     /**
      * Returns transport.
-     *
-     * @return TransportInterface
      */
     protected function getTransport(): TransportInterface
     {
@@ -92,12 +74,8 @@ class Client
 
     /**
      * Client will use servers from specified cluster.
-     *
-     * @param string|null $cluster
-     *
-     * @return $this
      */
-    public function onCluster(?string $cluster)
+    public function onCluster(?string $cluster): self
     {
         $this->clusterName = $cluster;
         $this->serverHostname = null;
@@ -107,8 +85,6 @@ class Client
 
     /**
      * Returns current cluster name.
-     *
-     * @return null|string
      */
     protected function getClusterName(): ?string
     {
@@ -117,12 +93,8 @@ class Client
 
     /**
      * Client will use specified server.
-     *
-     * @param string $serverHostname
-     *
-     * @return $this
      */
-    public function using(string $serverHostname)
+    public function using(string $serverHostname): self
     {
         $this->serverHostname = $serverHostname;
 
@@ -131,10 +103,8 @@ class Client
 
     /**
      * Client will return random server on each query.
-     *
-     * @return $this
      */
-    public function usingRandomServer()
+    public function usingRandomServer(): self
     {
         $this->serverHostname = function () {
             if ($this->isOnCluster()) {
@@ -149,12 +119,8 @@ class Client
 
     /**
      * Client will use server with tag as server for queries.
-     *
-     * @var string
-     *
-     * @return $this
      */
-    public function usingServerWithTag(string $tag)
+    public function usingServerWithTag(string $tag): self
     {
         $this->serverHostname = function () use ($tag) {
             if ($this->isOnCluster()) {
@@ -180,7 +146,8 @@ class Client
     /**
      * Returns server to perform request.
      *
-     * @return Server
+     * @throws ServerProviderException
+     * @throws ClusterException
      */
     public function getServer(): Server
     {
@@ -223,11 +190,9 @@ class Client
      *
      * $client->select('select * from table where column = ?', [1]);
      *
-     * @param string          $query
      * @param FileInterface[] $files
-     * @param array           $settings
-     *
-     * @return \Tinderbox\Clickhouse\Query\Result
+     * @throws ServerProviderException
+     * @throws ClusterException
      */
     public function readOne(string $query, array $files = [], array $settings = []): Result
     {
@@ -241,10 +206,8 @@ class Client
     /**
      * Performs batch of select queries.
      *
-     * @param array $queries
-     * @param int   $concurrency Max concurrency requests
-     *
-     * @return array
+     * @param int $concurrency Max concurrency requests
+     * @throws ServerProviderException
      */
     public function read(array $queries, int $concurrency = 5): array
     {
@@ -260,11 +223,8 @@ class Client
     /**
      * Performs insert or simple statement query.
      *
-     * @param string $query
-     * @param array  $files
-     * @param array  $settings
-     *
-     * @return bool
+     * @throws ServerProviderException
+     * @throws ClusterException
      */
     public function writeOne(string $query, array $files = [], array $settings = []): bool
     {
@@ -279,11 +239,6 @@ class Client
 
     /**
      * Performs batch of insert or simple statement queries.
-     *
-     * @param array $queries
-     * @param int   $concurrency
-     *
-     * @return array
      */
     public function write(array $queries, int $concurrency = 5): array
     {
@@ -299,23 +254,18 @@ class Client
     /**
      * Performs async insert queries using local csv or tsv files.
      *
-     * @param string      $table
-     * @param array       $columns
-     * @param array       $files
-     * @param string|null $format
-     * @param array       $settings
-     * @param int         $concurrency Max concurrency requests
-     *
-     * @return array
+     * @param int $concurrency Max concurrency requests
+     * @throws ServerProviderException
+     * @throws ClusterException
      */
     public function writeFiles(
         string $table,
         array $columns,
         array $files,
-        string $format = Format::TSV,
+        ?string $format = Format::TSV,
         array $settings = [],
         int $concurrency = 5
-    ) {
+    ): array {
         $sql = 'INSERT INTO '.$table.' ('.implode(', ', $columns).') FORMAT '.strtoupper($format);
 
         foreach ($files as $i => $file) {
@@ -331,13 +281,6 @@ class Client
 
     /**
      * Creates query instance from specified arguments.
-     *
-     * @param \Tinderbox\Clickhouse\Server $server
-     * @param string                       $sql
-     * @param array                        $files
-     * @param array                        $settings
-     *
-     * @return \Tinderbox\Clickhouse\Query
      */
     protected function createQuery(
         Server $server,
@@ -351,9 +294,8 @@ class Client
     /**
      * Parses query array and returns query instance.
      *
-     * @param array $query
-     *
-     * @return \Tinderbox\Clickhouse\Query
+     * @throws ServerProviderException
+     * @throws ClusterException
      */
     protected function guessQuery(array $query): Query
     {

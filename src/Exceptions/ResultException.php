@@ -7,12 +7,12 @@ namespace Tinderbox\Clickhouse\Exceptions;
  */
 class ResultException extends \Exception
 {
-    public static function propertyNotExists($name)
+    public static function propertyNotExists($name): static
     {
         return new static('Query result has no property '.$name);
     }
 
-    public static function isReadonly()
+    public static function isReadonly(): static
     {
         return new static('Query result is read-only');
     }

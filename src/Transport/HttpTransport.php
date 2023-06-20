@@ -3,11 +3,13 @@
 namespace Tinderbox\Clickhouse\Transport;
 
 use GuzzleHttp\Client;
+use GuzzleHttp\Exception\ConnectException;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Pool;
 use GuzzleHttp\Psr7\MultipartStream;
 use GuzzleHttp\Psr7\Request;
 use Psr\Http\Message\ResponseInterface;
+use Throwable;
 use Tinderbox\Clickhouse\Common\TempTable;
 use Tinderbox\Clickhouse\Exceptions\TransportException;
 use Tinderbox\Clickhouse\Interfaces\FileInterface;
@@ -24,10 +26,8 @@ class HttpTransport implements TransportInterface
 {
     /**
      * GuzzleClient.
-     *
-     * @var Client
      */
-    protected $httpClient;
+    protected Client $httpClient;
 
     /**
      * Array with three keys (read, write and deflate) with guzzle options for corresponding requests.
@@ -43,18 +43,13 @@ class HttpTransport implements TransportInterface
      *   ],
      *   'deflate' => true
      * ]
-     *
-     * @var array
      */
-    private $options;
+    private array $options;
 
     /**
      * HttpTransport constructor.
-     *
-     * @param Client $client
-     * @param array  $options
      */
-    public function __construct(Client $client = null, array $options = [])
+    public function __construct(?Client $client = null, array $options = [])
     {
         $this->setClient($client);
 
@@ -63,8 +58,6 @@ class HttpTransport implements TransportInterface
 
     /**
      * Returns flag to enable / disable queries and data compression.
-     *
-     * @return bool
      */
     protected function isDeflateEnabled(): bool
     {
@@ -73,10 +66,8 @@ class HttpTransport implements TransportInterface
 
     /**
      * Returns default headers for requests.
-     *
-     * @return array
      */
-    protected function getHeaders()
+    protected function getHeaders(): array
     {
         $headers = [
             'Accept-Encoding'  => 'gzip',
@@ -91,10 +82,8 @@ class HttpTransport implements TransportInterface
 
     /**
      * Sets Guzzle client.
-     *
-     * @param Client|null $client
      */
-    protected function setClient(Client $client = null)
+    protected function setClient(?Client $client = null): void
     {
         if (is_null($client)) {
             $this->httpClient = $this->createHttpClient();
@@ -106,7 +95,7 @@ class HttpTransport implements TransportInterface
     /**
      * Creates Guzzle client.
      */
-    protected function createHttpClient()
+    protected function createHttpClient(): Client
     {
         return new Client();
     }
@@ -114,12 +103,7 @@ class HttpTransport implements TransportInterface
     /**
      * Executes write queries.
      *
-     * @param array $queries
-     * @param int   $concurrency
-     *
-     * @throws \Throwable
-     *
-     * @return array
+     * @throws Throwable
      */
     public function write(array $queries, int $concurrency = 5): array
     {
@@ -177,7 +161,7 @@ class HttpTransport implements TransportInterface
 
             try {
                 $promise->wait();
-            } catch (\Throwable $exception) {
+            } catch (Throwable $exception) {
                 foreach ($openedStreams as $openedStream) {
                     $openedStream->close();
                 }
@@ -197,6 +181,9 @@ class HttpTransport implements TransportInterface
         return $result;
     }
 
+    /**
+     * @throws Throwable
+     */
     public function read(array $queries, int $concurrency = 5): array
     {
         $openedStreams = [];
@@ -265,7 +252,7 @@ class HttpTransport implements TransportInterface
 
         try {
             $promise->wait();
-        } catch (\Throwable $exception) {
+        } catch (Throwable $exception) {
             foreach ($openedStreams as $openedStream) {
                 $openedStream->close();
             }
@@ -284,12 +271,8 @@ class HttpTransport implements TransportInterface
 
     /**
      * Parse temp table data to append it to request.
-     *
-     * @param \Tinderbox\Clickhouse\Common\TempTable $table
-     *
-     * @return array
      */
-    protected function getTempTableQueryParams(TempTable $table)
+    protected function getTempTableQueryParams(TempTable $table): array
     {
         list($structure, $withColumns) = $this->assembleTempTableStructure($table);
 
@@ -301,12 +284,8 @@ class HttpTransport implements TransportInterface
 
     /**
      * Assembles string from TempTable structure.
-     *
-     * @param \Tinderbox\Clickhouse\Common\TempTable $table
-     *
-     * @return string
      */
-    protected function assembleTempTableStructure(TempTable $table)
+    protected function assembleTempTableStructure(TempTable $table): array
     {
         $structure = $table->getStructure();
         $withColumns = true;
@@ -327,22 +306,20 @@ class HttpTransport implements TransportInterface
 
     /**
      * Determines the reason why request was rejected.
-     *
-     * @param Query $query
-     *
-     * @return \Closure
      */
-    protected function parseReason(Query $query)
+    protected function parseReason(Query $query): \Closure
     {
         return function ($reason) use ($query) {
             if ($reason instanceof RequestException) {
                 $response = $reason->getResponse();
-
                 if (is_null($response)) {
                     throw TransportException::connectionError($query->getServer(), $reason->getMessage());
                 } else {
                     throw TransportException::serverReturnedError($reason, $query);
                 }
+            }
+            if ($reason instanceof ConnectException) {
+                throw TransportException::connectionError($query->getServer(), $reason->getMessage());
             }
 
             throw $reason;
@@ -352,10 +329,7 @@ class HttpTransport implements TransportInterface
     /**
      * Assembles Result instance from server response.
      *
-     * @param Query                               $query
-     * @param \Psr\Http\Message\ResponseInterface $response
-     *
-     * @return \Tinderbox\Clickhouse\Query\Result
+     * @throws TransportException
      */
     protected function assembleResult(Query $query, ResponseInterface $response): Result
     {
@@ -379,12 +353,6 @@ class HttpTransport implements TransportInterface
 
     /**
      * Builds uri with necessary params.
-     *
-     * @param \Tinderbox\Clickhouse\Server $server
-     * @param array                        $query
-     * @param array                        $settings
-     *
-     * @return string
      */
     protected function buildRequestUri(Server $server, array $query = [], array $settings = []): string
     {

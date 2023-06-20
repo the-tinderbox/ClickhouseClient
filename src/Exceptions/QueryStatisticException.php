@@ -7,7 +7,7 @@ namespace Tinderbox\Clickhouse\Exceptions;
  */
 class QueryStatisticException extends \Exception
 {
-    public static function propertyNotExists($name)
+    public static function propertyNotExists($name): static
     {
         return new static('Query statistic has no property '.$name);
     }

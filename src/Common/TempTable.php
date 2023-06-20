@@ -12,41 +12,28 @@ class TempTable implements FileInterface
 {
     /**
      * Table name to use in query in where section.
-     *
-     * @var string
      */
-    protected $name;
+    protected string $name;
 
     /**
      * Table structure to map data in file on table.
-     *
-     * @var array
      */
-    protected $structure = [];
+    protected array $structure = [];
 
     /**
      * Format.
-     *
-     * @var string
      */
-    protected $format;
+    protected string $format;
 
     /**
      * Source.
-     *
-     * @var string|FileInterface
      */
-    protected $source;
+    protected string|FileInterface $source;
 
     /**
      * TempTable constructor.
-     *
-     * @param string               $name
-     * @param string|FileInterface $source
-     * @param array                $structure
-     * @param string               $format
      */
-    public function __construct(string $name, $source, array $structure, string $format = Format::CSV)
+    public function __construct(string $name, string|FileInterface $source, array $structure, string $format = Format::CSV)
     {
         $this->name = $name;
         $this->structure = $structure;
@@ -55,7 +42,7 @@ class TempTable implements FileInterface
         $this->setSource($source);
     }
 
-    protected function setSource($source)
+    protected function setSource($source): void
     {
         if (is_scalar($source)) {
             $source = new File($source);
@@ -66,8 +53,6 @@ class TempTable implements FileInterface
 
     /**
      * Returns table name.
-     *
-     * @return string
      */
     public function getName(): string
     {
@@ -76,8 +61,6 @@ class TempTable implements FileInterface
 
     /**
      * Returns table structure.
-     *
-     * @return array
      */
     public function getStructure(): array
     {
@@ -86,8 +69,6 @@ class TempTable implements FileInterface
 
     /**
      * Returns format.
-     *
-     * @return string
      */
     public function getFormat(): string
     {
