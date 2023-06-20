@@ -9,12 +9,8 @@ abstract class Sanitizer
 {
     /**
      * Escapes value.
-     *
-     * @param mixed $value
-     *
-     * @return mixed
      */
-    public static function escape($value)
+    public static function escape(mixed $value): mixed
     {
         if (is_string($value)) {
             $value = addslashes($value);

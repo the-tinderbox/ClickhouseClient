@@ -11,55 +11,36 @@ class Server
 {
     /**
      * Host.
-     *
-     * @var string
      */
-    protected $host;
+    protected string $host;
 
     /**
      * Port.
-     *
-     * @var string
      */
-    protected $port;
+    protected string $port;
 
     /**
      * Database.
-     *
-     * @var string
      */
-    protected $database;
+    protected ?string $database;
 
     /**
      * Username.
-     *
-     * @var string
      */
-    protected $username;
+    protected ?string $username;
 
     /**
      * Password.
-     *
-     * @var string
      */
-    protected $password;
+    protected ?string $password;
 
     /**
      * Options.
-     *
-     * @var ServerOptions
      */
-    protected $options;
+    protected ?ServerOptions $options;
 
     /**
      * Server constructor.
-     *
-     * @param string                                          $host
-     * @param string                                          $port
-     * @param string                                          $database
-     * @param string|null                                     $username
-     * @param string|null                                     $password
-     * @param \Tinderbox\Clickhouse\Common\ServerOptions|null $options
      */
     public function __construct(
         string $host,
@@ -67,7 +48,7 @@ class Server
         ?string $database = 'default',
         ?string $username = null,
         ?string $password = null,
-        ServerOptions $options = null
+        ?ServerOptions $options = null
     ) {
         $this->setHost($host);
         $this->setPort($port);
@@ -79,10 +60,6 @@ class Server
 
     /**
      * Sets host.
-     *
-     * @param string $host
-     *
-     * @return \Tinderbox\Clickhouse\Server
      */
     public function setHost(string $host): self
     {
@@ -93,8 +70,6 @@ class Server
 
     /**
      * Returns host.
-     *
-     * @return string
      */
     public function getHost(): string
     {
@@ -103,10 +78,6 @@ class Server
 
     /**
      * Sets port.
-     *
-     * @param string $port
-     *
-     * @return \Tinderbox\Clickhouse\Server
      */
     public function setPort(string $port): self
     {
@@ -117,8 +88,6 @@ class Server
 
     /**
      * Returns port.
-     *
-     * @return string
      */
     public function getPort(): string
     {
@@ -127,12 +96,8 @@ class Server
 
     /**
      * Sets database.
-     *
-     * @param string|null $database
-     *
-     * @return \Tinderbox\Clickhouse\Server
      */
-    public function setDatabase(string $database = null): self
+    public function setDatabase(?string $database = null): self
     {
         $this->database = $database;
 
@@ -141,8 +106,6 @@ class Server
 
     /**
      * Returns database.
-     *
-     * @return null|string
      */
     public function getDatabase(): ?string
     {
@@ -151,12 +114,8 @@ class Server
 
     /**
      * Sets username.
-     *
-     * @param string|null $username
-     *
-     * @return \Tinderbox\Clickhouse\Server
      */
-    public function setUsername(string $username = null): self
+    public function setUsername(?string $username = null): self
     {
         $this->username = $username;
 
@@ -165,8 +124,6 @@ class Server
 
     /**
      * Returns username.
-     *
-     * @return null|string
      */
     public function getUsername(): ?string
     {
@@ -175,12 +132,8 @@ class Server
 
     /**
      * Sets password.
-     *
-     * @param string|null $password
-     *
-     * @return \Tinderbox\Clickhouse\Server
      */
-    public function setPassword(string $password = null): self
+    public function setPassword(?string $password = null): self
     {
         $this->password = $password;
 
@@ -189,8 +142,6 @@ class Server
 
     /**
      * Returns password.
-     *
-     * @return null|string
      */
     public function getPassword(): ?string
     {
@@ -201,12 +152,8 @@ class Server
      * Sets options.
      *
      * If no options provided, will use default options
-     *
-     * @param \Tinderbox\Clickhouse\Common\ServerOptions|null $options
-     *
-     * @return \Tinderbox\Clickhouse\Server
      */
-    public function setOptions(ServerOptions $options = null): self
+    public function setOptions(?ServerOptions $options = null): self
     {
         if (is_null($options)) {
             return $this->setDefaultOptions();
@@ -219,8 +166,6 @@ class Server
 
     /**
      * Sets default options.
-     *
-     * @return \Tinderbox\Clickhouse\Server
      */
     protected function setDefaultOptions(): self
     {
@@ -231,8 +176,6 @@ class Server
 
     /**
      * Returns options.
-     *
-     * @return \Tinderbox\Clickhouse\Common\ServerOptions
      */
     public function getOptions(): ServerOptions
     {

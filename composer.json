@@ -18,18 +18,19 @@
     }
   },
   "require": {
-    "php": "^7.1|^8.0",
-    "guzzlehttp/guzzle": "^6.0|^7.0"
+    "php": "^8.0",
+    "guzzlehttp/guzzle": "^7.0"
   },
   "bin": [
     "bin/ccat_linux",
     "bin/ccat_darwin"
   ],
   "require-dev": {
-    "mockery/mockery": "^0.9|^1.4",
-    "phpunit/phpunit": "^7.0|^8.0|^9.0",
-    "php-coveralls/php-coveralls": "^2.2",
-    "phpunit/phpcov": "^5.0|^6.0|^7.0|^8.0"
+    "mockery/mockery": "^1.6",
+    "phpunit/phpunit": "^9.0",
+    "php-coveralls/php-coveralls": "^2.5",
+    "phpunit/phpcov": "^8.0",
+    "ext-zlib": "*"
   },
   "scripts": {
     "test": "phpunit --coverage-text --colors=never"

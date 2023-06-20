@@ -6,15 +6,11 @@ abstract class AbstractFile
 {
     /**
      * Source file.
-     *
-     * @var string
      */
-    protected $source;
+    protected string $source;
 
     /**
      * File constructor.
-     *
-     * @param string $source
      */
     public function __construct(string $source)
     {
@@ -23,8 +19,6 @@ abstract class AbstractFile
 
     /**
      * Returns full path to source file.
-     *
-     * @return string
      */
     public function getSource(): string
     {

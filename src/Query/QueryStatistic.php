@@ -10,49 +10,31 @@ use Tinderbox\Clickhouse\Exceptions\QueryStatisticException;
  * 1. rows - number of rows read by server
  * 2. bytes - number of bytes read by server
  * 3. time - query execution time in seconds
- *
- * @property int   $rows
- * @property int   $bytes
- * @property float $time
- * @property int   $rowsBeforeLimitAtLeast
  */
 class QueryStatistic
 {
     /**
      * Number of rows read.
-     *
-     * @var int
      */
-    protected $rows;
+    protected int $rows;
 
     /**
      * Number of bytes read.
-     *
-     * @var int
      */
-    protected $bytes;
+    protected int $bytes;
 
     /**
      * Query execution time in seconds.
-     *
-     * @var float
      */
-    protected $time;
+    protected float $time;
 
     /**
      * Rows before limit at least.
-     *
-     * @var null|int
      */
-    protected $rowsBeforeLimitAtLeast;
+    protected ?int $rowsBeforeLimitAtLeast;
 
     /**
      * QueryStatistic constructor.
-     *
-     * @param int      $rows
-     * @param int      $bytes
-     * @param float    $time
-     * @param null|int $rowsBeforeLimitAtLeast
      */
     public function __construct(int $rows, int $bytes, float $time, ?int $rowsBeforeLimitAtLeast = null)
     {
@@ -64,8 +46,6 @@ class QueryStatistic
 
     /**
      * Returns number of read rows.
-     *
-     * @return int
      */
     public function getRows(): int
     {
@@ -74,8 +54,6 @@ class QueryStatistic
 
     /**
      * Returns number of read bytes.
-     *
-     * @return int
      */
     public function getBytes(): int
     {
@@ -84,8 +62,6 @@ class QueryStatistic
 
     /**
      * Returns query execution time.
-     *
-     * @return float
      */
     public function getTime(): float
     {
@@ -94,8 +70,6 @@ class QueryStatistic
 
     /**
      * Returns rows before limit at least.
-     *
-     * @return int|null
      */
     public function getRowsBeforeLimitAtLeast(): ?int
     {
@@ -105,13 +79,9 @@ class QueryStatistic
     /**
      * Getter to simplify access to rows, bytes and time.
      *
-     * @param string $name
-     *
-     * @throws \Tinderbox\Clickhouse\Exceptions\QueryStatisticException
-     *
-     * @return mixed
+     * @throws QueryStatisticException
      */
-    public function __get($name)
+    public function __get(string $name): mixed
     {
         $method = 'get'.ucfirst($name);
 

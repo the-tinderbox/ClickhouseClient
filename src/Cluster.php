@@ -10,37 +10,31 @@ use Tinderbox\Clickhouse\Exceptions\ClusterException;
 class Cluster
 {
     /**
-     * Cluster name like in configuration file.
-     *
-     * @var string
-     */
-    protected $name;
-
-    /**
      * Servers in cluster.
      *
-     * @var \Tinderbox\Clickhouse\Server[]
+     * @var Server[]
      */
-    protected $servers = [];
+    protected array $servers = [];
 
     /**
      * Servers in cluster by tags.
      *
-     * @var \Tinderbox\Clickhouse\Server[][]
+     * @var Server[][]
      */
-    protected $serversByTags = [];
+    protected array $serversByTags = [];
 
     /**
      * Cluster constructor.
      *
-     * @param string $name
-     * @param array  $servers
-     *
      * @throws ClusterException
      */
-    public function __construct(string $name, array $servers)
-    {
-        $this->name = $name;
+    public function __construct(
+        /**
+         * Cluster name like in configuration file.
+         */
+        protected string $name,
+        array $servers
+    ) {
         $this->addServers($servers);
     }
 
@@ -49,9 +43,7 @@ class Cluster
      *
      * @param array $servers Each server can be provided as array or Server instance
      *
-     * @throws \Tinderbox\Clickhouse\Exceptions\ClusterException
-     *
-     * @return \Tinderbox\Clickhouse\Cluster
+     * @throws ClusterException
      */
     public function addServers(array $servers): self
     {
@@ -81,12 +73,9 @@ class Cluster
     /**
      * Pushes one server to cluster.
      *
-     * @param string                       $hostname
-     * @param \Tinderbox\Clickhouse\Server $server
-     *
-     * @throws \Tinderbox\Clickhouse\Exceptions\ClusterException
+     * @throws ClusterException
      */
-    public function addServer(string $hostname, Server $server)
+    public function addServer(string $hostname, Server $server): void
     {
         if (isset($this->servers[$hostname])) {
             throw ClusterException::serverHostnameDuplicate($hostname);
@@ -104,7 +93,7 @@ class Cluster
     /**
      * Returns servers in cluster.
      *
-     * @return \Tinderbox\Clickhouse\Server[]
+     * @return Server[]
      */
     public function getServers(): array
     {
@@ -114,11 +103,9 @@ class Cluster
     /**
      * Returns servers in cluster by tag.
      *
-     * @param string $tag
-     *
      * @throws ClusterException
      *
-     * @return \Tinderbox\Clickhouse\Server[]
+     * @return Server[]
      */
     public function getServersByTag(string $tag): array
     {
@@ -132,11 +119,7 @@ class Cluster
     /**
      * Returns server by specified hostname.
      *
-     * @param string $hostname
-     *
-     * @throws \Tinderbox\Clickhouse\Exceptions\ClusterException
-     *
-     * @return \Tinderbox\Clickhouse\Server
+     * @throws ClusterException
      */
     public function getServerByHostname(string $hostname): Server
     {
@@ -149,8 +132,6 @@ class Cluster
 
     /**
      * Returns cluster name.
-     *
-     * @return string
      */
     public function getName(): string
     {

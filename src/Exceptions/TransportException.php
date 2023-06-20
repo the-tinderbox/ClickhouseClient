@@ -11,12 +11,12 @@ use Tinderbox\Clickhouse\Server;
  */
 class TransportException extends \Exception
 {
-    public static function connectionError(Server $server, $reasonMessage)
+    public static function connectionError(Server $server, $reasonMessage): static
     {
         return new static('Can\'t connect to the server ['.$server->getHost().':'.$server->getPort().'] with error: ['.$reasonMessage.']');
     }
 
-    public static function serverReturnedError($exception, Query $query)
+    public static function serverReturnedError($exception, Query $query): static
     {
         if ($exception instanceof RequestException) {
             $error = $exception->getResponse()->getBody()->getContents();
@@ -29,7 +29,7 @@ class TransportException extends \Exception
         return new static($errorString);
     }
 
-    public static function malformedResponseFromServer($response)
+    public static function malformedResponseFromServer($response): static
     {
         return new static('Malformed response from server: '.$response);
     }

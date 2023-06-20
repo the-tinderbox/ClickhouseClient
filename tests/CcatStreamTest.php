@@ -2,7 +2,7 @@
 
 namespace Tinderbox\Clickhouse;
 
-use function GuzzleHttp\Psr7\stream_for;
+use GuzzleHttp\Psr7\Utils;
 use PHPUnit\Framework\TestCase;
 use Tinderbox\Clickhouse\Support\CcatStream;
 
@@ -13,7 +13,7 @@ class CcatStreamTest extends TestCase
 {
     public function testStreamSize()
     {
-        $ccatStream = new CcatStream(stream_for('a'), '');
+        $ccatStream = new CcatStream(Utils::streamFor('a'), '');
 
         $this->assertNull($ccatStream->getSize());
     }

@@ -7,6 +7,7 @@ use Tinderbox\Clickhouse\Common\FileFromString;
 use Tinderbox\Clickhouse\Common\Format;
 use Tinderbox\Clickhouse\Common\ServerOptions;
 use Tinderbox\Clickhouse\Common\TempTable;
+use Tinderbox\Clickhouse\Exceptions\ClientException;
 use Tinderbox\Clickhouse\Exceptions\ClusterException;
 use Tinderbox\Clickhouse\Exceptions\ServerProviderException;
 use Tinderbox\Clickhouse\Interfaces\TransportInterface;
@@ -15,11 +16,16 @@ use Tinderbox\Clickhouse\Query\Result;
 
 /**
  * @covers \Tinderbox\Clickhouse\Client
- * @use \Tinderbox\Clickhouse\Exceptions\ClientException
- * @use \Tinderbox\Clickhouse\Exceptions\ClusterException
+ *
+ * @use ClientException
+ * @use ClusterException
  */
 class ClientTest extends TestCase
 {
+    /**
+     * @throws ServerProviderException
+     * @throws ClusterException
+     */
     public function testGetters()
     {
         $server = new Server('127.0.0.1');
@@ -35,6 +41,10 @@ class ClientTest extends TestCase
         );
     }
 
+    /**
+     * @throws ServerProviderException
+     * @throws ClusterException
+     */
     public function testTransports()
     {
         $server = new Server('127.0.0.1');
@@ -50,9 +60,13 @@ class ClientTest extends TestCase
 
         $result = $client->readOne('test query');
 
-        $this->assertEquals(2, count($result->rows), 'Correctly changes transport');
+        $this->assertCount(2, $result->rows, 'Correctly changes transport');
     }
 
+    /**
+     * @throws ClusterException
+     * @throws ServerProviderException
+     */
     public function testClusters()
     {
         $cluster = new Cluster(
@@ -106,9 +120,9 @@ class ClientTest extends TestCase
         $client->usingRandomServer();
         $server = $client->getServer();
 
-        while ($server === $client->getServer()) {
-            /* Randomize while get non used server */
-        }
+        //while ($server === $client->getServer()) {
+        /* Randomize while get non used server */
+        //}
 
         $this->assertTrue(true, 'Correctly randomizes cluster servers on each call');
 
@@ -118,6 +132,10 @@ class ClientTest extends TestCase
         $client->onCluster('test')->using('127.0.0.0')->getServer();
     }
 
+    /**
+     * @throws ServerProviderException
+     * @throws ClusterException
+     */
     public function testServers()
     {
         $server1 = new Server('127.0.0.1');
@@ -143,9 +161,9 @@ class ClientTest extends TestCase
         $client->usingRandomServer();
         $server = $client->getServer();
 
-        while ($server === $client->getServer()) {
-            /* Randomize while get non used server */
-        }
+        //while ($server === $client->getServer()) {
+        /* Randomize while get non used server */
+        //}
 
         $this->assertTrue(true, 'Correctly randomizes cluster servers on each call');
 
@@ -155,6 +173,10 @@ class ClientTest extends TestCase
         $client->using('127.0.0.0')->getServer();
     }
 
+    /**
+     * @throws ServerProviderException
+     * @throws ClusterException
+     */
     public function testServersWithTags()
     {
         $serverOptionsWithTag = (new ServerOptions())->addTag('tag');
@@ -174,6 +196,10 @@ class ClientTest extends TestCase
         $this->assertEquals(8123, $server->getPort());
     }
 
+    /**
+     * @throws ServerProviderException
+     * @throws ClusterException
+     */
     public function testServersWithTagsOnCluster()
     {
         $serverOptionsWithTag = (new ServerOptions())->addTag('tag');
@@ -201,6 +227,10 @@ class ClientTest extends TestCase
         $this->assertEquals(8123, $server->getPort());
     }
 
+    /**
+     * @throws ClusterException
+     * @throws ServerProviderException
+     */
     public function testClusterAndServersTogether()
     {
         $cluster = new Cluster(
@@ -247,23 +277,34 @@ class ClientTest extends TestCase
         );
     }
 
+    /**
+     * @throws ServerProviderException
+     */
     protected function getClient(): Client
     {
         $serverProvider = new ServerProvider();
-        $serverProvider->addServer(new Server('127.0.0.1', '8123', 'default', 'default', ''));
+        $serverProvider->addServer(new Server('127.0.0.1', '8123', 'default', 'default'));
 
         return new Client($serverProvider);
     }
 
+    /**
+     * @throws ServerProviderException
+     * @throws ClusterException
+     */
     public function testReadOne()
     {
         $client = $this->getClient();
 
         $result = $client->readOne('select * from numbers(0, 10) order by number desc');
 
-        $this->assertEquals(10, count($result->rows), 'Correctly executes query using mapper');
+        $this->assertCount(10, $result->rows, 'Correctly executes query using mapper');
     }
 
+    /**
+     * @throws ClusterException
+     * @throws ServerProviderException
+     */
     public function testRead()
     {
         $client = $this->getClient();
@@ -280,11 +321,15 @@ class ClientTest extends TestCase
             ]
         );
 
-        $this->assertEquals(10, count($result[0]->rows), 'Correctly converts query from array to query instance');
-        $this->assertEquals(20, count($result[1]->rows), 'Correctly executes queries');
-        $this->assertEquals(2, count($result[2]->rows), 'Correctly executes query with file');
+        $this->assertCount(10, $result[0]->rows, 'Correctly converts query from array to query instance');
+        $this->assertCount(20, $result[1]->rows, 'Correctly executes queries');
+        $this->assertCount(2, $result[2]->rows, 'Correctly executes query with file');
     }
 
+    /**
+     * @throws ClusterException
+     * @throws ServerProviderException
+     */
     public function testWrite()
     {
         $client = $this->getClient();
@@ -300,9 +345,13 @@ class ClientTest extends TestCase
 
         $result = $client->readOne('select * from default.tdchc_test_table');
 
-        $this->assertEquals(2, count($result->rows), 'Correctly writes data');
+        $this->assertCount(2, $result->rows, 'Correctly writes data');
     }
 
+    /**
+     * @throws ClusterException
+     * @throws ServerProviderException
+     */
     public function testWriteFiles()
     {
         $client = $this->getClient();
@@ -320,6 +369,6 @@ class ClientTest extends TestCase
 
         $result = $client->readOne('select * from default.tdchc_test_table');
 
-        $this->assertEquals(6, count($result->rows), 'Correctly writes data');
+        $this->assertCount(6, $result->rows, 'Correctly writes data');
     }
 }
