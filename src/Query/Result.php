@@ -142,21 +142,25 @@ class Result implements \ArrayAccess, \Iterator, \Countable
      * ArrayAccess
      */
 
+    #[\ReturnTypeWillChange]
     public function offsetExists($offset)
     {
         return isset($this->rows[$offset]);
     }
 
+    #[\ReturnTypeWillChange]
     public function offsetGet($offset)
     {
         return $this->rows[$offset];
     }
 
+    #[\ReturnTypeWillChange]
     public function offsetSet($offset, $value)
     {
         throw ResultException::isReadonly();
     }
 
+    #[\ReturnTypeWillChange]
     public function offsetUnset($offset)
     {
         throw ResultException::isReadonly();
@@ -166,26 +170,31 @@ class Result implements \ArrayAccess, \Iterator, \Countable
      * Iterator
      */
 
+    #[\ReturnTypeWillChange]
     public function current()
     {
         return $this->rows[$this->current];
     }
 
+    #[\ReturnTypeWillChange]
     public function next()
     {
         $this->current++;
     }
 
+    #[\ReturnTypeWillChange]
     public function key()
     {
         return $this->current;
     }
 
+    #[\ReturnTypeWillChange]
     public function valid()
     {
         return isset($this->rows[$this->current]);
     }
 
+    #[\ReturnTypeWillChange]
     public function rewind()
     {
         $this->current = 0;
@@ -195,6 +204,7 @@ class Result implements \ArrayAccess, \Iterator, \Countable
      * Countable
      */
 
+    #[\ReturnTypeWillChange]
     public function count()
     {
         return count($this->rows);
